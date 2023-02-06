@@ -7,204 +7,81 @@ from particle import Corsika7ID, Particle, InvalidParticle, PDGID
 import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
-from .fluxes import FastHillasGaisser2012
 
 D0_LIFETIME = Particle.from_name("D0").lifetime
+DEFAULT_RUN_HEADER_FEATURES = (
+    "run_number",
+    "date",
+    "version",
+    "n_observation_levels",
+    "observation_height",
+    "energy_spectrum_slope",
+    "energy_min",
+    "energy_max",
+    "energy_cutoff_hadrons",
+    "energy_cutoff_muons",
+    "energy_cutoff_electrons",
+    "energy_cutoff_photons",
+    "n_showers",
+)
+DEFAULT_EVENT_HEADER_FEATURES = (
+    "event_number",
+    "run_number",
+    "particle_id",
+    "total_energy",
+    "starting_altitude",
+    "first_interaction_height",
+    "momentum_x",
+    "momentum_y",
+    "momentum_minus_z",
+    "zenith",
+    "azimuth",
+    "low_energy_hadron_model",
+    "high_energy_hadron_model",
+    "sybill_interaction_flag",
+    "sybill_cross_section_flag",
+    "explicit_charm_generation_flag",
+)
 
 
-def _mother_idx(is_mother: np.ndarray, index: np.ndarray) -> np.ndarray:
-    mi = np.empty(index.shape, dtype=index.dtype)
-    mi[0] = None
-    mi[1] = None
-    for i in range(2, len(is_mother)):
-        mi[i] = index[i - 2] if is_mother[i - 1] and is_mother[i - 2] else None
-    return mi
-
-
-# @njit
-def _mother_idx_numba(
-    is_mother: np.ndarray,
-    run_idx: np.ndarray,
-    event_idx: np.ndarray,
-    particle_idx: np.ndarray,
-) -> tuple[np.ndarray]:
-    """
-    Numba-compatible version of mother_idx, performance boost is approx x6 (6secs->1secs),
-    But UI is worse since the index can't be None (no object...), so I am just gonna eat the 6 seconds
-    """
-    mi_run = np.empty(run_idx.shape, dtype=run_idx.dtype)
-    mi_event = np.empty(event_idx.shape, dtype=event_idx.dtype)
-    mi_parti = np.empty(particle_idx.shape, dtype=particle_idx.dtype)
-
-    mi_run[0] = -1
-    mi_run[1] = -1
-    mi_event[0] = -1
-    mi_event[1] = -1
-    mi_parti[0] = -1
-    mi_parti[1] = -1
-
-    for i in range(2, len(is_mother)):
-        mi_run[i] = run_idx[i - 2] if is_mother[i - 1] and is_mother[i - 2] else -1
-        mi_event[i] = event_idx[i - 2] if is_mother[i - 1] and is_mother[i - 2] else -1
-        mi_parti[i] = (
-            particle_idx[i - 2] if is_mother[i - 1] and is_mother[i - 2] else -1
-        )
-
-    return (mi_run, mi_event, mi_parti)
-
-
-# @njit
-def _mother_idx_numba_ez(
-    is_mother: np.ndarray, index: np.ndarray, none_val: np.ndarray
-) -> np.ndarray:
-    """
-    Numba-compatible version of mother_idx, performance boost is approx x6 (6secs->1secs),
-    But UI is worse since the index can't be None (no object...), so I am just gonna eat the 6 seconds
-    """
-    mi = np.empty(index.shape, dtype=index.dtype)
-
-    mi[0] = none_val
-    mi[0] = none_val
-
-    for i in range(2, len(is_mother)):
-        mi[i] = index[i - 2] if is_mother[i - 1] and is_mother[i - 2] else none_val
-    return mi
-
-
-def add_weight(df_run, df_event, df, model=FastHillasGaisser2012(model="H3a")):
-    """
-    Adds the collumn "weight" too df_particle to reweight for given primary flux.
-
-    Parameters
-    ----------
-    df_run: The run dataframe (as returned by `read_corsika_particle_files_to_dataframe`)
-    df_event: The event dataframe (as returned by `read_corsika_particle_files_to_dataframe`)
-    df: The particle dataframe (as returned by `read_corsika_particle_files_to_dataframe`)
-    model: The Cosmic Ray primary flux model (instance of CRFlux)
-    """
-    primary_pids = df_event["particle_id"].unique()
-    energy_slopes = df_run["energy_spectrum_slope"].unique()
-    emaxs = df_run["energy_max"].unique()
-    emins = df_run["energy_min"].unique()
-
-    assert len(primary_pids) == 1
-    assert len(energy_slopes) == 1
-    assert len(emaxs) == 1
-    assert len(emins) == 1
-
-    primary_pid, energy_slope = primary_pids[0], energy_slopes[0]
-    emin, emax = emins[0], emaxs[0]
-
-    N = 1
-    if energy_slope == -1:
-        N = np.log(emax / emin)
-    else:
-        ep = energy_slope + 1
-        N = (emax**ep - emin**ep) / ep
-
-    flux = lambda E: sum(model.p_and_n_flux(E)[1:])
-
-    ext_pdf = df_event.shape[0] * (df_event["total_energy"] ** energy_slope) / N
-
-    df["weight"] = flux(df_event["total_energy"]) / ext_pdf
-
-
-def add_weight_prompt(df, prompt_factor):
-    """
-    Adds collumn "weight_prompt" to df, to set a weight for every prompt particle, non prompt particles get weight 1
-    """
-    df["weight_prompt"] = 1.0
-    df.loc[df["is_prompt"] == True, "weight_prompt"] = prompt_factor
-
-
-def add_weight_prompt_per_event(df, prompt_factor):
-    """
-    Adds collumn "weight_prompt_per_event" to df, which will be `prompt_factor` for every particle, which is inside
-    a shower, which has at least one prompt muon. For every other particle, it will be 1.
-    """
-    # For some weird reason this makes a difference, as the last line of this function does not work otherwise
-    if not df.index.is_monotonic_increasing:
-        df.sort_index(inplace=True)
-
-    df["weight_prompt_per_event"] = 1.0
-
-    indexes = df.query("is_prompt == True").index
-    evt_idxs = {i[0]: set() for i in indexes}
-    for i in indexes:
-        evt_idxs[i[0]].add(i[1])
-
-    for i in evt_idxs:
-        df.loc[i].loc[list(evt_idxs[i]), "weight_prompt_per_event"] = prompt_factor
-
-
-def read_corsika_particle_glob_to_dataframe(
-    files: str, **kwargs
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Calls `read_corsika_particle_files_to_dataframe` for every globbed file.
-    """
-    basepath = Path(files).parent
-    files = list(basepath.glob(Path(files).name))
-    return read_corsika_particle_files_to_dataframe(files, **kwargs)
-
-
-def read_corsika_particle_files_to_dataframe(
-    files: [Path],
+def read_DAT(
+    files: Path | [Path] | None = None,
+    glob: str | None = None,
     max_events: int | None = None,
-    run_header_features: tuple = (
-        "run_number",
-        "date",
-        "version",
-        "n_observation_levels",
-        "observation_height",
-        "energy_spectrum_slope",
-        "energy_min",
-        "energy_max",
-        "energy_cutoff_hadrons",
-        "energy_cutoff_muons",
-        "energy_cutoff_electrons",
-        "energy_cutoff_photons",
-        "n_showers",
-    ),
-    event_header_features: tuple = (
-        "event_number",
-        "run_number",
-        "particle_id",
-        "total_energy",
-        "starting_altitude",
-        "first_interaction_height",
-        "momentum_x",
-        "momentum_y",
-        "momentum_minus_z",
-        "zenith",
-        "azimuth",
-        "low_energy_hadron_model",
-        "high_energy_hadron_model",
-        "sybill_interaction_flag",
-        "sybill_cross_section_flag",
-        "explicit_charm_generation_flag",
-    ),
+    run_header_features: tuple | None = None,
+    event_header_features: tuple | None = None,
     additional_columns: bool = True,
     mother_columns: bool = False,
     drop_mothers: bool = True,
     drop_non_particles: bool = True,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
+    Read CORSIKA DAT files to Pandas.DataFrame.
+    Exactly one of `files` or `glob` must be provided.
+    Made for CORSIKA>7.4, other compatibility not garantueed, but probably approximate.
     Parameters
     ----------
-    files: List of Paths
-        List of Paths to read into the dataframe.
+    files: Path or List of Paths
+        Single or list of DAT files to read into the dataframe.
         They must all have unique run_numbers and
         event_numbers.
+        If None `glob` must be provided
+    glob:
+        Globbing expression like `path/to/corsika/output/DAT*`.
+        If None, `files` must be provided.
     max_events: int | None
         Maximum number of events to read in.
         If None, read in everything.
-    run_header_features: tuple
+    run_header_features: tuple or None
         Names of the run header to actually save,
         corresponding to the naming of `pycorsikaio`.
-    event_header_features: tuple
+        If None uses a default list.
+        (default: None)
+    event_header_features: tuple or None
         Names of the event header to actually save,
         corresponding to the naming of `pycorsikaio`.
+        If None uses a default list.
+        (default: None)
     additional_columns: bool
         Weather to add (and calculate) additional columns
         not present in standard corsika output, to
@@ -241,6 +118,24 @@ def read_corsika_particle_files_to_dataframe(
         DataFrame with the information about each particle
     """
 
+    if files is None and glob is None:
+        raise TypeError("`file` and `glob` can't both be None")
+    if files is not None and glob is not None:
+        raise TypeError("`file` and `glob` can't both be not None")
+
+    if glob is not None:
+        basepath = Path(files).parent
+        files = list(basepath.glob(Path(files).name))
+
+    if run_header_features is None:
+        run_header_features = DEFAULT_RUN_HEADER_FEATURES
+
+    if event_header_features is None:
+        event_header_features = DEFAULT_EVENT_HEADER_FEATURES
+
+    if not isinstance(files, list):
+        files = [files]
+
     run_headers = []
     event_headers = []
     particles = []
@@ -255,7 +150,16 @@ def read_corsika_particle_files_to_dataframe(
     # flag to break
     finished = False
 
-    with tqdm(total=max_events) as pbar:
+    # Check how many showers are there
+    n_events = 0
+    if max_events is None:
+        for file in files:
+            with CorsikaParticleFile(file) as f:
+                n_events += f.run_header["n_showers"]
+    else:
+        n_events = max_events
+
+    with tqdm(total=n_events) as pbar:
         for file in files:
 
             if finished:
@@ -393,6 +297,7 @@ def read_corsika_particle_files_to_dataframe(
                 for pdgid in pdgids
             }
 
+            # this follows the MCEq definition
             lifetime_limit = Particle.from_name("D0").lifetime * 10
             lifetimes = {
                 pdgid: Particle.from_pdgid(pdgid).lifetime
