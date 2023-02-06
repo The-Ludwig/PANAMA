@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "PANAMA"
+name = "corsika-panama"
 version = "0.1.0"
 description = "PArallel ruN of corsikA on MAny cores and other python utils to work with CORSIKA"
 authors = ["Ludwig Neste <ludwig.neste@tu-dortmund.de>"]
