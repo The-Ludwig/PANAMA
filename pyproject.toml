@@ -6,6 +6,9 @@ authors = ["Ludwig Neste <ludwig.neste@tu-dortmund.de>"]
 license = "MIT"
 readme = "README.md"
 packages = [{ include = "panama" }]
+homepage = "https://github.com/The-Ludwig/PANAMA"
+repository = "https://github.com/The-Ludwig/PANAMA"
+documentation = "https://github.com/The-Ludwig/PANAMA#readme"
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -22,7 +25,7 @@ black = "^22.10.0"
 pytest = "^7.2.0"
 
 [tool.poetry.scripts]
-panama = 'corsika_tools.parallel_run:cli'
+panama = 'panama.parallel_run:cli'
 
 [build-system]
 requires = ["poetry-core"]
