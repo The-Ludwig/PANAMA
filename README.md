@@ -11,7 +11,7 @@ This started a little while ago while I was looking into the `EHIST` option
 of corsika.
 I wanted a way of conveniently running CORSIKA7 on more than 1 core.
 I ended in the same place where most CORSIKA7 users end (see e.g. [fact-project/corsika_wrapper](https://github.com/fact-project/corsika_wrapper))
-and wrote a small wrapper. Once this package is installed, you can use it with the `corsika_run_parallel` command (see `corsika_run_parallel --help` for options).
+and wrote a small wrapper. Once this package is installed, you can use it with the `panama` command (see `panama --help` for options).
 
 This wrapper has a nice progress bar, so you get an estimate for how long your simulation needs.
 
