@@ -1,6 +1,7 @@
 PANAMA
 ===
-*PA*rallel ru*N* of corsik*A*7 on *MA*ny cores
+**PA**rallel ru**N** of corsik**A**7 on **MA**ny cores
+
 Thanks @Jean1995 for the silly naming idea.
 
 # What this is
