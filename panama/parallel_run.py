@@ -12,7 +12,7 @@ import shutil
 from .nbstreamreader import NonBlockingStreamReader as NBSR
 
 CORSIKA_FILE_ERROR = "STOP FILOPN: FATAL PROBLEM OPENING FILE"
-CORSIKA_EVENT_FINISHED = b"(dyn) We have replaced"
+CORSIKA_EVENT_FINISHED = b"PRIMARY PARAMETERS AT FIRST INTERACTION POINT AT HEIGHT"
 CORSIKA_PATH = environ.get(
     "CORSIKA_PATH",
     "/net/nfshome/home/lneste/corsika7-master/run/corsika77420Linux_SIBYLL_urqmd",

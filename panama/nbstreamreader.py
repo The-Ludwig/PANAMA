@@ -1,11 +1,11 @@
-# from http://eyalarubas.com/python-subproc-nonblock.html
+# Adapted from http://eyalarubas.com/python-subproc-nonblock.html
 from threading import Thread
 from queue import Queue, Empty
 from time import sleep
 
 
 class NonBlockingStreamReader:
-    def __init__(self, stream, wait=0.01):
+    def __init__(self, stream):
         """
         stream: the stream to read from.
                 Usually a process' stdout or stderr.
@@ -13,7 +13,6 @@ class NonBlockingStreamReader:
 
         self._s = stream
         self._q = Queue()
-        self._wait = wait
 
         self._is_alive = True
 
@@ -27,10 +26,8 @@ class NonBlockingStreamReader:
                 while line:
                     queue.put(line)
                     line = stream.readline()
-                #  sleep(wait)
                 # we arrive here if line is None, this means that the stream is closed
                 return
-                sleep(wait)
 
         self._t = Thread(
             target=_populateQueue, args=(self._s, self._q, self._is_alive, self._wait)

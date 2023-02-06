@@ -5,7 +5,7 @@ description = "PArallel ruN of corsikA on MAny cores and other python utils to w
 authors = ["Ludwig Neste <ludwig.neste@tu-dortmund.de>"]
 license = "MIT"
 readme = "README.md"
-packages = [{ include = "corsika_tools" }]
+packages = [{ include = "panama" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
