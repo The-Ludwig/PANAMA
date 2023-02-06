@@ -1,4 +1,4 @@
-PANAMA
+PANAMA  [![PyPI version](https://badge.fury.io/py/corsikaio.svg)](https://badge.fury.io/py/corsikaio)
 ===
 **PAN**das **A**nd **M**ulticore utils for corsik**A**7
 
@@ -26,13 +26,7 @@ Made possible by [cta-observatory/pycorsikaio](https://github.com/cta-observator
 Bug-free or stable
 
 # Installation
-To install this module, clone it
+This package is available on pypi:
 ```
-git clone git@github.com:The-Ludwig/PANAMA.git
+pip install corsika-panama
 ```
-and run
-```
-pip install ./PANAMA
-```
-
-A future PyPi release is planned.
