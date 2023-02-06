@@ -1,6 +1,6 @@
 PANAMA
 ===
-**PA**rallel ru**N** of corsik**A**7 on **MA**ny cores
+**PAN**das **A**nd **M**ulticore utils for corsik**A**7
 
 Thanks [@Jean1995](https://github.com/Jean1995) for the silly naming idea.
 
