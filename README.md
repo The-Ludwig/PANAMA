@@ -1,4 +1,4 @@
-PANAMA  [![PyPI version](https://badge.fury.io/py/corsikaio.svg)](https://badge.fury.io/py/corsikaio)
+PANAMA  [![PyPI version](https://badge.fury.io/py/corsika-panama.svg)](https://badge.fury.io/py/corsika-panama)
 ===
 **PAN**das **A**nd **M**ulticore utils for corsik**A**7
 
