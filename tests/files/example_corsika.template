@@ -12,7 +12,7 @@ OBSLEV  110.E2                         observation level (in cm)
 FIXCHI  0.                             starting altitude (g/cm**2)
 MAGNET  16.811  -51.890                magnetic field at south pole (IceCube)
 HADFLG  0  0  0  0  0  2               flags hadr.interact.&fragmentation
-ECUTS   1.E4  1.0E4  1.0E4  1.0E4      energy cuts for particles
+ECUTS   1.0E3  1.0E3  1.0E20  1.0E20   energy cuts for particles
 MUADDI  T                              additional info for muons
 MUMULT  T                              muon multiple scattering angle
 ELMFLG  T   T                          em. interaction flags (NKG,EGS)
@@ -23,4 +23,6 @@ MAXPRT  1                              max. number of printed events
 DIRECT  {dir}                          output directory
 USER    you                            user
 DEBUG   F  6  F  1000000               debug flag and log.unit for out
+DYNSTACK 10000
+DYNSTACK_P 1 1
 EXIT                                   terminates input

@@ -5,7 +5,7 @@ from time import sleep
 
 
 class NonBlockingStreamReader:
-    def __init__(self, stream):
+    def __init__(self, stream, wait=5):
         """
         stream: the stream to read from.
                 Usually a process' stdout or stderr.
@@ -13,10 +13,11 @@ class NonBlockingStreamReader:
 
         self._s = stream
         self._q = Queue()
+        self._wait = wait
 
         self._is_alive = True
 
-        def _populateQueue(stream, queue, is_alive, wait):
+        def _populateQueue(stream, queue, is_alive):
             """
             Collect lines from 'stream' and put them in 'quque'.
             """
@@ -29,15 +30,13 @@ class NonBlockingStreamReader:
                 # we arrive here if line is None, this means that the stream is closed
                 return
 
-        self._t = Thread(
-            target=_populateQueue, args=(self._s, self._q, self._is_alive, self._wait)
-        )
+        self._t = Thread(target=_populateQueue, args=(self._s, self._q, self._is_alive))
         self._t.daemon = True
         self._t.start()  # start collecting lines from the stream
 
     def __del__(self):
         self._is_alive = False
-        self._t.join(timeout=self._wait * 2)
+        self._t.join(timeout=self._wait)
         if self._t.is_alive():
             raise RuntimeError("Could not kill thread in NonBlockingStreamReader")
 
