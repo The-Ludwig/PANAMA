@@ -23,6 +23,7 @@ crflux = "^1.0.6"
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
 pytest = "^7.2.0"
+coverage = "^7.1.0"
 
 [tool.poetry.scripts]
 panama = 'panama.parallel_run:cli'
