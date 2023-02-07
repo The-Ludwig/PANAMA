@@ -1,7 +1,5 @@
-PANAMA  [![PyPI version](https://badge.fury.io/py/corsika-panama.svg)](https://badge.fury.io/py/corsika-panama)
-===
 **PAN**das **A**nd **M**ulticore utils for corsik**A**7
-
+===
 [![GitHub](https://img.shields.io/github/license/The-Ludwig/PANAMA?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/blob/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/corsika-panama?style=for-the-badge)](https://pypi.org/project/corsika-panama/)
 [![GitHub issues](https://img.shields.io/github/issues-raw/The-Ludwig/PANAMA?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/issues)
