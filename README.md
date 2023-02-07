@@ -69,7 +69,7 @@ I wanted a way of conveniently running CORSIKA7 on more than 1 core.
 I ended in the same place where most CORSIKA7 users end (see e.g. [fact-project/corsika_wrapper](https://github.com/fact-project/corsika_wrapper))
 and wrote a small wrapper.
 
-Corsika read in ade possible by [cta-observatory/pycorsikaio](https://github.com/cta-observatory/pycorsikaio).
+read_DAT made possible by [cta-observatory/pycorsikaio](https://github.com/cta-observatory/pycorsikaio).
 
 #### Pitfalls
 - The whole `run` folder of CORSIKA7 must be copied for each proccess, so very high parallel runs have high overhead
