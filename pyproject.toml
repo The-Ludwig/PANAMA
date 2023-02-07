@@ -11,7 +11,7 @@ repository = "https://github.com/The-Ludwig/PANAMA"
 documentation = "https://github.com/The-Ludwig/PANAMA#readme"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.8"
 corsikaio = "^0.2.6.post1"
 numpy = "^1.23.4"
 pandas = "^1.5.1"
