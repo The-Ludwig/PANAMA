@@ -13,10 +13,6 @@ from .nbstreamreader import NonBlockingStreamReader as NBSR
 
 CORSIKA_FILE_ERROR = "STOP FILOPN: FATAL PROBLEM OPENING FILE"
 CORSIKA_EVENT_FINISHED = b"PRIMARY PARAMETERS AT FIRST INTERACTION POINT AT HEIGHT"
-CORSIKA_PATH = environ.get(
-    "CORSIKA_PATH",
-    "/net/nfshome/home/lneste/corsika7-master/run/corsika77420Linux_SIBYLL_urqmd",
-)
 CORSIKA_RUN_END = b"END OF RUN"
 
 
@@ -149,28 +145,50 @@ def run_corsika_parallel(
     cleanup(n_jobs, corsika_tmp_dir)
 
 
-DEFAULT_TMP_DIR = "/tmp/corsika_parallel_run"
+DEFAULT_TMP_DIR = environ.get("TMP_DIR", "/tmp/corsika_parallel_run")
+CORSIKA_PATH = environ.get(
+    "CORSIKA_PATH",
+    "/net/nfshome/home/lneste/corsika7-master/run/corsika77420Linux_SIBYLL_urqmd",
+)
 
 
 @click.command()
-@click.argument("template", type=click.Path())  # , help="Path to the template to run")
-@click.argument("events", type=int)  # , help="Number of events to generate")
-@click.argument("output", type=click.Path())  # , help="Number of events to generate")
+@click.argument(
+    "template", type=click.Path(exists=True, dir_okay=False)
+)  # , help="Path to the template to run")
+@click.option(
+    "--events", "-n", type=int, help="Number of shower-events to generate", default=100
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    help="Path to store the CORSIKA7 DAT files",
+    default="./corsika_output/",
+)
 @click.option("--jobs", "-j", default=4, help="Number of jobs to use", type=int)
 @click.option(
     "--corsika",
+    "-c",
     default=CORSIKA_PATH,
-    help="Path to the corsika executable",
-    type=click.Path(),
+    help="Path to the CORSIKA7 executable. Can also be set using the `CORSIKA_PATH` environment variable.",
+    type=click.Path(exists=True, dir_okay=False, executable=True),
 )
 @click.option(
     "--seed",
+    "-s",
     default=None,
     help="Seed to use. If none, will use system time or other entropic source",
     type=int,
 )
-@click.option("--tmp", "-t", default=DEFAULT_TMP_DIR, type=click.Path())
-@click.option("--debug", "-d", default=False, is_flag=True)
+@click.option(
+    "--tmp",
+    "-t",
+    default=DEFAULT_TMP_DIR,
+    type=click.Path(file_okay=False),
+    help="Path to the default temp folder to copy corsika to. Can also be set using the `TMP_DIR` environment variable.",
+)
+@click.option("--debug", "-d", default=False, is_flag=True, help="Enable debug output")
 def cli(
     template: Path,
     events: int,
@@ -181,6 +199,17 @@ def cli(
     tmp: Path,
     debug,
 ):
+    """
+    Command line interface to run CORSIKA7 in parallel.
+
+    The `TEMPLATE` argument must point to a valid CORSIKA7 stiring card, where
+    `{run_idx}`, `{first_event_idx}` `{n_show}` `{seed_1}` `{seed_2}` and `{dir}`
+    will be replaced accordingly.
+
+    For examples see the PANAMA repository:
+
+    https://github.com/The-Ludwig/PANAMA#readme
+    """
     if debug:
         logging.basicConfig(level=logging.DEBUG)
 
