@@ -23,4 +23,6 @@ MAXPRT  1                              max. number of printed events
 DIRECT  {dir}                          output directory
 USER    you                            user
 DEBUG   F  6  F  1000000               debug flag and log.unit for out
+DYNSTACK 10000
+DYNSTACK_P 1 1
 EXIT                                   terminates input
