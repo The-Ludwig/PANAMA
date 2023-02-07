@@ -145,19 +145,23 @@ def run_corsika_parallel(
     cleanup(n_jobs, corsika_tmp_dir)
 
 
-DEFAULT_TMP_DIR = environ.get("TMP_DIR", "/tmp/corsika_parallel_run")
+DEFAULT_TMP_DIR = environ.get("TMP_DIR", "/tmp/PANAMA")
 CORSIKA_PATH = environ.get(
     "CORSIKA_PATH",
-    "/net/nfshome/home/lneste/corsika7-master/run/corsika77420Linux_SIBYLL_urqmd",
+    "~/corsika7-master/run/corsika77420Linux_SIBYLL_urqmd",
 )
 
 
-@click.command()
+@click.command(context_settings={"show_default": True})
 @click.argument(
     "template", type=click.Path(exists=True, dir_okay=False)
 )  # , help="Path to the template to run")
 @click.option(
-    "--events", "-n", type=int, help="Number of shower-events to generate", default=100
+    "--events",
+    "-n",
+    type=int,
+    help="Number of shower-events to generate",
+    default=100,
 )
 @click.option(
     "--output",

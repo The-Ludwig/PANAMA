@@ -124,8 +124,8 @@ def read_DAT(
         raise TypeError("`file` and `glob` can't both be not None")
 
     if glob is not None:
-        basepath = Path(files).parent
-        files = list(basepath.glob(Path(files).name))
+        basepath = Path(glob).parent
+        files = list(basepath.glob(Path(glob).name))
 
     if run_header_features is None:
         run_header_features = DEFAULT_RUN_HEADER_FEATURES

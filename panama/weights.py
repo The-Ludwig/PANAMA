@@ -2,6 +2,7 @@
 Functions to add weights to the read in corsika dataframe
 """
 from .fluxes import FastHillasGaisser2012
+import numpy as np
 
 
 def add_weight(df_run, df_event, df, model=FastHillasGaisser2012(model="H3a")):
