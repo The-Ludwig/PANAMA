@@ -148,7 +148,7 @@ def run_corsika_parallel(
 DEFAULT_TMP_DIR = environ.get("TMP_DIR", "/tmp/PANAMA")
 CORSIKA_PATH = environ.get(
     "CORSIKA_PATH",
-    "~/corsika7-master/run/corsika77420Linux_SIBYLL_urqmd",
+    f"{environ.get('HOME')}/corsika7-master/run/corsika77420Linux_SIBYLL_urqmd",
 )
 
 
