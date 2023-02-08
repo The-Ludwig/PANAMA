@@ -14,7 +14,7 @@ Thanks [@Jean1995](https://github.com/Jean1995) for the silly naming idea.
 
 ### Run CORSIKA7 on multiple cores
 You need to have [`CORSIKA7`](https://www.iap.kit.edu/corsika/79.php) installed to run this.
-```
+```sh
 $ panama --corsika path/to/corsika7/executable -j4 ./tests/files/example_corsika.template
 83%|████████████████████████████████████████████████████▋        | 83.0/100 [00:13<00:02, 6.36shower/s]
 Jobs should be nearly finished, now we wait for them to exit
@@ -23,7 +23,7 @@ All jobs terminated, cleanup now
 
 ### Read CORSIKA7 DAT files to pandas dataframes
 Example: Calculate mean energy in the corsika files created in the example above:
-```ipython
+```python
 In [1]: import panama as pn
 
 In [2]: run_header, event_header, particles = pn.read_DAT(glob="corsika_output/DAT*")
@@ -41,7 +41,7 @@ If you want additional columns in the real particles storing the mother informat
 This packages also provides facility to add a `weight` column to the dataframe, so you can look at corsika-output
 in physical flux in terms of $(\mathrm{cm^2} \mathrm{s}\ \mathrm{sr}\ \mathrm{GeV})^{-1}$.
 Using the example above, to get the whole physical flux in the complete simulated energy region:
-```ipython
+```python
 In [1]: import panama as pn
 
 In [2]: run_header, event_header, particles = pn.read_DAT(glob="corsika_output/DAT*")
