@@ -1,7 +1,7 @@
 RUNNR   {run_idx}                      run number
 EVTNR   {first_event_idx}              number of first shower event
 NSHOW   {n_show}                       number of showers to generate
-PRMPAR  14                             particle type of prim. particle
+PRMPAR  {primary}                      particle type of prim. particle
 ESLOPE  -1                             slope of primary energy spectrum
 ERANGE  1.E4  1.E9                     energy range of primary particle
 THETAP  0.     0.                      range of zenith angle (degree)

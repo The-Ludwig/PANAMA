@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "corsika-panama"
-version = "0.2.0"
+version = "0.2.1"
 description = "PArallel ruN of corsikA on MAny cores and other python utils to work with CORSIKA"
 authors = ["Ludwig Neste <ludwig.neste@tu-dortmund.de>"]
 license = "MIT"
@@ -26,7 +26,7 @@ pytest = "^7.2.0"
 coverage = "^7.1.0"
 
 [tool.poetry.scripts]
-panama = 'panama.parallel_run:cli'
+panama = 'panama.cli:cli'
 
 [build-system]
 requires = ["poetry-core"]
