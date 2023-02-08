@@ -1,5 +1,7 @@
 import click
+from os import environ
 from .parallel_run import run_corsika_parallel
+from pathlib import Path
 
 DEFAULT_TMP_DIR = environ.get("TMP_DIR", "/tmp/PANAMA")
 CORSIKA_PATH = environ.get(
@@ -7,6 +9,29 @@ CORSIKA_PATH = environ.get(
     f"{environ.get('HOME')}/corsika7-master/run/corsika77420Linux_SIBYLL_urqmd",
 )
 DEFAULT_N_EVENTS = 100
+
+
+class IntOrDictParamType(click.ParamType):
+    name = "int or py dict"
+
+    def convert(self, value, param, ctx):
+        if isinstance(value, int):
+            return value
+
+        try:
+            d = eval(value)
+            if type(d) != dict:
+                self.fail(
+                    f"{value!r} is a valid python expression, but not a dict",
+                    param,
+                    ctx,
+                )
+            return d
+        except ValueError:
+            self.fail(f"{value!r} is not a valid integer", param, ctx)
+
+
+INT_OR_DICT = IntOrDictParamType()
 
 
 @click.command(context_settings={"show_default": True})
@@ -23,7 +48,7 @@ DEFAULT_N_EVENTS = 100
 @click.option(
     "--primary",
     "-p",
-    type=int | str,
+    type=INT_OR_DICT,
     help="PDGid of primary to inject. Default is proton. "
     "Can be a python dict with diffrerent primaries as keys and values the number of events to generate for that. "
     "In this case, --events is ignored. "

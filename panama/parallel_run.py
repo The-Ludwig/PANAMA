@@ -91,7 +91,7 @@ def run_corsika_parallel(
     jobs: [Popen] = []
 
     for idx, (pdgid, n_events) in enumerate(primary.items()):
-        corsikaid = int(Corsika7id.from_pdgid(pdgid))
+        corsikaid = int(Corsika7ID.from_pdgid(pdgid))
 
         events_per_job = n_events // n_jobs
         last_events_per_job = events_per_job + (n_events - events_per_job * n_jobs)
