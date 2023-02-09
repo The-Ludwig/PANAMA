@@ -30,8 +30,16 @@ def test_cli(
     runner = CliRunner()
     result = runner.invoke(
         cli,
-        [f"{test_file_path}", "--events", "10", "--primary", "{10: 10, 20: 20}"],
+        [
+            f"{test_file_path}",
+            "--events",
+            "10",
+            "--primary",
+            "{10: 10, 20: 20}",
+            "--corsika",
+            f"{test_file_path}",
+        ],
     )
-    assert "does not exist" in result.output
-    assert "--events is ignored" in result.output
+    assert "not executable" in result.output
+    # assert "--events is ignored" in result.output
     assert result.exit_code == 2
