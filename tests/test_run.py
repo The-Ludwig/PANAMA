@@ -1,6 +1,8 @@
 from panama import run_corsika_parallel
 from pathlib import Path
+from panama.cli import cli
 import subprocess
+from click.testing import CliRunner
 
 # since I can not ship the corsika executable,
 # for now I will only test if this fails
@@ -25,12 +27,10 @@ def test_run_fail(
 def test_cli(
     test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
 ):
-    process = subprocess.Popen(
-        ["poetry", "run", "panama", f"{test_file_path}"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [f"{test_file_path}"],
     )
-    stdout, stderr = process.communicate()
-    print(dir(process))
-    assert b"does not exist" in stderr
-    assert process.returncode == 2
+    assert "does not exist" in result.output
+    assert result.exit_code == 2
