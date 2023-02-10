@@ -16,7 +16,6 @@ def test_noparse(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
 
     assert df_np.equals(df)
 
-
 def test_read_corsia_file(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
 
     df_run, df_event, df = panama.read_DAT(test_file_path, drop_non_particles=False)
