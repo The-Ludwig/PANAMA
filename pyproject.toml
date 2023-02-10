@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "corsika-panama"
 version = "0.2.2"
-description = "PArallel ruN of corsikA on MAny cores and other python utils to work with CORSIKA"
+description = "PANdas And Multicore utils for corsikA7"
 authors = ["Ludwig Neste <ludwig.neste@tu-dortmund.de>"]
 license = "MIT"
 readme = "README.md"
