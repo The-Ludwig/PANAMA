@@ -99,7 +99,7 @@ def run_corsika_parallel(
         for i in range(n_jobs - 1):
             jobs.append(
                 start_corsika_job(
-                    idx + i,
+                    n_jobs * idx + i,
                     events_per_job,
                     input_template,
                     abs_path,
@@ -110,7 +110,7 @@ def run_corsika_parallel(
             )
         jobs.append(
             start_corsika_job(
-                idx + (n_jobs - 1),
+                n_jobs * idx + (n_jobs - 1),
                 last_events_per_job,
                 input_template,
                 abs_path,
@@ -127,21 +127,25 @@ def run_corsika_parallel(
     nbstreams = [NBSR(job.stdout) for job in jobs]
     outputs = [b""] * len(jobs)
 
-    with tqdm(total=n_events, unit="shower", unit_scale=True) as pbar:
-        while jobs[-1].poll() is None:
-            for idx, nbstream in enumerate(nbstreams):
-                line = nbstream.readline()
-                if line is not None:
-                    outputs[idx] = b""
-                while line is not None:
-                    logging.debug(line.decode("ASCII"))
-                    logging.info(
-                        f"finished events = {line.count(CORSIKA_EVENT_FINISHED)}"
-                    )
-                    pbar.update(line.count(CORSIKA_EVENT_FINISHED))
-                    outputs[idx] += line
+    try:
+        with tqdm(total=n_events, unit="shower", unit_scale=True) as pbar:
+            while jobs[-1].poll() is None:
+                for idx, nbstream in enumerate(nbstreams):
                     line = nbstream.readline()
-            sleep(0.5)
+                    if line is not None:
+                        outputs[idx] = b""
+                    while line is not None:
+                        logging.debug(line.decode("ASCII"))
+                        logging.info(
+                            f"finished events = {line.count(CORSIKA_EVENT_FINISHED)}"
+                        )
+                        pbar.update(line.count(CORSIKA_EVENT_FINISHED))
+                        outputs[idx] += line
+                        line = nbstream.readline()
+                sleep(0.5)
+    except KeyboardInterrupt:
+        print("Interrupted by user, cleanup tmp files.")
+        cleanup(n_jobs * len(primary), corsika_tmp_dir)
 
     # finish
     print("Jobs should be nearly finished, now we wait for them to exit")

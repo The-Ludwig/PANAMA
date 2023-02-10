@@ -1,4 +1,5 @@
 import click
+import logging
 from os import environ
 from .parallel_run import run_corsika_parallel
 from pathlib import Path
@@ -88,6 +89,7 @@ INT_OR_DICT = IntOrDictParamType()
 def cli(
     template: Path,
     events: int,
+    primary: int | dict,
     output: Path,
     jobs: int,
     corsika: Path,
@@ -118,16 +120,10 @@ def cli(
     else:
         p = Path(tmp)
 
-    if isinstance(primary, int):
-        primary = {primary: events}
-    elif isinstance(primary, str):
-        primary = eval(primary)
-        if events != DEFAULT_N_EVENTS:
-            logging.warn(
-                f"Looks like --events was given and --primary was provided a dict. --events is ignored."
-            )
-    else:
-        raise TypeError("Primary must either be int or string")
+    if events != DEFAULT_N_EVENTS and len(primary) > 1:
+        logging.warn(
+            f"Looks like --events was given and --primary was provided a dict. --events is ignored."
+        )
 
     run_corsika_parallel(primary, jobs, template, Path(output), corsika, p, seed)
 

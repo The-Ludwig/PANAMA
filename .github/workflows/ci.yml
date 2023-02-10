@@ -1,11 +1,11 @@
 name: CI
 # this avoids duplicated builds on pull request for the cost
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - '**'
+  # push:
+  #   branches:
+  #     - main
+  #   tags:
+  #     - '**'
   pull_request:
 
 jobs:
