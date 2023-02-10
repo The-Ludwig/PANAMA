@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, make_dataclass
 import numpy as np
 from corsikaio import CorsikaParticleFile
+from corsikaio.subblocks import event_header_types, particle_data_dtype
 from collections import defaultdict
 from particle import Corsika7ID, Particle, InvalidParticle, PDGID
 import pandas as pd
@@ -42,6 +43,7 @@ DEFAULT_EVENT_HEADER_FEATURES = (
     "sybill_cross_section_flag",
     "explicit_charm_generation_flag",
 )
+CORSIKA_FIELD_BYTE_LEN = 4
 
 
 def read_DAT(
@@ -54,6 +56,7 @@ def read_DAT(
     mother_columns: bool = False,
     drop_mothers: bool = True,
     drop_non_particles: bool = True,
+    noparse: bool = True,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Read CORSIKA DAT files to Pandas.DataFrame.
@@ -165,16 +168,30 @@ def read_DAT(
             if finished:
                 break
 
-            with CorsikaParticleFile(file) as f:
+            with CorsikaParticleFile(file, parse_blocks=not noparse) as f:
 
                 run_headers.append([f.run_header[key] for key in run_header_features])
                 run_idx = int(f.run_header["run_number"])
 
+                version = float(str(f.run_header["version"])[:3])
+
                 for event in f:
-                    event_headers.append(
-                        [event.header[key] for key in event_header_features]
-                    )
-                    event_idx = int(event.header["event_number"])
+                    if noparse:
+                        event_headers.append(event.header)
+                    else:
+                        event_headers.append(
+                            [event.header[key] for key in event_header_features]
+                        )
+
+                    if noparse:
+                        event_idx = int(
+                            event.header[
+                                event_header_types[version].fields["event_number"][1]
+                                // 4
+                            ]
+                        )
+                    else:
+                        event_idx = int(event.header["event_number"])
 
                     pbar.update(n=1)
                     events += 1
@@ -183,7 +200,10 @@ def read_DAT(
                         finished = True
                         break
 
-                    n_particles = event.particles.shape[0]
+                    if noparse:
+                        n_particles = np.sum(event.particles[:, 1] != 0.0)
+                    else:
+                        n_particles = event.particles.shape[0]
 
                     if n_particles == 0:
                         continue
@@ -197,20 +217,58 @@ def read_DAT(
     df_run_headers = pd.DataFrame(run_headers, columns=run_header_features)
     df_run_headers.set_index(keys=["run_number"], inplace=True)
 
-    df_event_headers = pd.DataFrame(event_headers, columns=event_header_features)
+    if noparse:
+        df_event_headers = pd.DataFrame(event_headers)
+        valid_columns = list(
+            map(
+                lambda v: v[1] // CORSIKA_FIELD_BYTE_LEN,
+                list(event_header_types[version].fields.values()),
+            )
+        )
+        valid_names = event_header_types[version].names
+
+        mapper = {pos: name for pos, name in zip(valid_columns, valid_names)}
+
+        df_event_headers.drop(
+            df_event_headers.columns.difference(valid_columns), 1, inplace=True
+        )
+        df_event_headers.rename(columns=mapper, inplace=True)
+    else:
+        df_event_headers = pd.DataFrame(event_headers, columns=event_header_features)
     df_event_headers.set_index(keys=["run_number", "event_number"], inplace=True)
 
-    # Hopefully this is more of O(events) than O(particles)
-    np_particles = np.empty(
-        (sum([p.shape[0] for p in particles]),), dtype=particles[0].dtype
-    )
-    n = 0
-    for p in particles:
-        n_p = p.shape[0]
-        np_particles[n : n + n_p] = p
-        n += n_p
+    if noparse:
+        df_particles_l = [pd.DataFrame(p) for p in particles]
+        df_particles = pd.concat(df_particles_l)
 
-    df_particles = pd.DataFrame(np_particles)
+        valid_columns = list(
+            map(
+                lambda v: v[1] // CORSIKA_FIELD_BYTE_LEN,
+                list(particle_data_dtype.fields.values()),
+            )
+        )
+        valid_names = particle_data_dtype.names
+
+        mapper = {pos: name for pos, name in zip(valid_columns, valid_names)}
+
+        df_particles.drop(
+            df_particles.columns.difference(valid_columns), 1, inplace=True
+        )
+        df_particles.rename(columns=mapper, inplace=True)
+        df_particles.query("particle_description != 0", inplace=True)
+    else:
+        # Hopefully this is more of O(events) than O(particles)
+        np_particles = np.empty(
+            (sum([p.shape[0] for p in particles]),), dtype=particles[0].dtype
+        )
+        n = 0
+        for p in particles:
+            n_p = p.shape[0]
+            np_particles[n : n + n_p] = p
+            n += n_p
+
+        df_particles = pd.DataFrame(np_particles)
+
     df_particles["run_number"] = pd.Series(particles_run_num, dtype=int)
     df_particles["event_number"] = pd.Series(particles_event_num, dtype=int)
     df_particles["particle_number"] = pd.Series(particles_num, dtype=int)

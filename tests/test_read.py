@@ -5,11 +5,25 @@ from corsikaio import CorsikaParticleFile
 import numpy as np
 
 
+def test_noparse(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
+
+    df_run_np, df_event_np, df_np = panama.read_DAT(
+        test_file_path, drop_non_particles=False, noparse=True
+    )
+    df_run, df_event, df = panama.read_DAT(
+        test_file_path, drop_non_particles=False, noparse=False
+    )
+
+    print(df_np)
+    print(df)
+    assert df_np == df
+
+
 def test_read_corsia_file(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
 
     df_run, df_event, df = panama.read_DAT(test_file_path, drop_non_particles=False)
 
-    with CorsikaParticleFile(test_file_path) as cf:
+    with CorsikaParticleFile(test_file_path, parse_blocks=True) as cf:
         num = 0
         for event in cf:
             for particle in event.particles:
