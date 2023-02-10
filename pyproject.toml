@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "corsika-panama"
-version = "0.2.1"
+version = "0.2.2"
 description = "PArallel ruN of corsikA on MAny cores and other python utils to work with CORSIKA"
 authors = ["Ludwig Neste <ludwig.neste@tu-dortmund.de>"]
 license = "MIT"
