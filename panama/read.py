@@ -200,6 +200,9 @@ def read_DAT(
                         finished = True
                         break
 
+                    # if noparse:
+                    #     n_particles = np.sum(event.particles[:, 1] != 0.0)
+                    # else:
                     n_particles = event.particles.shape[0]
 
                     if n_particles == 0:
