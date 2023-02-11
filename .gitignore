@@ -1,2 +1,5 @@
 __pycache__
 dist/
+corsika_output/
+corsika-*/
+corsika-*.tar.gz
