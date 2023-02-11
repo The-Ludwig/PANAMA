@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: poetry install --with dev
       - name: Install CORSIKA7
-        run: admin download_corsika.sh
+        run: admin/download_corsika.sh
         env:
           CORSIKA_PW: ${{ secrets.CORSIKA_PW }}
       - name: Run tests
