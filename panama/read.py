@@ -109,7 +109,9 @@ def read_DAT(
     drop_non_particles: bool
         Weather to remove all rows not representing a real particle (like muon additional information)
         (default: True)
-
+    noparse:
+        Use the "noparse" feature of pycorsikaio, which theoretically
+        makes reading in the corsika files faster
     Returns
     -------
     A tuple (run_header, event_header, particles) with:
@@ -161,6 +163,8 @@ def read_DAT(
                 n_events += f.run_header["n_showers"]
     else:
         n_events = max_events
+
+    version = None
 
     with tqdm(total=n_events) as pbar:
         for file in files:
@@ -230,7 +234,7 @@ def read_DAT(
         mapper = {pos: name for pos, name in zip(valid_columns, valid_names)}
 
         df_event_headers.drop(
-            df_event_headers.columns.difference(valid_columns), 1, inplace=True
+            columns=df_event_headers.columns.difference(valid_columns), inplace=True
         )
         df_event_headers.rename(columns=mapper, inplace=True)
     else:
@@ -252,7 +256,7 @@ def read_DAT(
         mapper = {pos: name for pos, name in zip(valid_columns, valid_names)}
 
         df_particles.drop(
-            df_particles.columns.difference(valid_columns), 1, inplace=True
+            columns=df_particles.columns.difference(valid_columns), inplace=True
         )
         df_particles.rename(columns=mapper, inplace=True)
         df_particles.query("particle_description != 0", inplace=True)
@@ -303,12 +307,15 @@ def read_DAT(
         )
 
         pdgids = df_particles["pdgid"].unique()
-        mass_map = {
-            pdgid: Particle.from_pdgid(pdgid).mass / 1000  # GeV
-            if pdgid != pdg_error_val
-            else 0
-            for pdgid in pdgids
-        }
+
+        mass_map = dict()
+        for pdgid in pdgids:
+            if pdgid == pdg_error_val:
+                mass_map[pdgid] = 0
+            else:
+                mass = Particle.from_pdgid(pdgid).mass
+                mass_map[pdgid] = mass / 1000 if mass is not None else 0  # GeV
+
         df_particles["mass"] = df_particles["pdgid"].map(mass_map, na_action=None)
         df_particles["energy"] = df_particles.eval("sqrt(mass**2+px**2+py**2+pz**2)")
         df_particles["zenith"] = df_particles.eval("arccos(pz/sqrt(px**2+py**2+pz**2))")

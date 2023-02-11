@@ -27,6 +27,10 @@ jobs:
           poetry-version: ${{ matrix.poetry-version }}
       - name: Install dependencies
         run: poetry install --with dev
+      - name: Install CORSIKA7
+        run: admin/download_corsika.sh
+        env:
+          CORSIKA_PW: ${{ secrets.CORSIKA_PW }}
       - name: Run tests
         run: poetry run coverage run --include="panama/**" -m pytest
       - name: Produce coverage xml
