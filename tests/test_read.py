@@ -5,11 +5,23 @@ from corsikaio import CorsikaParticleFile
 import numpy as np
 
 
+def test_noparse(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
+
+    df_run_np, df_event_np, df_np = panama.read_DAT(
+        test_file_path, drop_non_particles=False, noparse=True
+    )
+    df_run, df_event, df = panama.read_DAT(
+        test_file_path, drop_non_particles=False, noparse=False
+    )
+
+    assert df_np.equals(df)
+
+
 def test_read_corsia_file(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
 
     df_run, df_event, df = panama.read_DAT(test_file_path, drop_non_particles=False)
 
-    with CorsikaParticleFile(test_file_path) as cf:
+    with CorsikaParticleFile(test_file_path, parse_blocks=True) as cf:
         num = 0
         for event in cf:
             for particle in event.particles:
@@ -36,7 +48,6 @@ def test_spectral_index(test_file_path=Path(__file__).parent / "files" / "DAT*")
     )
     hist, bin_edges = np.histogram(sel["energy"], bins=bins, weights=sel["weight"])
     hist /= bin_edges[1:] - bin_edges[:-1]
-    print(hist)
     empty = hist == 0
     log_e = np.log10((bin_edges[1:] + bin_edges[:-1]) / 2)
     # dont fit empty bins
@@ -51,7 +62,6 @@ def test_spectral_index(test_file_path=Path(__file__).parent / "files" / "DAT*")
     )
     hist, bin_edges = np.histogram(sel["energy"], bins=bins, weights=sel["weight"])
     hist /= bin_edges[1:] - bin_edges[:-1]
-    print(hist)
     empty = hist == 0
     log_e = np.log10((bin_edges[1:] + bin_edges[:-1]) / 2)
     # dont fit empty bins

@@ -84,24 +84,28 @@ files = [
 
 [[package]]
 name = "corsikaio"
-version = "0.2.6.post1"
+version = "0.2.6.post2.dev1+g4e659d4"
 description = "Reader for corsika binary output files using numpy"
 category = "main"
 optional = false
 python-versions = ">=3.8"
-files = [
-    {file = "corsikaio-0.2.6.post1-py3-none-any.whl", hash = "sha256:f0f18e0b43ccaa63099b293f7b7e2be259b727f5e21cf6ddd42721f52cb1a56b"},
-    {file = "corsikaio-0.2.6.post1.tar.gz", hash = "sha256:7e2d70c0cd7071c3076fee260c3ef91bf3f3d93ccd558c188e22d4e575fd592f"},
-]
+files = []
+develop = false
 
 [package.dependencies]
 numpy = "*"
 
 [package.extras]
 all = ["pytest", "zstandard"]
-dev = ["setuptools-scm[toml]"]
+dev = ["setuptools_scm[toml]"]
 tests = ["pytest"]
 zstd = ["zstandard"]
+
+[package.source]
+type = "git"
+url = "https://github.com/cta-observatory/pycorsikaio.git"
+reference = "noparse"
+resolved_reference = "4e659d4ed54425310ecfd7a17b3a09f55b255c36"
 
 [[package]]
 name = "coverage"
@@ -592,14 +596,14 @@ files = [
 
 [[package]]
 name = "zipp"
-version = "3.12.1"
+version = "3.13.0"
 description = "Backport of pathlib-compatible object wrapper for zip files"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "zipp-3.12.1-py3-none-any.whl", hash = "sha256:6c4fe274b8f85ec73c37a8e4e3fa00df9fb9335da96fb789e3b96b318e5097b3"},
-    {file = "zipp-3.12.1.tar.gz", hash = "sha256:a3cac813d40993596b39ea9e93a18e8a2076d5c378b8bc88ec32ab264e04ad02"},
+    {file = "zipp-3.13.0-py3-none-any.whl", hash = "sha256:e8b2a36ea17df80ffe9e2c4fda3f693c3dad6df1697d3cd3af232db680950b0b"},
+    {file = "zipp-3.13.0.tar.gz", hash = "sha256:23f70e964bc11a34cef175bc90ba2914e1e4545ea1e3e2f67c079671883f9cb6"},
 ]
 
 [package.extras]
@@ -609,4 +613,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "e081e59ff389c494a65bf7daf953d340979b89fa7291aab442ec2c191d1e5653"
+content-hash = "2f402c4f8ec0397d0e76f6611c310d9f39e46690307a2d3262b2b2166137b05d"
