@@ -307,15 +307,15 @@ def read_DAT(
         )
 
         pdgids = df_particles["pdgid"].unique()
-        
+
         mass_map = dict()
         for pdgid in pdgids:
             if pdgid == pdg_error_val:
                 mass_map[pdgid] = 0
             else:
                 mass = Particle.from_pdgid(pdgid).mass
-                mass_map[pdgid] = mass / 1000 if mass is not None else 0 # GeV
-        
+                mass_map[pdgid] = mass / 1000 if mass is not None else 0  # GeV
+
         df_particles["mass"] = df_particles["pdgid"].map(mass_map, na_action=None)
         df_particles["energy"] = df_particles.eval("sqrt(mass**2+px**2+py**2+pz**2)")
         df_particles["zenith"] = df_particles.eval("arccos(pz/sqrt(px**2+py**2+pz**2))")
