@@ -3,6 +3,7 @@ Functions to add weights to the read in corsika dataframe
 """
 from .fluxes import FastHillasGaisser2012
 import numpy as np
+from particle import Corsika7ID
 
 
 def add_weight(df_run, df_event, df, model=FastHillasGaisser2012(model="H3a")):
@@ -21,11 +22,10 @@ def add_weight(df_run, df_event, df, model=FastHillasGaisser2012(model="H3a")):
     emaxs = df_run["energy_max"].unique()
     emins = df_run["energy_min"].unique()
 
-    assert len(primary_pids) == 1
     assert len(energy_slopes) == 1
     assert len(emaxs) == 1
     assert len(emins) == 1
-    primary_pid, energy_slope = primary_pids[0], energy_slopes[0]
+    energy_slope = energy_slopes[0]
     emin, emax = emins[0], emaxs[0]
 
     N = 1
@@ -35,11 +35,14 @@ def add_weight(df_run, df_event, df, model=FastHillasGaisser2012(model="H3a")):
         ep = energy_slope + 1
         N = (emax**ep - emin**ep) / ep
 
-    flux = lambda E: sum(model.p_and_n_flux(E)[1:])
+    for primary_pid in primary_pids:
+        flux = lambda E: model.nucleus_flux(primary_pid, E)
 
-    ext_pdf = df_event.shape[0] * (df_event["total_energy"] ** energy_slope) / N
+        energy = df_event["total_energy"][df_event["particle_id"] == primary_pid]
 
-    df["weight"] = flux(df_event["total_energy"]) / ext_pdf
+        ext_pdf = energy.shape[0] * (energy**energy_slope) / N
+
+        df["weight"] = flux(energy) / ext_pdf
 
 
 def add_weight_prompt(df, prompt_factor):

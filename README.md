@@ -14,11 +14,19 @@ Thanks [@Jean1995](https://github.com/Jean1995) for the silly naming idea.
 
 ### Run CORSIKA7 on multiple cores
 You need to have [`CORSIKA7`](https://www.iap.kit.edu/corsika/79.php) installed to run this.
+
+Running 100 showers on 4 cores with primary being proton:
 ```sh
 $ panama --corsika path/to/corsika7/executable -j4 ./tests/files/example_corsika.template
 83%|████████████████████████████████████████████████████▋        | 83.0/100 [00:13<00:02, 6.36shower/s]
 Jobs should be nearly finished, now we wait for them to exit
 All jobs terminated, cleanup now
+```
+
+Injecting 5 different primaries (Proton, Helium-4, Nitrogen-14, Aluminium-27, Iron-56 roughly aligning with grouping in H3a) with each primary shower taking 10 jobs:
+```sh
+$ panama --corsika corsika-77420/run/corsika77420Linux_SIBYLL_urqmd --jobs 10 --primary "{2212: 10_000, 1000020040: 5000, 1000070140: 500, 1000130270: 500,1000260560: 500}" ./tests/files/example_corsika.template
+...
 ```
 
 ### Read CORSIKA7 DAT files to pandas dataframes
