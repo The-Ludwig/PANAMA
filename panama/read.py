@@ -200,10 +200,10 @@ def read_DAT(
                         finished = True
                         break
 
-                    if noparse:
-                        n_particles = np.sum(event.particles[:, 1] != 0.0)
-                    else:
-                        n_particles = event.particles.shape[0]
+                    # if noparse:
+                    #     n_particles = np.sum(event.particles[:, 1] != 0.0)
+                    # else:
+                    n_particles = event.particles.shape[0]
 
                     if n_particles == 0:
                         continue
@@ -239,7 +239,7 @@ def read_DAT(
 
     if noparse:
         df_particles_l = [pd.DataFrame(p) for p in particles]
-        df_particles = pd.concat(df_particles_l)
+        df_particles = pd.concat(df_particles_l, ignore_index=True)
 
         valid_columns = list(
             map(

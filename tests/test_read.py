@@ -14,9 +14,7 @@ def test_noparse(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
         test_file_path, drop_non_particles=False, noparse=False
     )
 
-    print(df_np)
-    print(df)
-    assert df_np == df
+    assert df_np.equals(df)
 
 
 def test_read_corsia_file(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
@@ -50,7 +48,6 @@ def test_spectral_index(test_file_path=Path(__file__).parent / "files" / "DAT*")
     )
     hist, bin_edges = np.histogram(sel["energy"], bins=bins, weights=sel["weight"])
     hist /= bin_edges[1:] - bin_edges[:-1]
-    print(hist)
     empty = hist == 0
     log_e = np.log10((bin_edges[1:] + bin_edges[:-1]) / 2)
     # dont fit empty bins
@@ -65,7 +62,6 @@ def test_spectral_index(test_file_path=Path(__file__).parent / "files" / "DAT*")
     )
     hist, bin_edges = np.histogram(sel["energy"], bins=bins, weights=sel["weight"])
     hist /= bin_edges[1:] - bin_edges[:-1]
-    print(hist)
     empty = hist == 0
     log_e = np.log10((bin_edges[1:] + bin_edges[:-1]) / 2)
     # dont fit empty bins
