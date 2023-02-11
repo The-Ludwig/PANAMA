@@ -3,6 +3,7 @@ Functions to add weights to the read in corsika dataframe
 """
 from .fluxes import FastHillasGaisser2012
 import numpy as np
+import pandas as pd
 from particle import Corsika7ID
 
 
@@ -17,6 +18,10 @@ def add_weight(df_run, df_event, df, model=FastHillasGaisser2012(model="H3a")):
     df: The particle dataframe (as returned by `read_corsika_particle_files_to_dataframe`)
     model: The Cosmic Ray primary flux model (instance of CRFlux)
     """
+    if not df_event.index.is_monotonic_increasing:
+        df_event.sort_index(inplace=True)
+    if not df.index.is_monotonic_increasing:
+        df.sort_index(inplace=True)
     primary_pids = df_event["particle_id"].unique()
     energy_slopes = df_run["energy_spectrum_slope"].unique()
     emaxs = df_run["energy_max"].unique()
@@ -35,14 +40,18 @@ def add_weight(df_run, df_event, df, model=FastHillasGaisser2012(model="H3a")):
         ep = energy_slope + 1
         N = (emax**ep - emin**ep) / ep
 
+    weights = []
     for primary_pid in primary_pids:
         flux = lambda E: model.nucleus_flux(primary_pid, E)
 
         energy = df_event["total_energy"][df_event["particle_id"] == primary_pid]
-
         ext_pdf = energy.shape[0] * (energy**energy_slope) / N
 
-        df["weight"] = flux(energy) / ext_pdf
+        weights += [flux(energy) / ext_pdf]
+
+    print(pd.concat(weights))
+    df["weight"] = pd.concat(weights)
+    df_event["weight"] = pd.concat(weights)
 
 
 def add_weight_prompt(df, prompt_factor):
