@@ -129,26 +129,27 @@ def run_corsika_parallel(
 
     try:
         with tqdm(total=n_events, unit="shower", unit_scale=True) as pbar:
-            while jobs[-1].poll() is None:
-                for idx, nbstream in enumerate(nbstreams):
-                    line = nbstream.readline()
-                    if line is not None:
-                        outputs[idx] = b""
-                    while line is not None:
-                        logging.debug(line.decode("ASCII"))
-                        logging.info(
-                            f"finished events = {line.count(CORSIKA_EVENT_FINISHED)}"
-                        )
-                        pbar.update(line.count(CORSIKA_EVENT_FINISHED))
-                        outputs[idx] += line
+            for job in jobs:
+                while job.poll() is None:
+                    for idx, nbstream in enumerate(nbstreams):
                         line = nbstream.readline()
-                sleep(0.5)
+                        if line is not None:
+                            outputs[idx] = b""
+                        while line is not None:
+                            logging.debug(line.decode("ASCII"))
+                            logging.info(
+                                f"finished events = {line.count(CORSIKA_EVENT_FINISHED)}"
+                            )
+                            pbar.update(line.count(CORSIKA_EVENT_FINISHED))
+                            outputs[idx] += line
+                            line = nbstream.readline()
+                    sleep(0.5)
     except KeyboardInterrupt:
         print("Interrupted by user, cleanup tmp files.")
         cleanup(n_jobs * len(primary), corsika_tmp_dir)
 
     # finish
-    print("Jobs should be nearly finished, now we wait for them to exit")
+    print("Jobs finished, now we wait for them to exit")
     for idx, job in enumerate(jobs):
         (last_stdout, last_stderr_data) = job.communicate()
         line = nbstreams[idx].readline()
