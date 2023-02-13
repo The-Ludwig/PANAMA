@@ -138,7 +138,11 @@ class FastThunman(FastPrimaryFlux):
         """Broken power law spectrum for protons."""
         #         E = np.atleast_1d(E)
         if corsika_id != 14:
-            return np.zeros_like(E)
+            if isinstance(E, np.ndarray):
+                flux = np.zeros(E.shape)
+            else:
+                flux = 0.0
+            return flux
 
         le = E < self.params["trans"]
         he = E >= self.params["trans"]
@@ -180,7 +184,11 @@ class FastThunmanCO(FastPrimaryFlux):
         """Broken power law spectrum for protons."""
         #         E = np.atleast_1d(E)
         if corsika_id != 14:
-            return np.zeros_like(E)
+            if isinstance(E, np.ndarray):
+                flux = np.zeros(E.shape)
+            else:
+                flux = 0.0
+            return flux
 
         if not isinstance(E, np.ndarray):
             E = np.atleast_1d(E)

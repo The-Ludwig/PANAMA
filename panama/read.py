@@ -237,6 +237,8 @@ def read_DAT(
             columns=df_event_headers.columns.difference(valid_columns), inplace=True
         )
         df_event_headers.rename(columns=mapper, inplace=True)
+        df_event_headers["run_number"] = df_event_headers["run_number"].astype(int)
+        df_event_headers["event_number"] = df_event_headers["event_number"].astype(int)
     else:
         df_event_headers = pd.DataFrame(event_headers, columns=event_header_features)
     df_event_headers.set_index(keys=["run_number", "event_number"], inplace=True)
