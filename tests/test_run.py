@@ -31,6 +31,7 @@ def test_cli_missing_executable(
     result = runner.invoke(
         cli,
         [
+            "run",
             f"{test_file_path}",
             "--events",
             "10",
@@ -58,6 +59,7 @@ def test_cli(
     result = runner.invoke(
         cli,
         [
+            "run",
             f"{test_file_path}",
             "--primary",
             "{2212: 1, 1000260560: 1}",  # proton and iron

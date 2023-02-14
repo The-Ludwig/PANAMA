@@ -98,7 +98,7 @@ def run(
     debug,
 ):
     """
-    Command line interface to run CORSIKA7 in parallel.
+    Run CORSIKA7 in parallel.
 
     The `TEMPLATE` argument must point to a valid CORSIKA7 stiring card, where
     `{run_idx}`, `{first_event_idx}` `{n_show}` `{seed_1}` `{seed_2}` and `{dir}`

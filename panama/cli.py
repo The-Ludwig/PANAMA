@@ -1,14 +1,12 @@
 import click
 import logging
 from os import environ
-from .parallel_run import run_corsika_parallel
 from pathlib import Path
-
-from .run import run
 from .corsika_to_hdf5 import hdf5
+from .run import run
 
 
-@click.group([run, hdf5], context_settings={"show_default": True})
+@click.group()
 @click.option("--debug", "-d", default=False, is_flag=True, help="Enable debug output")
 def cli(
     debug,
@@ -23,6 +21,9 @@ def cli(
     if debug:
         logging.basicConfig(level=logging.DEBUG)
 
+
+cli.add_command(hdf5)
+cli.add_command(run)
 
 if __name__ == "__main__":
     cli()
