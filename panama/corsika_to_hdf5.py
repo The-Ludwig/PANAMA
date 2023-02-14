@@ -6,8 +6,8 @@ from .read import read_DAT
 
 
 @click.command(context_settings={"show_default": True})
-@click.argument("datfiles", type=click.Path(exists=True, dir_okay=False), nargs=-1)
-@click.argument("hdf5out", type=click.Path(exists=False, dir_okay=False), nargs=1)
+@click.argument("input", type=click.Path(exists=True, dir_okay=False), nargs=-1)
+@click.argument("output", type=click.Path(exists=False, dir_okay=False), nargs=1)
 @click.option(
     "--noadd",
     "-n",
@@ -33,27 +33,32 @@ from .read import read_DAT
     help="Drop all rows which don't really represent a particle. (Like decay or additional information)",
 )
 def hdf5(
-    datfiles: [Path],
+    input: [Path],
     output: Path,
-    no_additional_collumns: bool,
-    mother_columns: bool,
-    drop_mothers: bool,
-    drop_non_particles: bool,
+    noadd: bool,
+    mother: bool,
+    dropmother: bool,
+    dropnonparticles: bool,
 ):
     """
     Convert CORSIKA7 DAT files to hdf5 files.
+
+    INPUT: One or more CORSIKA7 datfiles
+    OUTPUT: The filename of the hdf5 output file
 
     For examples see the PANAMA repository:
 
     https://github.com/The-Ludwig/PANAMA#readme
     """
 
+    files = list(input)
+
     run_header, event_header, particles = read_DAT(
-        files=datfiles,
-        additional_columns=not no_additional_columns,
-        mother_columns=mother_columns,
-        drop_mothers=drop_mothers,
-        drop_non_particles=drop_non_particle,
+        files=files,
+        additional_columns=not noadd,
+        mother_columns=mother,
+        drop_mothers=dropmother,
+        drop_non_particles=dropnonparticles,
     )
 
     run_header.to_hdf(output, "run_header")
