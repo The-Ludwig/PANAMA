@@ -3,6 +3,9 @@ from pathlib import Path
 import panama
 from corsikaio import CorsikaParticleFile
 import numpy as np
+from click.testing import CliRunner
+import pandas as pd
+from panama.cli import cli
 
 
 def test_noparse(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
@@ -28,6 +31,31 @@ def test_read_corsia_file(test_file_path=Path(__file__).parent / "files" / "DAT0
                 if particle["particle_description"] < 0:
                     continue
                 assert df.iloc[num]["px"] == particle["px"]
+                num += 1
+
+
+def test_cli(tmp_path, test_file_path=Path(__file__).parent / "files" / "DAT000000"):
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "hdf5",
+            f"{test_file_path}",
+            f"{tmp_path}",
+        ],
+    )
+    assert result.exit_code == 0
+
+    particles = pd.read_hdf(tmp_path, "particles")
+
+    with CorsikaParticleFile(test_file_path, parse_blocks=True) as cf:
+        num = 0
+        for event in cf:
+            for particle in event.particles:
+                if particle["particle_description"] < 0:
+                    continue
+                assert parciles.iloc[num]["px"] == particle["px"]
                 num += 1
 
 
