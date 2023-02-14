@@ -10,6 +10,11 @@ PAN*das* A*nd* M*ulticore utils for corsik*A*7*
 
 Thanks [@Jean1995](https://github.com/Jean1995) for the silly naming idea.
 
+## Installation
+```
+pip install corsika-panama
+```
+
 ## Features
 
 ### Run CORSIKA7 on multiple cores
@@ -86,9 +91,3 @@ read_DAT made possible by [cta-observatory/pycorsikaio](https://github.com/cta-o
 
 ## What this is not
 Bug-free or stable
-
-## Installation
-This package is available on pypi:
-```
-pip install corsika-panama
-```
