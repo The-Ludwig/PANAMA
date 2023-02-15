@@ -26,7 +26,8 @@ def test_read_corsia_file(test_file_path=Path(__file__).parent / "files" / "DAT0
 
     with CorsikaParticleFile(test_file_path, parse_blocks=True) as cf:
         num = 0
-        for event in cf:
+        for idx, event in enumerate(cf):
+            assert df_event.iloc[idx]["total_energy"] == event.header["total_energy"]
             for particle in event.particles:
                 if particle["particle_description"] < 0:
                     continue
@@ -49,10 +50,14 @@ def test_cli(tmp_path, test_file_path=Path(__file__).parent / "files" / "DAT0000
     assert result.exit_code == 0
 
     particles = pd.read_hdf(tmp_path / "output.hdf5", "particles")
+    event_headers = pd.read_hdf(tmp_path / "output.hdf5", "event_header")
 
     with CorsikaParticleFile(test_file_path, parse_blocks=True) as cf:
         num = 0
-        for event in cf:
+        for idx, event in enumerate(cf):
+            assert (
+                event_headers.iloc[idx]["total_energy"] == event.header["total_energy"]
+            )
             for particle in event.particles:
                 assert particles.iloc[num]["px"] == particle["px"]
                 num += 1
