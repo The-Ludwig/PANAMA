@@ -20,19 +20,46 @@ def test_noparse(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
     assert df_np.equals(df)
 
 
-def test_read_corsia_file(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
-
-    df_run, df_event, df = panama.read_DAT(test_file_path, drop_non_particles=False)
-
-    with CorsikaParticleFile(test_file_path, parse_blocks=True) as cf:
+def check_eq(file, df_run, df_event, particles, skip_mother=False):
+    with CorsikaParticleFile(file, parse_blocks=True) as cf:
         num = 0
         for idx, event in enumerate(cf):
             assert df_event.iloc[idx]["total_energy"] == event.header["total_energy"]
             for particle in event.particles:
-                if particle["particle_description"] < 0:
+                if particle["particle_description"] < 0 and skip_mother:
                     continue
-                assert df.iloc[num]["px"] == particle["px"]
+                assert particles.iloc[num]["px"] == particle["px"]
                 num += 1
+
+
+def test_noadd(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
+
+    try:
+        df_run, df_event, particles = panama.read_DAT(
+            test_file_path, drop_non_particles=True, additional_columns=False
+        )
+
+        check_eq(test_file_path, df_run, df_event, particles)
+    except ValueError as e:
+        assert "requires" in str(e)
+
+    df_run, df_event, particles = panama.read_DAT(
+        test_file_path, drop_non_particles=False, additional_columns=True
+    )
+
+    check_eq(test_file_path, df_run, df_event, particles, skip_mother=True)
+
+
+def test_read_corsia_file(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
+
+    df_run, df_event, df = panama.read_DAT(test_file_path, drop_non_particles=False)
+
+    check_eq(test_file_path, df_run, df_event, df, skip_mother=True)
+    try:
+        check_eq(test_file_path, df_run, df_event, df, skip_mother=False)
+        assert False
+    except AssertionError:
+        pass
 
 
 def test_cli(tmp_path, test_file_path=Path(__file__).parent / "files" / "DAT000000"):
@@ -50,17 +77,10 @@ def test_cli(tmp_path, test_file_path=Path(__file__).parent / "files" / "DAT0000
     assert result.exit_code == 0
 
     particles = pd.read_hdf(tmp_path / "output.hdf5", "particles")
-    event_headers = pd.read_hdf(tmp_path / "output.hdf5", "event_header")
+    event_header = pd.read_hdf(tmp_path / "output.hdf5", "event_header")
+    run_header = pd.read_hdf(tmp_path / "output.hdf5", "run_header")
 
-    with CorsikaParticleFile(test_file_path, parse_blocks=True) as cf:
-        num = 0
-        for idx, event in enumerate(cf):
-            assert (
-                event_headers.iloc[idx]["total_energy"] == event.header["total_energy"]
-            )
-            for particle in event.particles:
-                assert particles.iloc[num]["px"] == particle["px"]
-                num += 1
+    check_eq(test_file_path, run_header, event_header, particles)
 
 
 def test_spectral_index(test_file_path=Path(__file__).parent / "files" / "DAT*"):
