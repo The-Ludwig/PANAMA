@@ -54,8 +54,6 @@ def test_cli(tmp_path, test_file_path=Path(__file__).parent / "files" / "DAT0000
         num = 0
         for event in cf:
             for particle in event.particles:
-                if particle["particle_description"] < 0:
-                    continue
                 assert particles.iloc[num]["px"] == particle["px"]
                 num += 1
 
