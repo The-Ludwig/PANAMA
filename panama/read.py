@@ -222,7 +222,7 @@ def read_DAT(
     df_run_headers.set_index(keys=["run_number"], inplace=True)
 
     if noparse:
-        df_event_headers = pd.DataFrame(event_headers)
+        df_event_headers = pd.DataFrame(np.array(event_headers))
         valid_columns = list(
             map(
                 lambda v: v[1] // CORSIKA_FIELD_BYTE_LEN,
@@ -244,6 +244,7 @@ def read_DAT(
     df_event_headers.set_index(keys=["run_number", "event_number"], inplace=True)
 
     if noparse:
+        # necesary since we can have a diffrent number of particles in each event
         df_particles_l = [pd.DataFrame(p) for p in particles]
         df_particles = pd.concat(df_particles_l, ignore_index=True)
 
