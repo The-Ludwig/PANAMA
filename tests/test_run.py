@@ -18,6 +18,7 @@ def test_run_fail(
             test_file_path.parent.parent.parent / "panama" / "cli.py",
             Path("/tmp/corsika_tmp_dir"),
         )
+        assert False
     except OSError as e:
         print(dir(e))
         assert e.strerror == "Exec format error"
@@ -39,8 +40,10 @@ def test_cli_missing_executable(
             "{10: 10, 20: 20}",
             "--corsika",
             f"{test_file_path}",
+            "--debug",
         ],
     )
+
     assert "not executable" in result.output
     # assert "--events is ignored" in result.output
     assert result.exit_code == 2

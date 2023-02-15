@@ -42,12 +42,13 @@ def test_cli(tmp_path, test_file_path=Path(__file__).parent / "files" / "DAT0000
         [
             "hdf5",
             f"{test_file_path}",
-            f"{tmp_path}",
+            f"{tmp_path}/output.hdf5",
         ],
     )
+
     assert result.exit_code == 0
 
-    particles = pd.read_hdf(tmp_path, "particles")
+    particles = pd.read_hdf(tmp_path / "output.hdf5", "particles")
 
     with CorsikaParticleFile(test_file_path, parse_blocks=True) as cf:
         num = 0
@@ -55,7 +56,7 @@ def test_cli(tmp_path, test_file_path=Path(__file__).parent / "files" / "DAT0000
             for particle in event.particles:
                 if particle["particle_description"] < 0:
                     continue
-                assert parciles.iloc[num]["px"] == particle["px"]
+                assert particles.iloc[num]["px"] == particle["px"]
                 num += 1
 
 
