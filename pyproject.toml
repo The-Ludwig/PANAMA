@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "corsika-panama"
-version = "0.2.2"
+version = "0.3.0"
 description = "PANdas And Multicore utils for corsikA7"
 authors = ["Ludwig Neste <ludwig.neste@tu-dortmund.de>"]
 license = "MIT"
@@ -19,6 +19,7 @@ click = "^8.1.3"
 particle = "^0.21.0"
 tqdm = "^4.64.1"
 crflux = "^1.0.6"
+tables = "^3.8.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
