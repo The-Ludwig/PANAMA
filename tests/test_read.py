@@ -34,11 +34,20 @@ def check_eq(file, df_run, df_event, particles, skip_mother=False):
 
 def test_noadd(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
 
+    try:
+        df_run, df_event, particles = panama.read_DAT(
+            test_file_path, drop_non_particles=True, additional_columns=False
+        )
+
+        check_eq(test_file_path, df_run, df_event, particles)
+    except ValueError as e:
+        assert "requires" in str(e)
+
     df_run, df_event, particles = panama.read_DAT(
-        test_file_path, drop_non_particles=False, additional_columns=False
+        test_file_path, drop_non_particles=False, additional_columns=True
     )
 
-    check_eq(test_file_path, df_run, df_event, particles)
+    check_eq(test_file_path, df_run, df_event, particles, skip_mother=True)
 
 
 def test_read_corsia_file(test_file_path=Path(__file__).parent / "files" / "DAT000000"):

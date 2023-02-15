@@ -128,6 +128,16 @@ def read_DAT(
     if files is not None and glob is not None:
         raise TypeError("`file` and `glob` can't both be not None")
 
+    if not additional_columns:
+        if drop_non_particles:
+            raise ValueError(
+                "drop_non_particles requires additional_columns to be calculated."
+            )
+        if mother_columns:
+            raise ValueError(
+                "mother_columns require additional columns to be calculated"
+            )
+
     if glob is not None:
         basepath = Path(glob).parent
         files = list(basepath.glob(Path(glob).name))
@@ -409,10 +419,11 @@ def read_DAT(
                 )  # mother is muon (and in early generation)
             )
 
-        if drop_mothers:
-            df_particles.drop(
-                index=df_particles.query("is_mother == True").index.values, inplace=True
-            )
+    if drop_mothers:
+        df_particles.drop(
+            index=df_particles.query("particle_description < 0").index.values,
+            inplace=True,
+        )
 
         # Numba version...
         # df["mother_run_idx"], df["mother_event_idx"], df["mother_particle_idx"] = mother_idx_numba(df.loc[:, "is_mother"].values, df.loc[:, "run_number"].values, df.loc[:, "event_number"].values, df.loc[:, "particle_number"].values)
