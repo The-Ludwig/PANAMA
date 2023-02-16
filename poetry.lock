@@ -130,28 +130,24 @@ files = [
 
 [[package]]
 name = "corsikaio"
-version = "0.2.6.post2.dev1+g4e659d4"
+version = "0.3.0"
 description = "Reader for corsika binary output files using numpy"
 category = "main"
 optional = false
 python-versions = ">=3.8"
-files = []
-develop = false
+files = [
+    {file = "corsikaio-0.3.0-py3-none-any.whl", hash = "sha256:e6f317e01edd302c48251161abc0bb165a74819965e7d7e2e1dfae34203771a9"},
+    {file = "corsikaio-0.3.0.tar.gz", hash = "sha256:d26a673c28509297ec2b07f13b49b6077c29f2b027b98de8942108b75aa7ac43"},
+]
 
 [package.dependencies]
 numpy = "*"
 
 [package.extras]
 all = ["pytest", "zstandard"]
-dev = ["setuptools_scm[toml]"]
+dev = ["setuptools-scm[toml]"]
 tests = ["pytest"]
 zstd = ["zstandard"]
-
-[package.source]
-type = "git"
-url = "https://github.com/cta-observatory/pycorsikaio.git"
-reference = "noparse"
-resolved_reference = "4e659d4ed54425310ecfd7a17b3a09f55b255c36"
 
 [[package]]
 name = "coverage"
@@ -1012,4 +1008,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "8307a5c0ba2cba227be054efc0caa01746cc07ffb06bf225ab882bda221f4f29"
+content-hash = "d7b1674e5dd5345b59180d67504cfe85c01ad52f487a6066d2a2b9a13886e511"

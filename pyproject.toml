@@ -12,7 +12,7 @@ documentation = "https://github.com/The-Ludwig/PANAMA#readme"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-corsikaio =  { git = "https://github.com/cta-observatory/pycorsikaio.git", branch = "noparse" }
+corsikaio =  "^0.3"
 numpy = "^1.23.4"
 pandas = "^1.5.1"
 click = "^8.1.3"
