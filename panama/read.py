@@ -62,6 +62,7 @@ def read_DAT(
     Read CORSIKA DAT files to Pandas.DataFrame.
     Exactly one of `files` or `glob` must be provided.
     Made for CORSIKA>7.4, other compatibility not garantueed, but probably approximate.
+
     Parameters
     ----------
     files: Path or List of Paths
@@ -112,15 +113,16 @@ def read_DAT(
     noparse:
         Use the "noparse" feature of pycorsikaio, which theoretically
         makes reading in the corsika files faster
+
     Returns
     -------
-    A tuple (run_header, event_header, particles) with:
-    run_header: pandas.DataFrame
-        DataFrame with the information about each run
-    event_header: pandas.DataFrame
-        DataFrame with the information about each event
-    particles: pandas.DataFrame
-        DataFrame with the information about each particle
+    A tuple (run_header, event_header, particles):
+        run_header: pandas.DataFrame
+            DataFrame with the information about each run
+        event_header: pandas.DataFrame
+            DataFrame with the information about each event
+        particles: pandas.DataFrame
+            DataFrame with the information about each particle
     """
 
     if files is None and glob is None:
