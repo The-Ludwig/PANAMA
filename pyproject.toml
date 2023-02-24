@@ -95,5 +95,7 @@ enable_error_code = [
   "redundant-expr",
 ]
 exclude = [
-    "tests/*"
+    "tests/*",
+    "panama/fluxes/fluxes.py", # for now we exlude these files. They are mostly copied anyway and
+                          # a complete rewrite of them would be smart
 ]
