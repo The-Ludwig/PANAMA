@@ -1,10 +1,10 @@
 """
 Functions to add weights to the read in corsika dataframe
 """
-from .fluxes import FastHillasGaisser2012
 import numpy as np
 import pandas as pd
-from particle import Corsika7ID
+
+from .fluxes import FastHillasGaisser2012
 
 
 def add_weight(df_run, df_event, df, model=FastHillasGaisser2012(model="H3a")):
@@ -42,7 +42,9 @@ def add_weight(df_run, df_event, df, model=FastHillasGaisser2012(model="H3a")):
 
     weights = []
     for primary_pid in primary_pids:
-        flux = lambda E: model.nucleus_flux(primary_pid, E)
+
+        def flux(E):
+            return model.nucleus_flux(primary_pid, E)
 
         energy = df_event["total_energy"][df_event["particle_id"] == primary_pid]
         ext_pdf = energy.shape[0] * (energy**energy_slope) / N
@@ -58,7 +60,7 @@ def add_weight_prompt(df, prompt_factor):
     Adds collumn "weight_prompt" to df, to set a weight for every prompt particle, non prompt particles get weight 1
     """
     df["weight_prompt"] = 1.0
-    df.loc[df["is_prompt"] == True, "weight_prompt"] = prompt_factor
+    df.loc[df["is_prompt"] is True, "weight_prompt"] = prompt_factor
 
 
 def add_weight_prompt_per_event(df, prompt_factor):

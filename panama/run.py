@@ -2,8 +2,11 @@ from __future__ import annotations
 import click
 import logging
 from os import environ
-from .parallel_run import run_corsika_parallel
 from pathlib import Path
+
+import click
+
+from .parallel_run import run_corsika_parallel
 
 DEFAULT_TMP_DIR = environ.get("TMP_DIR", "/tmp/PANAMA")
 CORSIKA_PATH = environ.get(
@@ -116,7 +119,7 @@ def run(
     if tmp == DEFAULT_TMP_DIR:
         n = 0
         p = Path(tmp)
-        while p.exists() and next(p.iterdir(), True) != True:
+        while p.exists() and next(p.iterdir(), True) is not True:
             n += 1
             p = Path(DEFAULT_TMP_DIR + f"_{n}")
     else:
@@ -126,8 +129,8 @@ def run(
         primary = {primary: events}
 
     if events != DEFAULT_N_EVENTS and len(primary) > 1:
-        logging.warn(
-            f"Looks like --events was given and --primary was provided a dict. --events is ignored."
+        logging.warning(
+            "Looks like --events was given and --primary was provided a dict. --events is ignored."
         )
 
     run_corsika_parallel(primary, jobs, template, Path(output), corsika, p, seed)

@@ -1,7 +1,7 @@
-import click
 import logging
-from os import environ
-from pathlib import Path
+
+import click
+
 from .corsika_to_hdf5 import hdf5
 from .run import run
 

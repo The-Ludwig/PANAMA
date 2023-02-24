@@ -2,8 +2,8 @@
 Faster implementations of some fluxes from the crflux package.
 I basically only used numpy at the right places, that was it.
 """
-from crflux.models import PrimaryFlux
 import numpy as np
+from crflux.models import PrimaryFlux
 
 
 class FastPrimaryFlux(PrimaryFlux):
@@ -103,10 +103,7 @@ class FastHillasGaisser2012(FastPrimaryFlux):
         if corsika_id not in self.params:
             raise Exception("Unknown CorsikaID for model.")
 
-        if isinstance(E, np.ndarray):
-            flux = np.zeros(E.shape)
-        else:
-            flux = 0.0
+        flux = np.zeros(E.shape) if isinstance(E, np.ndarray) else 0.0
 
         for i in range(1, 4):
             p = self.params[corsika_id][i]
@@ -137,14 +134,11 @@ class FastThunman(FastPrimaryFlux):
         """Broken power law spectrum for protons."""
         #         E = np.atleast_1d(E)
         if corsika_id != 14:
-            if isinstance(E, np.ndarray):
-                flux = np.zeros(E.shape)
-            else:
-                flux = 0.0
+            flux = np.zeros(E.shape) if isinstance(E, np.ndarray) else 0.0
             return flux
 
-        le = E < self.params["trans"]
-        he = E >= self.params["trans"]
+        le = self.params["trans"] > E
+        he = self.params["trans"] <= E
 
         flux = E.copy()
         flux[le] = self.params["low_e"][0] * E[le] ** self.params["low_e"][1]
@@ -183,17 +177,14 @@ class FastThunmanCO(FastPrimaryFlux):
         """Broken power law spectrum for protons."""
         #         E = np.atleast_1d(E)
         if corsika_id != 14:
-            if isinstance(E, np.ndarray):
-                flux = np.zeros(E.shape)
-            else:
-                flux = 0.0
+            flux = np.zeros(E.shape) if isinstance(E, np.ndarray) else 0.0
             return flux
 
         if not isinstance(E, np.ndarray):
             E = np.atleast_1d(E)
-        le = E < self.params["trans"]
-        he = E >= self.params["trans"]
-        co = E > self.params["cutoff"]
+        le = self.params["trans"] > E
+        he = self.params["trans"] <= E
+        co = self.params["cutoff"] < E
 
         flux = E.copy()
         flux[le] = self.params["low_e"][0] * E[le] ** self.params["low_e"][1]

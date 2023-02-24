@@ -1,12 +1,12 @@
 from __future__ import annotations
-from dataclasses import dataclass, make_dataclass
+
+from pathlib import Path
+
 import numpy as np
+import pandas as pd
 from corsikaio import CorsikaParticleFile
 from corsikaio.subblocks import event_header_types, particle_data_dtype
-from collections import defaultdict
-from particle import Corsika7ID, Particle, InvalidParticle, PDGID
-import pandas as pd
-from pathlib import Path
+from particle import Corsika7ID, Particle
 from tqdm import tqdm
 
 D0_LIFETIME = Particle.from_name("D0").lifetime
@@ -233,12 +233,10 @@ def read_DAT(
 
     if noparse:
         df_event_headers = pd.DataFrame(np.array(event_headers))
-        valid_columns = list(
-            map(
-                lambda v: v[1] // CORSIKA_FIELD_BYTE_LEN,
-                list(event_header_types[version].fields.values()),
-            )
-        )
+        valid_columns = [
+            v[1] // CORSIKA_FIELD_BYTE_LEN
+            for v in list(event_header_types[version].fields.values())
+        ]
         valid_names = event_header_types[version].names
 
         mapper = {pos: name for pos, name in zip(valid_columns, valid_names)}
@@ -258,12 +256,10 @@ def read_DAT(
         df_particles_l = [pd.DataFrame(p) for p in particles]
         df_particles = pd.concat(df_particles_l, ignore_index=True)
 
-        valid_columns = list(
-            map(
-                lambda v: v[1] // CORSIKA_FIELD_BYTE_LEN,
-                list(particle_data_dtype.fields.values()),
-            )
-        )
+        valid_columns = [
+            v[1] // CORSIKA_FIELD_BYTE_LEN
+            for v in list(particle_data_dtype.fields.values())
+        ]
         valid_names = particle_data_dtype.names
 
         mapper = {pos: name for pos, name in zip(valid_columns, valid_names)}
@@ -321,7 +317,7 @@ def read_DAT(
 
         pdgids = df_particles["pdgid"].unique()
 
-        mass_map = dict()
+        mass_map = {}
         for pdgid in pdgids:
             if pdgid == pdg_error_val:
                 mass_map[pdgid] = 0
