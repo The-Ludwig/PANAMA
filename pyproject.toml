@@ -45,8 +45,6 @@ minversion = "6.0"
 xfail_strict = true
 addopts = [
     "-ra",
-    "--strict-markers",
-    "--strict-config",
 ]
 testpaths = [
     "tests",
@@ -80,12 +78,11 @@ extend-ignore = [
   "E501",  # Line too long
 ]
 target-version = "py311"
-typing-modules = ["vector._typeutils"]
 src = ["panama"]
 
 [tool.mypy]
 files = [
-  "panama",
+  "panama/",
 ]
 python_version = "3.11"
 strict = true
@@ -96,4 +93,7 @@ enable_error_code = [
   "ignore-without-code",
   "truthy-bool",
   "redundant-expr",
+]
+exclude = [
+    "tests/*"
 ]
