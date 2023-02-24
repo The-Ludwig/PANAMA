@@ -1,5 +1,5 @@
-PAN*das* A*nd* M*ulticore utils for corsik*A*7*
-===
+# PAN*das* A*nd* M*ulticore utils for corsik*A*7*
+
 [Documentation ![Read the Docs](https://img.shields.io/readthedocs/panama?style=for-the-badge)](https://panama.readthedocs.io/en/latest/)
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/The-Ludwig/PANAMA/ci.yml?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/actions/workflows/ci.yml)
@@ -13,6 +13,7 @@ PAN*das* A*nd* M*ulticore utils for corsik*A*7*
 Thanks [@Jean1995](https://github.com/Jean1995) for the silly naming idea.
 
 ## Installation
+
 ```
 pip install corsika-panama
 ```
@@ -20,9 +21,11 @@ pip install corsika-panama
 ## Features
 
 ### Run CORSIKA7 on multiple cores
+
 You need to have [`CORSIKA7`](https://www.iap.kit.edu/corsika/79.php) installed to run this.
 
 Running 100 showers on 4 cores with primary being proton:
+
 ```sh
 $ panama run --corsika path/to/corsika7/executable -j4 ./tests/files/example_corsika.template
 83%|████████████████████████████████████████████████████▋        | 83.0/100 [00:13<00:02, 6.36shower/s]
@@ -31,18 +34,24 @@ All jobs terminated, cleanup now
 ```
 
 Injecting 5 different primaries (Proton, Helium-4, Carbon-12, Silicon-28, Iron-54 roughly aligning with grouping in H3a) with each primary shower taking 10 jobs:
+
 ```sh
 $ panama run --corsika corsika-77420/run/corsika77420Linux_SIBYLL_urqmd --jobs 10 --primary ""{2212: 500, 1000020040: 250, 1000060120: 50, 1000140280: 50, 1000260540: 50}"" ./tests/files/example_corsika.template
 ...
 ```
+
 ### Convert CORSIKA7 DAT files to hdf5 files
+
 ```sh
 $ panama hdf5 path/to/corsika/dat/files/DAT* output.hdf5
 ```
+
 The data is availabe under the `run_header` `event_header` and `particles` key.
 
 ### Read CORSIKA7 DAT files to pandas dataframes
+
 Example: Calculate mean energy in the corsika files created in the example above:
+
 ```python
 In [1]: import panama as pn
 
@@ -58,9 +67,11 @@ If `CORSIKA7` is compiled with the `EHIST` option, then the mother particles are
 If you want additional columns in the real particles storing the mother information use `mother_columns=True`.
 
 ### Weighting to primary spectrum
+
 This packages also provides facility to add a `weight` column to the dataframe, so you can look at corsika-output
 in physical flux in terms of $(\mathrm{m^2} \mathrm{s}\ \mathrm{sr}\ \mathrm{GeV})^{-1}$.
 Using the example above, to get the whole physical flux in the complete simulated energy region:
+
 ```python
 In [1]: import panama as pn
 
@@ -78,6 +89,7 @@ run_number
 dtype: float32
 
 ```
+
 Which is in units of $(\mathrm{m^2}\ \mathrm{s}\ \mathrm{sr})^{-1}$. We get a result for each run, since
 in theory we could have different energy regions. Here, we do not, so the result is always equal.
 
@@ -88,6 +100,7 @@ Weighting can be applied to different primaries, also, if they are known by the 
 TODO: Better documentation of weighting (what is weighted, how, proton/neutrons, area...?)
 
 #### Notes:
+
 This started a little while ago while I was looking into the `EHIST` option
 of corsika.
 I wanted a way of conveniently running CORSIKA7 on more than 1 core.
@@ -97,8 +110,10 @@ and wrote a small wrapper.
 read_DAT made possible by [cta-observatory/pycorsikaio](https://github.com/cta-observatory/pycorsikaio).
 
 #### Pitfalls
+
 - The whole `run` folder of CORSIKA7 must be copied for each proccess, so very high parallel runs have high overhead
 - If you simulate to low energies, python can't seem to hold up with the corsika output to `stdin` and essentially slows down corsika this is still a bug in investigation #1
 
 ## What this is not
+
 Bug-free or stable
