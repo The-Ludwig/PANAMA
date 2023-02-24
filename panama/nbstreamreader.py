@@ -1,23 +1,23 @@
 # Adapted from http://eyalarubas.com/python-subproc-nonblock.html
+from io import IOBase
+from queue import Empty, Queue
 from threading import Thread
-from queue import Queue, Empty
-from time import sleep
 
 
 class NonBlockingStreamReader:
-    def __init__(self, stream, wait=5):
+    def __init__(self, stream: IOBase, wait: int = 5) -> None:
         """
         stream: the stream to read from.
                 Usually a process' stdout or stderr.
         """
 
         self._s = stream
-        self._q = Queue()
+        self._q: Queue[bytes] = Queue()
         self._wait = wait
 
         self._is_alive = True
 
-        def _populateQueue(stream, queue, is_alive):
+        def _populateQueue(stream: IOBase, queue: Queue[bytes], is_alive: bool) -> None:
             """
             Collect lines from 'stream' and put them in 'quque'.
             """
@@ -34,13 +34,13 @@ class NonBlockingStreamReader:
         self._t.daemon = True
         self._t.start()  # start collecting lines from the stream
 
-    def __del__(self):
+    def __del__(self) -> None:
         self._is_alive = False
         self._t.join(timeout=self._wait)
         if self._t.is_alive():
             raise RuntimeError("Could not kill thread in NonBlockingStreamReader")
 
-    def readline(self, timeout=None):
+    def readline(self, timeout: int | None = None) -> bytes | None:
         try:
             return self._q.get(block=timeout is not None, timeout=timeout)
         except Empty:

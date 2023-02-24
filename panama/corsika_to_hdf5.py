@@ -1,7 +1,7 @@
-import click
-import logging
-from os import environ
 from pathlib import Path
+
+import click
+
 from .read import read_DAT
 
 
