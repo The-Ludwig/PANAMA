@@ -1,14 +1,18 @@
 from pathlib import Path
 
-import panama
-from corsikaio import CorsikaParticleFile
 import numpy as np
-from click.testing import CliRunner
+import panama
 import pandas as pd
+import pytest
+from click.testing import CliRunner
+from corsikaio import CorsikaParticleFile
 from panama.cli import cli
 
+SINGLE_TEST_FILE = Path(__file__).parent / "files" / "DAT000000"
+GLOB_TEST_FILE = Path(__file__).parent / "files" / "DAT*"
 
-def test_noparse(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
+
+def test_noparse(test_file_path=SINGLE_TEST_FILE):
     df_run_np, df_event_np, df_np = panama.read_DAT(
         test_file_path, drop_non_particles=False, noparse=True
     )
@@ -31,15 +35,14 @@ def check_eq(file, df_run, df_event, particles, skip_mother=False):
                 num += 1
 
 
-def test_noadd(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
-    try:
-        df_run, df_event, particles = panama.read_DAT(
-            test_file_path, drop_non_particles=True, additional_columns=False
-        )
+def test_noadd(test_file_path=SINGLE_TEST_FILE):
 
+    df_run, df_event, particles = panama.read_DAT(
+        test_file_path, drop_non_particles=True, additional_columns=False
+    )
+
+    with pytest.raises(ValueError, match="requires"):
         check_eq(test_file_path, df_run, df_event, particles)
-    except ValueError as e:
-        assert "requires" in str(e)
 
     df_run, df_event, particles = panama.read_DAT(
         test_file_path, drop_non_particles=False, additional_columns=True
@@ -48,18 +51,20 @@ def test_noadd(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
     check_eq(test_file_path, df_run, df_event, particles, skip_mother=True)
 
 
-def test_read_corsia_file(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
+def test_read_corsia_file(test_file_path=SINGLE_TEST_FILE):
     df_run, df_event, df = panama.read_DAT(test_file_path, drop_non_particles=False)
 
     check_eq(test_file_path, df_run, df_event, df, skip_mother=True)
     try:
         check_eq(test_file_path, df_run, df_event, df, skip_mother=False)
-        assert False
+        raise AssertionError()
     except AssertionError:
         pass
 
 
-def test_cli(tmp_path, test_file_path=Path(__file__).parent / "files" / "DAT000000"):
+# Do not turn the PyTables performance warning into an error
+@pytest.mark.filterwarnings("ignore::pandas.errors.PerformanceWarning")
+def test_cli(pytestconfig, tmp_path, test_file_path=SINGLE_TEST_FILE):
     runner = CliRunner()
     result = runner.invoke(
         cli,
@@ -79,7 +84,7 @@ def test_cli(tmp_path, test_file_path=Path(__file__).parent / "files" / "DAT0000
     check_eq(test_file_path, run_header, event_header, particles)
 
 
-def test_spectral_index(test_file_path=Path(__file__).parent / "files" / "DAT*"):
+def test_spectral_index(test_file_path=GLOB_TEST_FILE):
     """Test if we can fit the muon spectral index, with the test dataset"""
 
     df_run, df_event, df = panama.read_DAT(
@@ -137,7 +142,7 @@ def test_spectral_index(test_file_path=Path(__file__).parent / "files" / "DAT*")
 
 
 def test_spectral_index_proton_only(
-    test_file_path=Path(__file__).parent / "files" / "DAT*",
+    test_file_path=GLOB_TEST_FILE,
 ):
     """Test if we can fit the muon spectral index, with the test dataset"""
 
@@ -191,7 +196,7 @@ def test_spectral_index_proton_only(
     log_e = np.log10((bin_edges[1:] + bin_edges[:-1]) / 2)
     # dont fit empty bins
     p, V = np.polyfit(log_e[~empty], np.log10(hist[~empty]), deg=1, cov=True)
-    # Prompt muons folow primary spectrum
+    # Prompt muons follow primary spectrum
     # this fails, since statistics is very low (only about 200 in test dataset)
     # and only some of them are proton... lets just skip this for now,
     # fix later
