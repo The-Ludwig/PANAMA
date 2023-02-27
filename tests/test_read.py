@@ -9,7 +9,6 @@ from panama.cli import cli
 
 
 def test_noparse(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
-
     df_run_np, df_event_np, df_np = panama.read_DAT(
         test_file_path, drop_non_particles=False, noparse=True
     )
@@ -33,7 +32,6 @@ def check_eq(file, df_run, df_event, particles, skip_mother=False):
 
 
 def test_noadd(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
-
     try:
         df_run, df_event, particles = panama.read_DAT(
             test_file_path, drop_non_particles=True, additional_columns=False
@@ -51,7 +49,6 @@ def test_noadd(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
 
 
 def test_read_corsia_file(test_file_path=Path(__file__).parent / "files" / "DAT000000"):
-
     df_run, df_event, df = panama.read_DAT(test_file_path, drop_non_particles=False)
 
     check_eq(test_file_path, df_run, df_event, df, skip_mother=True)
@@ -63,7 +60,6 @@ def test_read_corsia_file(test_file_path=Path(__file__).parent / "files" / "DAT0
 
 
 def test_cli(tmp_path, test_file_path=Path(__file__).parent / "files" / "DAT000000"):
-
     runner = CliRunner()
     result = runner.invoke(
         cli,
