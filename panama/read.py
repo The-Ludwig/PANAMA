@@ -180,12 +180,10 @@ def read_DAT(
 
     with tqdm(total=n_events) as pbar:
         for file in files:
-
             if finished:
                 break
 
             with CorsikaParticleFile(file, parse_blocks=not noparse) as f:
-
                 run_headers.append([f.run_header[key] for key in run_header_features])
                 run_idx = int(f.run_header["run_number"])
 

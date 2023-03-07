@@ -55,7 +55,6 @@ class FastHillasGaisser2012(FastPrimaryFlux):
     """
 
     def __init__(self, model="H4a"):
-
         self.name = "Hillas-Gaisser (" + model + ")"
         self.sname = model
         self.model = model
