@@ -89,7 +89,7 @@ INT_OR_DICT = IntOrDictParamType()
 def run(
     template: Path,
     events: int,
-    primary: int | dict,
+    primary: "int | dict",
     output: Path,
     jobs: int,
     corsika: Path,
