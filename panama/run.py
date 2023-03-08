@@ -22,15 +22,16 @@ class IntOrDictParamType(click.ParamType):
 
         try:
             d = eval(value)
-            if type(d) != dict:
+
+            if not isinstance(d, (int, dict)):
                 self.fail(
-                    f"{value!r} is a valid python expression, but not a dict",
+                    f"{value!r} is a valid python expression, but not a dict nor an int",
                     param,
                     ctx,
                 )
             return d
         except ValueError:
-            self.fail(f"{value!r} is not a valid integer", param, ctx)
+            self.fail(f"{value!r} is not a valid python expression", param, ctx)
 
 
 INT_OR_DICT = IntOrDictParamType()
@@ -120,6 +121,9 @@ def run(
             p = Path(DEFAULT_TMP_DIR + f"_{n}")
     else:
         p = Path(tmp)
+
+    if isinstance(primary, int):
+        primary = {primary: events}
 
     if events != DEFAULT_N_EVENTS and len(primary) > 1:
         logging.warn(
