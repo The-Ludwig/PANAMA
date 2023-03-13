@@ -49,7 +49,6 @@ def add_weight(df_run, df_event, df, model=FastHillasGaisser2012(model="H3a")):
 
         weights += [flux(energy) / ext_pdf]
 
-    print(pd.concat(weights))
     df["weight"] = pd.concat(weights)
     df_event["weight"] = pd.concat(weights)
 
