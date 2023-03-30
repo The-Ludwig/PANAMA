@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from os import environ
 from pathlib import Path
-from typing import Any, Self
+from typing import Any
 
 import click
 
@@ -20,9 +20,7 @@ DEFAULT_N_EVENTS = 100
 class IntOrDictParamType(click.ParamType):  # type: ignore[misc]
     name = "int or py dict"
 
-    def convert(
-        self: Self, value: int | str, param: Any, ctx: Any
-    ) -> int | dict[int, int]:
+    def convert(self, value: int | str, param: Any, ctx: Any) -> int | dict[int, int]:
         if isinstance(value, int):
             return value
 
