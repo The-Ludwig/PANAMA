@@ -1,3 +1,4 @@
+from __future__ import annotations
 from panama import run_corsika_parallel
 from pathlib import Path
 from panama.cli import cli
