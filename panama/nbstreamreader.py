@@ -1,4 +1,6 @@
 # Adapted from http://eyalarubas.com/python-subproc-nonblock.html
+from __future__ import annotations
+
 from queue import Empty, Queue
 from threading import Thread
 from typing import IO, Any
