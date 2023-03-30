@@ -83,8 +83,21 @@ def run_corsika_parallel(
     output: Path,
     corsika_path: Path,
     corsika_tmp_dir: Path,
-    seed: int | None = None,
+    seed=None,
+    job_limit=False,
 ) -> None:
+    """
+    TODO: Good Docstring, Types
+
+    Parameters
+    ----------
+    job_limit: Set to true if job_limit means a hard limit.
+        Then no more than `n_jobs` will be started and the components
+        will be processed after each other.
+        If set to `false` there will be `n_jobs` started for every component
+        in parallel. The maximum number of jobs running at the same time then
+        is `n_jobs*len(primary)`
+    """
     if seed is not None:
         set_seed(seed)
 
