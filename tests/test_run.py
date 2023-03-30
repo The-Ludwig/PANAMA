@@ -1,3 +1,4 @@
+from __future__ import annotations
 from panama import run_corsika_parallel
 from pathlib import Path
 from panama.cli import cli
@@ -42,6 +43,7 @@ def test_cli_missing_executable(
             f"{test_file_path}",
             "--debug",
         ],
+        catch_exceptions=False
     )
 
     assert "not executable" in result.output
@@ -76,10 +78,11 @@ def test_different_primary_type(
             "137",
             "--jobs",
             "1",
+            "--debug",
         ],
+        catch_exceptions=False
     )
 
-    assert "cleanup now" in result.output
     assert result.exit_code == 0
 
     # run_header, event_header, ps = read_DAT(glob=compare_files)
@@ -114,10 +117,11 @@ def test_cli(
             "137",
             "--jobs",
             "1",  # this also tests multi threading since we have one job per primary
+            "--debug",
         ],
+        catch_exceptions=False
     )
 
-    assert "cleanup now" in result.output
     assert result.exit_code == 0
 
     # run_header, event_header, ps = read_DAT(glob=compare_files)

@@ -1,7 +1,7 @@
-import click
 import logging
-from os import environ
-from pathlib import Path
+
+import click
+
 from .corsika_to_hdf5 import hdf5
 from .run import run
 
@@ -9,8 +9,8 @@ from .run import run
 @click.group()
 @click.option("--debug", "-d", default=False, is_flag=True, help="Enable debug output")
 def cli(
-    debug,
-):
+    debug: bool,
+) -> None:
     """
     Command line interface for PANAMA, providing useful CORSIKA utilities.
 

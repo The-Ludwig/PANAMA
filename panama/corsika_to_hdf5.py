@@ -1,7 +1,9 @@
-import click
-import logging
-from os import environ
+from __future__ import annotations
+
 from pathlib import Path
+
+import click
+
 from .read import read_DAT
 
 
@@ -12,13 +14,13 @@ from .read import read_DAT
     "--noadd",
     "-n",
     is_flag=True,
-    help="Don't parse Corsika information into additional collumns like e.g. pdgid.",
+    help="Don't parse Corsika information into additional columns like e.g. pdgid.",
 )
 @click.option(
     "--mother",
     "-m",
     is_flag=True,
-    help="Parse mother information into additional collumns if they are provided with the EHIST option of CORSIKA",
+    help="Parse mother information into additional columns if they are provided with the EHIST option of CORSIKA",
 )
 @click.option(
     "--dropMother",
@@ -33,13 +35,13 @@ from .read import read_DAT
     help="Drop all rows which don't really represent a particle. (Like decay or additional information)",
 )
 def hdf5(
-    input: [Path],
+    input: list[Path],
     output: Path,
     noadd: bool,
     mother: bool,
     dropmother: bool,
     dropnonparticles: bool,
-):
+) -> None:
     """
     Convert CORSIKA7 DAT files to hdf5 files.
 
