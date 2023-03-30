@@ -46,13 +46,13 @@ $ panama run --corsika corsika-77420/run/corsika77420Linux_SIBYLL_urqmd --jobs 1
 $ panama hdf5 path/to/corsika/dat/files/DAT* output.hdf5
 ```
 
-The data is availabe under the `run_header` `event_header` and `particles` key.
+The data is available under the `run_header` `event_header` and `particles` key.
 
 ### Read CORSIKA7 DAT files to pandas dataframes
 
 Example: Calculate mean energy in the corsika files created in the example above:
 
-```python
+```
 In [1]: import panama as pn
 
 In [2]: run_header, event_header, particles = pn.read_DAT(glob="corsika_output/DAT*")
@@ -72,7 +72,7 @@ This packages also provides facility to add a `weight` column to the dataframe, 
 in physical flux in terms of $(\mathrm{m^2} \mathrm{s}\ \mathrm{sr}\ \mathrm{GeV})^{-1}$.
 Using the example above, to get the whole physical flux in the complete simulated energy region:
 
-```python
+```
 In [1]: import panama as pn
 
 In [2]: run_header, event_header, particles = pn.read_DAT(glob="corsika_output/DAT*")
@@ -111,7 +111,7 @@ read_DAT made possible by [cta-observatory/pycorsikaio](https://github.com/cta-o
 
 #### Pitfalls
 
-- The whole `run` folder of CORSIKA7 must be copied for each proccess, so very high parallel runs have high overhead
+- The whole `run` folder of CORSIKA7 must be copied for each process, so very high parallel runs have high overhead
 - If you simulate to low energies, python can't seem to hold up with the corsika output to `stdin` and essentially slows down corsika this is still a bug in investigation #1
 
 ## What this is not

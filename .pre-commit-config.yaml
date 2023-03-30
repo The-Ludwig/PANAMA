@@ -34,6 +34,7 @@ repos:
     rev: v2.2.2
     hooks:
       - id: codespell
+        args: [--exclude-file, .codespell-ignore]
 
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0 # Use the ref you want to point at
