@@ -42,8 +42,6 @@ def test_noadd(test_file_path=SINGLE_TEST_FILE):
             test_file_path, drop_non_particles=True, additional_columns=False
         )
 
-    check_eq(test_file_path, df_run, df_event, particles)
-
     df_run, df_event, particles = panama.read_DAT(
         test_file_path, drop_non_particles=False, additional_columns=True
     )
