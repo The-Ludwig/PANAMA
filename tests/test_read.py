@@ -36,7 +36,6 @@ def check_eq(file, df_run, df_event, particles, skip_mother=False):
 
 
 def test_noadd(test_file_path=SINGLE_TEST_FILE):
-
     with pytest.raises(ValueError, match="requires"):
         df_run, df_event, particles = panama.read_DAT(
             test_file_path, drop_non_particles=True, additional_columns=False
