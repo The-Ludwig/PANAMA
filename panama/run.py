@@ -1,9 +1,13 @@
 from __future__ import annotations
-import click
+
 import logging
 from os import environ
-from .parallel_run import run_corsika_parallel
 from pathlib import Path
+from typing import Any
+
+import click
+
+from .parallel_run import run_corsika_parallel
 
 DEFAULT_TMP_DIR = environ.get("TMP_DIR", "/tmp/PANAMA")
 CORSIKA_PATH = environ.get(
@@ -13,16 +17,15 @@ CORSIKA_PATH = environ.get(
 DEFAULT_N_EVENTS = 100
 
 
-class IntOrDictParamType(click.ParamType):
+class IntOrDictParamType(click.ParamType):  # type: ignore[misc]
     name = "int or py dict"
 
-    def convert(self, value, param, ctx):
+    def convert(self, value: int | str, param: Any, ctx: Any) -> int | dict[int, int]:
         if isinstance(value, int):
             return value
 
         try:
-            d = eval(value)
-
+            d = eval(value)  # noqa: PGH001
             if not isinstance(d, (int, dict)):
                 self.fail(
                     f"{value!r} is a valid python expression, but not a dict nor an int",
@@ -32,6 +35,8 @@ class IntOrDictParamType(click.ParamType):
             return d
         except ValueError:
             self.fail(f"{value!r} is not a valid python expression", param, ctx)
+
+        raise RuntimeError("Unreachable code")
 
 
 INT_OR_DICT = IntOrDictParamType()
@@ -91,18 +96,18 @@ INT_OR_DICT = IntOrDictParamType()
 def run(
     template: Path,
     events: int,
-    primary: int | dict,
+    primary: int | dict[int, int],
     output: Path,
     jobs: int,
     corsika: Path,
     seed: int,
     tmp: Path,
-    debug,
-):
+    debug: bool,
+) -> None:
     """
     Run CORSIKA7 in parallel.
 
-    The `TEMPLATE` argument must point to a valid CORSIKA7 stiring card, where
+    The `TEMPLATE` argument must point to a valid CORSIKA7 steering card, where
     `{run_idx}`, `{first_event_idx}` `{n_show}` `{seed_1}` `{seed_2}` and `{dir}`
     will be replaced accordingly.
 
@@ -116,7 +121,7 @@ def run(
     if tmp == DEFAULT_TMP_DIR:
         n = 0
         p = Path(tmp)
-        while p.exists() and next(p.iterdir(), True) != True:
+        while p.exists() and next(p.iterdir(), True) is not True:
             n += 1
             p = Path(DEFAULT_TMP_DIR + f"_{n}")
     else:
@@ -126,8 +131,8 @@ def run(
         primary = {primary: events}
 
     if events != DEFAULT_N_EVENTS and len(primary) > 1:
-        logging.warn(
-            f"Looks like --events was given and --primary was provided a dict. --events is ignored."
+        logging.warning(
+            "Looks like --events was given and --primary was provided a dict. --events is ignored."
         )
 
     run_corsika_parallel(primary, jobs, template, Path(output), corsika, p, seed)

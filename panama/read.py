@@ -1,16 +1,16 @@
 from __future__ import annotations
-from dataclasses import dataclass, make_dataclass
+
+from pathlib import Path
+
 import numpy as np
+import pandas as pd
 from corsikaio import CorsikaParticleFile
 from corsikaio.subblocks import event_header_types, particle_data_dtype
-from collections import defaultdict
-from particle import Corsika7ID, Particle, InvalidParticle, PDGID
-import pandas as pd
-from pathlib import Path
+from particle import Corsika7ID, Particle
 from tqdm import tqdm
 
 D0_LIFETIME = Particle.from_name("D0").lifetime
-DEFAULT_RUN_HEADER_FEATURES = (
+DEFAULT_RUN_HEADER_FEATURES = [
     "run_number",
     "date",
     "version",
@@ -24,8 +24,8 @@ DEFAULT_RUN_HEADER_FEATURES = (
     "energy_cutoff_electrons",
     "energy_cutoff_photons",
     "n_showers",
-)
-DEFAULT_EVENT_HEADER_FEATURES = (
+]
+DEFAULT_EVENT_HEADER_FEATURES = [
     "event_number",
     "run_number",
     "particle_id",
@@ -42,22 +42,22 @@ DEFAULT_EVENT_HEADER_FEATURES = (
     "sybill_interaction_flag",
     "sybill_cross_section_flag",
     "explicit_charm_generation_flag",
-)
+]
 CORSIKA_FIELD_BYTE_LEN = 4
 
 
 def read_DAT(
-    files: Path | [Path] | None = None,
+    files: Path | list[Path] | None = None,
     glob: str | None = None,
     max_events: int | None = None,
-    run_header_features: tuple | None = None,
-    event_header_features: tuple | None = None,
+    run_header_features: list[str] | None = None,
+    event_header_features: list[str] | None = None,
     additional_columns: bool = True,
     mother_columns: bool = False,
     drop_mothers: bool = True,
     drop_non_particles: bool = True,
     noparse: bool = True,
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Read CORSIKA DAT files to Pandas.DataFrame.
     Exactly one of `files` or `glob` must be provided.
@@ -104,7 +104,7 @@ def read_DAT(
         Weather to add columns related to the mother/grandmother
         output of the EHIST option.
         They take more time to calculate, since the
-        columns are dependend of each other.
+        columns are dependent of each other.
     drop_mothers: bool
         Weather to remove all mother rows (default: True)
     drop_non_particles: bool
@@ -143,15 +143,16 @@ def read_DAT(
     if glob is not None:
         basepath = Path(glob).parent
         files = list(basepath.glob(Path(glob).name))
+    elif isinstance(files, Path):
+        files = [files]
+
+    assert isinstance(files, list)
 
     if run_header_features is None:
         run_header_features = DEFAULT_RUN_HEADER_FEATURES
 
     if event_header_features is None:
         event_header_features = DEFAULT_EVENT_HEADER_FEATURES
-
-    if not isinstance(files, list):
-        files = [files]
 
     run_headers = []
     event_headers = []
@@ -160,7 +161,7 @@ def read_DAT(
     # to index the particles
     particles_run_num = []
     particles_event_num = []
-    particles_num = []
+    particles_num: list[int] = []
 
     events = 0
 
@@ -233,15 +234,18 @@ def read_DAT(
 
     if noparse:
         df_event_headers = pd.DataFrame(np.array(event_headers))
-        valid_columns = list(
-            map(
-                lambda v: v[1] // CORSIKA_FIELD_BYTE_LEN,
-                list(event_header_types[version].fields.values()),
-            )
-        )
+        valid_columns = [
+            v[1] // CORSIKA_FIELD_BYTE_LEN
+            for v in list(event_header_types[version].fields.values())
+        ]
         valid_names = event_header_types[version].names
 
-        mapper = {pos: name for pos, name in zip(valid_columns, valid_names)}
+        mapper = {
+            pos: name
+            for pos, name in zip(  # noqa: B905
+                valid_columns, valid_names
+            )  # no py3.8 support: , strict=True)
+        }
 
         df_event_headers.drop(
             columns=df_event_headers.columns.difference(valid_columns), inplace=True
@@ -254,19 +258,22 @@ def read_DAT(
     df_event_headers.set_index(keys=["run_number", "event_number"], inplace=True)
 
     if noparse:
-        # necesary since we can have a diffrent number of particles in each event
+        # necessary since we can have a different number of particles in each event
         df_particles_l = [pd.DataFrame(p) for p in particles]
         df_particles = pd.concat(df_particles_l, ignore_index=True)
 
-        valid_columns = list(
-            map(
-                lambda v: v[1] // CORSIKA_FIELD_BYTE_LEN,
-                list(particle_data_dtype.fields.values()),
-            )
-        )
+        valid_columns = [
+            v[1] // CORSIKA_FIELD_BYTE_LEN
+            for v in list(particle_data_dtype.fields.values())
+        ]
         valid_names = particle_data_dtype.names
 
-        mapper = {pos: name for pos, name in zip(valid_columns, valid_names)}
+        mapper = {
+            pos: name
+            for pos, name in zip(  # noqa: B905
+                valid_columns, valid_names
+            )  # no py3.8 support n, strict=True)
+        }
 
         df_particles.drop(
             columns=df_particles.columns.difference(valid_columns), inplace=True
@@ -321,7 +328,7 @@ def read_DAT(
 
         pdgids = df_particles["pdgid"].unique()
 
-        mass_map = dict()
+        mass_map = {}
         for pdgid in pdgids:
             if pdgid == pdg_error_val:
                 mass_map[pdgid] = 0
