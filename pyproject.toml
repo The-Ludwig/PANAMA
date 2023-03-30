@@ -82,7 +82,7 @@ src = ["panama"]
 
 [tool.mypy]
 files = [
-  "panama/",
+  "panama/*.py",
 ]
 python_version = "3.11"
 strict = true
@@ -93,9 +93,4 @@ enable_error_code = [
   "ignore-without-code",
   "truthy-bool",
   "redundant-expr",
-]
-exclude = [
-    "tests/*",
-    "panama/fluxes/fluxes.py", # for now we exlude these files. They are mostly copied anyway and
-                          # a complete rewrite of them would be smart
 ]
