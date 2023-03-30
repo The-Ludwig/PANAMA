@@ -241,7 +241,10 @@ def read_DAT(
         valid_names = event_header_types[version].names
 
         mapper = {
-            pos: name for pos, name in zip(valid_columns, valid_names, strict=True)
+            pos: name
+            for pos, name in zip(  # noqa: B905
+                valid_columns, valid_names
+            )  # no py3.8 support: , strict=True)
         }
 
         df_event_headers.drop(
@@ -266,7 +269,10 @@ def read_DAT(
         valid_names = particle_data_dtype.names
 
         mapper = {
-            pos: name for pos, name in zip(valid_columns, valid_names, strict=True)
+            pos: name
+            for pos, name in zip(  # noqa: B905
+                valid_columns, valid_names
+            )  # no py3.8 support n, strict=True)
         }
 
         df_particles.drop(
