@@ -7,7 +7,7 @@ from contextlib import suppress
 from pathlib import Path
 from random import randrange
 from random import seed as set_seed
-from subprocess import PIPE, Popen
+from subprocess import PIPE, Popen, TimeoutExpired
 from time import sleep
 from typing import Any
 
@@ -54,7 +54,7 @@ def start_corsika_job(
 
     # this is what is expected...
     # Feels like a hack...
-    with suppress(TimeoutError):
+    with suppress(TimeoutExpired):
         stdin, stdout = job.communicate(
             input=input_template.format(
                 run_idx=f"{run_idx}",
@@ -166,5 +166,5 @@ def run_corsika_parallel(
                 f"Corsika Output:\n {outputs[idx].decode('ASCII')} \n'END OF RUN' not in corsika output. May indicate failed run. See the output above."
             )
 
-    logging.info("All jobs terminated, cleanup now")
+    logging.debug("All jobs terminated, cleanup now")
     cleanup(n_jobs * len(primary), corsika_tmp_dir)
