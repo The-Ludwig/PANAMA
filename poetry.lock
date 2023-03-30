@@ -1562,6 +1562,18 @@ slack = ["slack-sdk"]
 telegram = ["requests"]
 
 [[package]]
+name = "types-tqdm"
+version = "4.65.0.1"
+description = "Typing stubs for tqdm"
+category = "dev"
+optional = false
+python-versions = "*"
+files = [
+    {file = "types-tqdm-4.65.0.1.tar.gz", hash = "sha256:972dd871b6b2b8ff32f1f0f6fdfdf5a4ba2b0b848453689391bec8bd858fb1c4"},
+    {file = "types_tqdm-4.65.0.1-py3-none-any.whl", hash = "sha256:4894fe2b1581374ce9bca3f23d53729e4409d69b352e3d5db5829fa19482962c"},
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.5.0"
 description = "Backported and Experimental Type Hints for Python 3.7+"
@@ -1630,4 +1642,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "0143c6215929f85ac7e766b985cb428106727376c15803f4435026afc963a642"
+content-hash = "e57e40dbd4ac37d64ecae382b34afabf4713d52b47251775dcd49c4a46348144"

@@ -9,8 +9,8 @@ from .run import run
 @click.group()
 @click.option("--debug", "-d", default=False, is_flag=True, help="Enable debug output")
 def cli(
-    debug,
-):
+    debug: bool,
+) -> None:
     """
     Command line interface for PANAMA, providing useful CORSIKA utilities.
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import logging
 import shutil
 from contextlib import suppress
@@ -7,6 +9,7 @@ from random import randrange
 from random import seed as set_seed
 from subprocess import PIPE, Popen
 from time import sleep
+from typing import Any
 
 from particle import Corsika7ID
 from tqdm import tqdm
@@ -27,7 +30,7 @@ def start_corsika_job(
     corsika_tmp_dir: Path,
     primary_corsikaid: int,
     first_event_idx: int = 1,
-) -> Popen:
+) -> Popen[Any]:
     # create dir if not existent
     output.mkdir(parents=True, exist_ok=True)
 
@@ -74,13 +77,13 @@ def cleanup(n_runs: int, corsika_tmp_dir: Path) -> None:
 
 
 def run_corsika_parallel(
-    primary: dict,
+    primary: dict[int, int],
     n_jobs: int,
-    template_path,
+    template_path: Path,
     output: Path,
-    corsika_path: int,
+    corsika_path: Path,
     corsika_tmp_dir: Path,
-    seed=None,
+    seed: int | None = None,
 ) -> None:
     if seed is not None:
         set_seed(seed)
@@ -89,7 +92,7 @@ def run_corsika_parallel(
         input_template: str = f.read()
 
     abs_path = Path(corsika_path).absolute()
-    jobs: [Popen] = []
+    jobs: list[Popen[Any]] = []
 
     for idx, (pdgid, n_events) in enumerate(primary.items()):
         corsikaid = int(Corsika7ID.from_pdgid(pdgid))
@@ -124,7 +127,7 @@ def run_corsika_parallel(
     n_events = sum(primary.values())
 
     # show progressbar until close to end
-    nbstreams = [NBSR(job.stdout) for job in jobs]
+    nbstreams = [NBSR(job.stdout) for job in jobs]  # type: ignore[arg-type]
     outputs = [b""] * len(jobs)
 
     try:

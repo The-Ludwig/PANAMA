@@ -32,6 +32,7 @@ sphinx-rtd-theme = "^1.2.0"
 sphinx-click = "^4.4.0"
 ruff = "^0.0.252"
 mypy = "^1.0.1"
+types-tqdm = "^4.65.0.1"
 
 [tool.poetry.scripts]
 panama = 'panama.cli:cli'
@@ -89,8 +90,20 @@ strict = true
 warn_return_any = false
 warn_unreachable = true
 show_error_codes = true
+ignore_missing_imports = true
+disallow_untyped_decorators = false
 enable_error_code = [
   "ignore-without-code",
   "truthy-bool",
   "redundant-expr",
 ]
+exclude = ["tests/"]
+
+[[tool.mypy.overrides]]
+module = "tests"
+follow_imports = "skip"
+strict = false
+
+[[tool.mypy.overrides]]
+module = "panama.fluxes"
+follow_imports = "skip"
