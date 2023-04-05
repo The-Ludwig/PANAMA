@@ -37,5 +37,3 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-      - name: pre-commit
-        uses: pre-commit/action@v3.0.0
