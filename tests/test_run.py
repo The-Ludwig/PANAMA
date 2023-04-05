@@ -1,5 +1,5 @@
 from __future__ import annotations
-from panama import run_corsika_parallel
+from panama import CorsikaRunner
 from pathlib import Path
 from panama.cli import cli
 import subprocess
@@ -24,6 +24,33 @@ def test_run_fail(
         print(dir(e))
         assert e.strerror == "Exec format error"
         assert e.errno == 8
+
+
+def test_corsika_runner(
+    tmp_path,
+    test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
+    corsika_path=Path(__file__).parent.parent
+    / "corsika-77420"
+    / "run"
+    / "corsika77420Linux_SIBYLL_urqmd",
+    compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
+):
+    runner = CorsikaRunner(primary={2212: 1, 1000260560: 1},
+                           n_jobs=1,
+                           template_path=test_file_path,
+                           output=tmp_path,
+                           corsika_path=corsika_path,
+                           corsika_tmp_dir=tmp_path,
+                           seed=137,
+                           jobs_per_primary=False)
+    
+    runner.run()
+    
+    run_header_2, event_header_2, ps_2 = read_DAT(glob=f"{tmp_path}/DAT*")
+
+    assert event_header_2.shape[0] == 2
+    print(event_header_2.keys())
+    assert len(event_header_2["particle_id"].unique()) == 2
 
 
 def test_cli_missing_executable(
@@ -90,6 +117,53 @@ def test_different_primary_type(
 
     assert event_header_2.shape[0] == 1
     assert event_header_2["particle_id"].iloc[0] == 14
+
+
+def test_job_per_primary(
+    tmp_path,
+    test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
+    corsika_path=Path(__file__).parent.parent
+    / "corsika-77420"
+    / "run"
+    / "corsika77420Linux_SIBYLL_urqmd",
+    compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
+):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "run",
+            f"{test_file_path}",
+            "--primary",
+            "{2212: 1, 1000260560: 1}",  # proton and iron
+            "--corsika",
+            f"{corsika_path}",
+            "--output",
+            f"{tmp_path}",
+            "--seed",
+            "137",
+            "--jobs",
+            "1",  # this also tests multi threading since we have one job per primary
+            "--debug",
+            "--jobs-per-primary"
+        ],
+        catch_exceptions=False
+    )
+
+    assert result.exit_code == 0
+
+    # run_header, event_header, ps = read_DAT(glob=compare_files)
+    run_header_2, event_header_2, ps_2 = read_DAT(glob=f"{tmp_path}/DAT*")
+
+    # sadly, this does not seem to match on different machines
+    # probably, corsika related
+    # assert run_header.equals(run_header_2)
+    # assert event_header.equals(event_header_2)
+    # assert ps.equals(ps_2)
+
+    assert event_header_2.shape[0] == 2
+    print(event_header_2.keys())
+    assert len(event_header_2["particle_id"].unique()) == 2
 
 
 def test_cli(
