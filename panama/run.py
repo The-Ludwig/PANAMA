@@ -92,6 +92,7 @@ INT_OR_DICT = IntOrDictParamType()
     type=click.Path(file_okay=False),
     help="Path to the default temp folder to copy corsika to. Can also be set using the `TMP_DIR` environment variable.",
 )
+@click.option("--job-per-primary", "-jpp", default=False, is_flag=True, help="Run --jobs per primary, not in total.")
 @click.option("--debug", "-d", default=False, is_flag=True, help="Enable debug output")
 def run(
     template: Path,
@@ -102,6 +103,7 @@ def run(
     corsika: Path,
     seed: int,
     tmp: Path,
+    jobs_per_primary: bool,
     debug: bool,
 ) -> None:
     """
@@ -135,4 +137,4 @@ def run(
             "Looks like --events was given and --primary was provided a dict. --events is ignored."
         )
 
-    run_corsika_parallel(primary, jobs, template, Path(output), corsika, p, seed)
+    run_corsika_parallel(primary, jobs, template, Path(output), corsika, p, seed, jobs_per_primary)

@@ -11,7 +11,7 @@ from subprocess import PIPE, Popen, TimeoutExpired
 from time import sleep
 from typing import Any
 
-from particle import Corsika7ID
+from particle import Corsika7ID, Particle
 from tqdm import tqdm
 
 from .nbstreamreader import NonBlockingStreamReader as NBSR
@@ -21,163 +21,234 @@ CORSIKA_EVENT_FINISHED = b"PRIMARY PARAMETERS AT FIRST INTERACTION POINT AT HEIG
 CORSIKA_RUN_END = b"END OF RUN"
 
 
-def start_corsika_job(
-    run_idx: int,
-    n_show: int,
-    input_template: str,
-    abs_corsika_path: Path,
-    output: Path,
-    corsika_tmp_dir: Path,
-    primary_corsikaid: int,
-    first_event_idx: int = 1,
-) -> Popen[Any]:
-    # create dir if not existent
-    output.mkdir(parents=True, exist_ok=True)
+class CorsikaJob:
+    def __init__(self, corsika_executable: Path, corsika_copy_dir: Path, card_template: str) -> None:
+        
+        self.corsika_copy_path = corsika_copy_path
+        self.corsika_copy_path.mkdir(parents=True, exist_ok=False)
+        self.card_template = card_template
 
-    corsika_copy_dir = corsika_tmp_dir / f".corsika_copy_run_{run_idx}"
-    corsika_copy_dir.mkdir(parents=True, exist_ok=True)
+        # copy all files in the corsika run dir, except for the DAT files
+        # which are often created, if you test corsika in the run dir
+        for p in self.corsika_executable.absolute().parent.glob("[!DAT]*"):
+            if not p.is_file():
+                continue
+            shutil.copy(str(p.absolute()), str((corsika_copy_dir / p.name).absolute()))
+        self.this_corsika_path = self.corsika_copy_dir / self.abs_corsika_path.name
 
-    # copy all files in the corsika run dir, except for the DAT files
-    # which are often created, if you test corsika in the run dir
-    for p in abs_corsika_path.parent.glob("[!DAT]*"):
-        if not p.is_file():
-            continue
-        shutil.copy(str(p.absolute()), str((corsika_copy_dir / p.name).absolute()))
-    this_corsika_path = corsika_copy_dir / abs_corsika_path.name
+        self.running = None
+        self.config = None
+        self.stream = None
+        self.finished_showers = 0
+        self.output = b""
+        self.finished = []
 
-    job = Popen(
-        this_corsika_path.absolute(),
-        stdin=PIPE,
-        stdout=PIPE,
-        cwd=this_corsika_path.absolute().parent,
-    )
+    def __del__(self) -> None:
+        shutil.rmtree(self.corsika_copy_dir)
 
-    # this is what is expected...
-    # Feels like a hack...
-    with suppress(TimeoutExpired):
-        stdin, stdout = job.communicate(
-            input=input_template.format(
-                run_idx=f"{run_idx}",
-                first_event_idx="1",
-                n_show=f"{n_show}",
-                dir=str(output.absolute()) + "/",
-                seed_1=f"{randrange(1, 900_000_000)}",
-                seed_2=f"{randrange(1, 900_000_000)}",
-                primary=f"{primary_corsikaid}",
-            ).encode("ASCII"),
-            timeout=1,
+    @property
+    def is_finished(self):
+        return self.running is None
+
+    def start(self, corsika_config: dir[str, Any]) -> None:
+        if self.running is not None:
+            raise RuntimeError("Can't use this CorsikaJob, it's still running!")
+         
+        self.finished_showers = 0
+        self.running = Popen(
+            self.this_corsika_path.absolute(),
+            stdin=PIPE,
+            stdout=PIPE,
+            cwd=self.this_corsika_path.absolute().parent,
         )
 
-    return job
+        self.config = corsika_config
 
-
-def cleanup(n_runs: int, corsika_tmp_dir: Path) -> None:
-    for i in range(n_runs):
-        shutil.rmtree(corsika_tmp_dir / f".corsika_copy_run_{i}")
-
-
-def run_corsika_parallel(
-    primary: dict[int, int],
-    n_jobs: int,
-    template_path: Path,
-    output: Path,
-    corsika_path: Path,
-    corsika_tmp_dir: Path,
-    seed=None,
-    job_limit=False,
-) -> None:
-    """
-    TODO: Good Docstring, Types
-
-    Parameters
-    ----------
-    job_limit: Set to true if job_limit means a hard limit.
-        Then no more than `n_jobs` will be started and the components
-        will be processed after each other.
-        If set to `false` there will be `n_jobs` started for every component
-        in parallel. The maximum number of jobs running at the same time then
-        is `n_jobs*len(primary)`
-    """
-    if seed is not None:
-        set_seed(seed)
-
-    with open(template_path) as f:
-        input_template: str = f.read()
-
-    abs_path = Path(corsika_path).absolute()
-    jobs: list[Popen[Any]] = []
-
-    for idx, (pdgid, n_events) in enumerate(primary.items()):
-        corsikaid = int(Corsika7ID.from_pdgid(pdgid))
-
-        events_per_job = n_events // n_jobs
-        last_events_per_job = events_per_job + (n_events - events_per_job * n_jobs)
-
-        for i in range(n_jobs - 1):
-            jobs.append(
-                start_corsika_job(
-                    n_jobs * idx + i,
-                    events_per_job,
-                    input_template,
-                    abs_path,
-                    output,
-                    corsika_tmp_dir,
-                    corsikaid,
-                )
+        # this is what is expected...
+        # Feels like a hack...
+        with suppress(TimeoutExpired):
+            stdin, stdout = job.communicate(
+                input=self.card_template.format(**corsika_config).encode("ASCII"),
+                timeout=1,
             )
-        jobs.append(
-            start_corsika_job(
-                n_jobs * idx + (n_jobs - 1),
-                last_events_per_job,
-                input_template,
-                abs_path,
-                output,
-                corsika_tmp_dir,
-                corsikaid,
-            )
-        )
 
-    n_events = sum(primary.values())
+        self.stream = NBSR(self.running.stdout)
+    
+    def poll(self) -> int | None:
+        """ 
+        Returns
+        -------
+        n_update: The number of showers finished since last poll or None if process is finished
+        """
+        if self.running is None:
+            return None
+        
+        if (return_code := self.running.poll()) is not None:
+            if return_code != 0:
+                raise RuntimeError("Return code of corsika not 0 (should not be possible)")
+            
+            return self.join()
 
-    # show progressbar until close to end
-    nbstreams = [NBSR(job.stdout) for job in jobs]  # type: ignore[arg-type]
-    outputs = [b""] * len(jobs)
+        finished = 0
 
-    try:
-        with tqdm(total=n_events, unit="shower", unit_scale=True) as pbar:
-            for job in jobs:
-                while job.poll() is None:
-                    for idx, nbstream in enumerate(nbstreams):
-                        line = nbstream.readline()
-                        if line is not None:
-                            outputs[idx] = b""
-                        while line is not None:
-                            logging.debug(line.decode("ASCII"))
-                            logging.info(
-                                f"finished events = {line.count(CORSIKA_EVENT_FINISHED)}"
-                            )
-                            pbar.update(line.count(CORSIKA_EVENT_FINISHED))
-                            outputs[idx] += line
-                            line = nbstream.readline()
-                    sleep(0.5)
-    except KeyboardInterrupt:
-        logging.info("Interrupted by user, cleanup tmp files.")
-        cleanup(n_jobs * len(primary), corsika_tmp_dir)
-
-    # finish
-    logging.info("Jobs finished, now we wait for them to exit")
-    for idx, job in enumerate(jobs):
-        (last_stdout, last_stderr_data) = job.communicate()
-        line = nbstreams[idx].readline()
+        line = self.readline()
+        if line is not None:
+            self.output = b""
         while line is not None:
-            outputs[idx] += line
-            line = nbstreams[idx].readline()
-        outputs[idx] += last_stdout
-        logging.debug(f"Output job {idx}:\n {outputs[idx].decode('ASCII')}")
-        if CORSIKA_RUN_END not in outputs[idx]:
+            logging.debug(line.decode("ASCII"))
+            logging.info(
+                f"finished events = {line.count(CORSIKA_EVENT_FINISHED)}"
+            )
+            finished += line.count(CORSIKA_EVENT_FINISHED)
+            self.output += line
+            line = self.stream.readline()
+        
+        self.finished_showers += finished
+
+        return finished
+
+    def join(self) -> int:
+        """
+        Returns
+        -------
+        n_update: The number of finished events in the last output
+        """
+        if self.running is None:
+            raise RuntimeError("Job is already finished")
+
+        (last_stdout, last_stderr_data) = self.running.communicate()
+        line = self.stream.readline()
+
+        finished = 0
+
+        while line is not None:
+            finished += line.count(CORSIKA_EVENT_FINISHED)
+            self.output += line
+            line = self.stream.readline()
+
+        finished += last_stdout.count(CORSIKA_EVENT_FINISHED)
+        self.output += last_stdout
+        logging.debug(f"{self.output.decode('ASCII')}")
+
+        if CORSIKA_RUN_END not in self.output:
             logging.warning(
                 f"Corsika Output:\n {outputs[idx].decode('ASCII')} \n'END OF RUN' not in corsika output. May indicate failed run. See the output above."
             )
+        
+        self._reset()
 
-    logging.debug("All jobs terminated, cleanup now")
-    cleanup(n_jobs * len(primary), corsika_tmp_dir)
+        return finished
+
+    def _reset(self):
+        self.running = None
+        self.config = None
+        self.stream = None
+        self.finished_showers = 0
+
+class CorsikaRunner:
+
+    def __init__(
+        self,
+        primary: dict[int, int],
+        n_jobs: int,
+        template_path: Path,
+        output: Path,
+        corsika_executable: Path,
+        corsika_tmp_dir: Path,
+        seed=None,
+    ) -> None:
+        """
+        TODO: Good Docstring, Types
+
+        Parameters
+        ----------
+        job_per_primary: Set to true if n_jobs is not a hard limit.
+            Then no more than `n_jobs` will be started and the components
+            will be processed after each other.
+            If set to `false` there will be `n_jobs` started for every component
+            in parallel. The maximum number of jobs running at the same time then
+            is `n_jobs*len(primary)`
+        """
+        self.primary = primary
+        self.n_jobs = n_jobs
+        self.job_per_primary = job_per_primary
+        self.output = output
+        self.corsika_executable = corsika_executable
+        self.corsika_tmp_dir = corsika_tmp_dir
+
+        if seed is not None:
+            set_seed(seed)
+        self.seed = seed
+        
+        with open(template_path) as f:
+            self.input_template: str = f.read()
+
+        self.abs_corsika_path = Path(corsika_path).absolute()
+        self.job_pool: list[CorsikaJob] = []
+        
+        for i in range(n_jobs):
+            corsika_copy_dir = self.corsika_tmp_dir / f".corsika_copy_run_{i}"
+            self.job_pool.append(CorsikaJob(self.corsika_executable, corsika_copy_dir))
+
+    def wait_for_jobs(self, n_events):
+        # show progressbar until close to end
+        try:
+            with tqdm(total=n_events, unit="shower", unit_scale=True) as pbar:
+                while not all([job.is_finished for job in self.jobs]):
+                    for job in self.jobs:
+                        update = job.poll()
+                        pbar.update(update)
+                    sleep(0.1)
+        except KeyboardInterrupt:
+            logging.info("Interrupted by user.")
+
+
+    def run(self) -> None:
+        # create dir if not existent
+        self.output.mkdir(parents=True, exist_ok=True)
+        
+        for idx, (pdgid, n_events) in enumerate(self.primary.items()):
+            logging.info(f"Processing primary {Particle.from_pdgid(pdgid).name} ({pdgid})")
+
+            corsikaid = int(Corsika7ID.from_pdgid(pdgid))
+
+            events_per_job = n_events // self.n_jobs
+            last_events_per_job = events_per_job + (n_events - events_per_job * n_jobs)
+
+            for i, job in enumerate(self.job_pool[:-1]):
+                job.append(
+                    self._get_corsika_config(
+                        self.n_jobs * idx + i,
+                        events_per_job,
+                        corsikaid,
+                    )
+                )
+            self.job_pool[-1].start(
+                self._get_corsika_config(
+                    self.n_jobs * idx + (n_jobs - 1),
+                    last_events_per_job,
+                    corsikaid,
+                )
+            )
+
+            wait_for_jobs()
+
+    def _get_corsika_config(
+        run_idx: int,
+        n_show: int,
+        primary_corsikaid: int,
+        first_event_idx: int = 1,
+    ) -> dir[str, str]:
+
+        return {
+            run_idx: f"{run_idx}",
+            first_event_idx: f"{first_event_idx}",
+            n_show: f"{n_show}",
+            dir: str(self.output.absolute()) + "/",
+            seed_1: f"{randrange(1, 900_000_000)}",
+            seed_2: f"{randrange(1, 900_000_000)}",
+            primary: f"{primary_corsikaid}",
+            }
+
+
+
