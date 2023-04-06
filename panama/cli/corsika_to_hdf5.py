@@ -4,7 +4,7 @@ from pathlib import Path
 
 import click
 
-from .read import read_DAT
+from ..read import read_DAT
 
 
 @click.command(context_settings={"show_default": True})

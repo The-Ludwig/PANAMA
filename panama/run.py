@@ -1,140 +1,262 @@
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import logging
-from os import environ
+import shutil
+from contextlib import suppress
 from pathlib import Path
+from random import randrange
+from random import seed as set_seed
+from subprocess import PIPE, Popen, TimeoutExpired
+from time import sleep
 from typing import Any
 
-import click
+from particle import Corsika7ID, Particle
+from tqdm import tqdm
 
-from .parallel_run import run_corsika_parallel
+from .nbstreamreader import NonBlockingStreamReader as NBSR
 
-DEFAULT_TMP_DIR = environ.get("TMP_DIR", "/tmp/PANAMA")
-CORSIKA_PATH = environ.get(
-    "CORSIKA_PATH",
-    f"{environ.get('HOME')}/corsika7-master/run/corsika77420Linux_SIBYLL_urqmd",
-)
-DEFAULT_N_EVENTS = 100
+CORSIKA_FILE_ERROR = "STOP FILOPN: FATAL PROBLEM OPENING FILE"
+CORSIKA_EVENT_FINISHED = b"PRIMARY PARAMETERS AT FIRST INTERACTION POINT AT HEIGHT"
+CORSIKA_RUN_END = b"END OF RUN"
 
 
-class IntOrDictParamType(click.ParamType):  # type: ignore[misc]
-    name = "int or py dict"
+class CorsikaJob:
+    def __init__(
+        self, corsika_executable: Path, corsika_copy_dir: Path, card_template: str
+    ) -> None:
+        self.corsika_copy_dir = corsika_copy_dir
+        self.corsika_copy_dir.mkdir(parents=True, exist_ok=False)
+        self.card_template = card_template
 
-    def convert(self, value: int | str, param: Any, ctx: Any) -> int | dict[int, int]:
-        if isinstance(value, int):
-            return value
+        # copy all files in the corsika run dir, except for the DAT files
+        # which are often created, if you test corsika in the run dir
+        for p in corsika_executable.absolute().parent.glob("[!DAT]*"):
+            if not p.is_file():
+                continue
+            shutil.copy(str(p.absolute()), str((corsika_copy_dir / p.name).absolute()))
+        self.this_corsika_path = self.corsika_copy_dir / corsika_executable.name
 
-        try:
-            d = eval(value)  # noqa: PGH001
-            if not isinstance(d, (int, dict)):  # noqa: UP038
-                self.fail(
-                    f"{value!r} is a valid python expression, but not a dict nor an int",
-                    param,
-                    ctx,
-                )
-            return d
-        except ValueError:
-            self.fail(f"{value!r} is not a valid python expression", param, ctx)
+        self.running = None
+        self.config = None
+        self.stream = None
+        self.n_showers = 0
+        self.finished_showers = 0
+        self.output = b""
+        self.finished = []
 
-        raise RuntimeError("Unreachable code")
+    def __del__(self) -> None:
+        shutil.rmtree(self.corsika_copy_dir)
 
+    @property
+    def is_finished(self):
+        return self.running is None
 
-INT_OR_DICT = IntOrDictParamType()
+    def start(self, corsika_config: dir[str, Any]) -> None:
+        if self.running is not None:
+            raise RuntimeError("Can't use this CorsikaJob, it's still running!")
 
-
-@click.command(context_settings={"show_default": True})
-@click.argument(
-    "template", type=click.Path(exists=True, dir_okay=False)
-)  # , help="Path to the template to run")
-@click.option(
-    "--events",
-    "-n",
-    type=int,
-    help="Number of shower-events to generate per primary particle.",
-    default=DEFAULT_N_EVENTS,
-)
-@click.option(
-    "--primary",
-    "-p",
-    type=INT_OR_DICT,
-    help="PDGid of primary to inject. Default is proton. "
-    "Can be a python dict with diffrerent primaries as keys and values the number of events to generate for that. "
-    "In this case, --events is ignored. "
-    "Example with proton and iron: {2212: 100_000, 1000260560: 1000}",
-    default=2212,
-)
-@click.option(
-    "--output",
-    "-o",
-    type=click.Path(),
-    help="Path to store the CORSIKA7 DAT files",
-    default="./corsika_output/",
-)
-@click.option("--jobs", "-j", default=4, help="Number of jobs to use", type=int)
-@click.option(
-    "--corsika",
-    "-c",
-    default=CORSIKA_PATH,
-    help="Path to the CORSIKA7 executable. Can also be set using the `CORSIKA_PATH` environment variable.",
-    type=click.Path(exists=True, dir_okay=False, executable=True),
-)
-@click.option(
-    "--seed",
-    "-s",
-    default=None,
-    help="Seed to use. If none, will use system time or other entropic source",
-    type=int,
-)
-@click.option(
-    "--tmp",
-    "-t",
-    default=DEFAULT_TMP_DIR,
-    type=click.Path(file_okay=False),
-    help="Path to the default temp folder to copy corsika to. Can also be set using the `TMP_DIR` environment variable.",
-)
-@click.option("--job-per-primary", "-jpp", default=False, is_flag=True, help="Run --jobs per primary, not in total.")
-@click.option("--debug", "-d", default=False, is_flag=True, help="Enable debug output")
-def run(
-    template: Path,
-    events: int,
-    primary: int | dict[int, int],
-    output: Path,
-    jobs: int,
-    corsika: Path,
-    seed: int,
-    tmp: Path,
-    jobs_per_primary: bool,
-    debug: bool,
-) -> None:
-    """
-    Run CORSIKA7 in parallel.
-
-    The `TEMPLATE` argument must point to a valid CORSIKA7 steering card, where
-    `{run_idx}`, `{first_event_idx}` `{n_show}` `{seed_1}` `{seed_2}` and `{dir}`
-    will be replaced accordingly.
-
-    For examples see the PANAMA repository:
-
-    https://github.com/The-Ludwig/PANAMA#readme
-    """
-    if debug:
-        logging.basicConfig(level=logging.DEBUG)
-
-    if tmp == DEFAULT_TMP_DIR:
-        n = 0
-        p = Path(tmp)
-        while p.exists() and next(p.iterdir(), True) is not True:
-            n += 1
-            p = Path(DEFAULT_TMP_DIR + f"_{n}")
-    else:
-        p = Path(tmp)
-
-    if isinstance(primary, int):
-        primary = {primary: events}
-
-    if events != DEFAULT_N_EVENTS and len(primary) > 1:
-        logging.warning(
-            "Looks like --events was given and --primary was provided a dict. --events is ignored."
+        self.n_showers = corsika_config["n_show"]
+        self.finished_showers = 0
+        self.running = Popen(
+            self.this_corsika_path.absolute(),
+            stdin=PIPE,
+            stdout=PIPE,
+            cwd=self.this_corsika_path.absolute().parent,
         )
 
-    run_corsika_parallel(primary, jobs, template, Path(output), corsika, p, seed, jobs_per_primary)
+        self.config = corsika_config
+        self.config["n_show"] = f"{self.n_showers}"
+
+        # this is what is expected...
+        # Feels like a hack...
+        with suppress(TimeoutExpired):
+            stdin, stdout = self.running.communicate(
+                input=self.card_template.format(**corsika_config).encode("ASCII"),
+                timeout=1,
+            )
+
+        self.stream = NBSR(self.running.stdout)
+
+    def poll(self) -> int | None:
+        """
+        Returns
+        -------
+        n_update: The number of showers finished since last poll or None if process is finished
+        """
+        if self.running is None:
+            return None
+
+        if (return_code := self.running.poll()) is not None:
+            if return_code != 0:
+                raise RuntimeError(
+                    "Return code of corsika not 0 (should not be possible)"
+                )
+
+            return self.join()
+
+        finished = 0
+
+        line = self.stream.readline()
+        if line is not None:
+            self.output = b""
+        while line is not None:
+            logging.debug(line.decode("ASCII"))
+            logging.info(f"finished events = {line.count(CORSIKA_EVENT_FINISHED)}")
+            finished += line.count(CORSIKA_EVENT_FINISHED)
+            self.output += line
+            line = self.stream.readline()
+
+        self.finished_showers += finished
+
+        return finished
+
+    def join(self) -> int:
+        """
+        Returns
+        -------
+        n_update: The number of finished events in the last output
+        """
+        if self.running is None:
+            raise RuntimeError("Job is already finished")
+
+        (last_stdout, last_stderr_data) = self.running.communicate()
+        line = self.stream.readline()
+
+        finished = 0
+
+        while line is not None:
+            finished += line.count(CORSIKA_EVENT_FINISHED)
+            self.output += line
+            line = self.stream.readline()
+
+        finished += last_stdout.count(CORSIKA_EVENT_FINISHED)
+        self.output += last_stdout
+        logging.debug(f"{self.output.decode('ASCII')}")
+
+        if CORSIKA_RUN_END not in self.output:
+            logging.warning(
+                f"Corsika Output:\n {self.output.decode('ASCII')} \n'END OF RUN' not in corsika output. May indicate failed run. See the output above."
+            )
+
+        self._reset()
+
+        return finished
+
+    def _reset(self):
+        self.running = None
+        self.config = None
+        self.stream = None
+        self.finished_showers = 0
+
+
+class CorsikaRunner:
+    def __init__(
+        self,
+        primary: dict[int, int],
+        n_jobs: int,
+        template_path: Path,
+        output: Path,
+        corsika_executable: Path,
+        corsika_tmp_dir: Path,
+        seed=None,
+    ) -> None:
+        """
+        TODO: Good Docstring, Types
+
+        Parameters
+        ----------
+        """
+        self.primary = primary
+        self.n_jobs = n_jobs
+        self.output = Path(output)
+        self.corsika_executable = Path(corsika_executable)
+        self.corsika_tmp_dir = Path(corsika_tmp_dir)
+
+        # we always need at least n_showers if we want to run n_jobs
+        if not all(n_jobs <= n_showers for n_showers in primary.values()):
+            raise ValueError(
+                "n_jobs must be smaller or equal to the number of showers (for every primary)"
+            )
+
+        if seed is not None:
+            set_seed(seed)
+        self.seed = seed
+
+        with open(template_path) as f:
+            self.card_template: str = f.read()
+
+        self.job_pool: list[CorsikaJob] = []
+
+        for i in range(self.n_jobs):
+            corsika_copy_dir = self.corsika_tmp_dir / f".corsika_copy_run_{i}"
+            self.job_pool.append(
+                CorsikaJob(
+                    self.corsika_executable, corsika_copy_dir, self.card_template
+                )
+            )
+
+    def wait_for_jobs(self):
+        n_events = sum([job.n_showers for job in self.job_pool])
+        # show progressbar until close to end
+        try:
+            with tqdm(total=n_events, unit="shower", unit_scale=True) as pbar:
+                while not all(job.is_finished for job in self.job_pool):
+                    for job in self.job_pool:
+                        update = job.poll()
+                        if update is not None:
+                            pbar.update(update)
+                    sleep(0.1)
+        except KeyboardInterrupt:
+            logging.info("Interrupted by user.")
+
+    def run(self) -> None:
+        # create dir if not existent
+        self.output.mkdir(parents=True, exist_ok=True)
+
+        for idx, (pdgid, n_events) in enumerate(self.primary.items()):
+            logging.info(
+                f"Processing primary {Particle.from_pdgid(pdgid).name} ({pdgid})"
+            )
+
+            corsikaid = int(Corsika7ID.from_pdgid(pdgid))
+
+            events_per_job = n_events // self.n_jobs
+            last_events_per_job = events_per_job + (
+                n_events - events_per_job * self.n_jobs
+            )
+
+            for i, job in enumerate(self.job_pool[:-1]):
+                job.start(
+                    self._get_corsika_config(
+                        self.n_jobs * idx + i,
+                        events_per_job,
+                        corsikaid,
+                    )
+                )
+            self.job_pool[-1].start(
+                self._get_corsika_config(
+                    self.n_jobs * idx + (self.n_jobs - 1),
+                    last_events_per_job,
+                    corsikaid,
+                )
+            )
+
+            self.wait_for_jobs()
+
+    def _get_corsika_config(
+        self,
+        run_idx: int,
+        n_show: int,
+        primary_corsikaid: int,
+        first_event_idx: int = 1,
+    ) -> dir[str, str]:
+        return {
+            "run_idx": f"{run_idx}",
+            "first_event_idx": f"{first_event_idx}",
+            "n_show": n_show,
+            "dir": str(self.output.absolute()) + "/",
+            "seed_1": f"{randrange(1, 900_000_000)}",
+            "seed_2": f"{randrange(1, 900_000_000)}",
+            "primary": f"{primary_corsikaid}",
+        }

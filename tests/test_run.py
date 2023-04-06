@@ -5,20 +5,21 @@ from panama.cli import cli
 import subprocess
 from click.testing import CliRunner
 from panama import read_DAT
-
+import pytest
 
 def test_run_fail(
     test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
 ):
     try:
-        run_corsika_parallel(
+        runner = CorsikaRunner(
             {2212: 100_000, 1000260560: 1000},
             4,
             test_file_path,
             Path("/tmp/corsika_test_output"),
-            test_file_path.parent.parent.parent / "panama" / "cli.py",
+            test_file_path.parent.parent.parent / "panama" / "cli" / "cli.py",
             Path("/tmp/corsika_tmp_dir"),
         )
+        runner.run()
         assert False
     except OSError as e:
         print(dir(e))
@@ -39,10 +40,10 @@ def test_corsika_runner(
                            n_jobs=1,
                            template_path=test_file_path,
                            output=tmp_path,
-                           corsika_path=corsika_path,
+                           corsika_executable=corsika_path,
                            corsika_tmp_dir=tmp_path,
                            seed=137,
-                           jobs_per_primary=False)
+                           )
     
     runner.run()
     
@@ -119,12 +120,12 @@ def test_different_primary_type(
     assert event_header_2["particle_id"].iloc[0] == 14
 
 
-def test_job_per_primary(
+def test_multi_job(
     tmp_path,
     test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
     corsika_path=Path(__file__).parent.parent
     / "corsika-77420"
-    / "run"
+   / "run"
     / "corsika77420Linux_SIBYLL_urqmd",
     compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
 ):
@@ -135,7 +136,7 @@ def test_job_per_primary(
             "run",
             f"{test_file_path}",
             "--primary",
-            "{2212: 1, 1000260560: 1}",  # proton and iron
+            "{2212: 2, 1000260560: 2}",  # proton and iron
             "--corsika",
             f"{corsika_path}",
             "--output",
@@ -143,9 +144,8 @@ def test_job_per_primary(
             "--seed",
             "137",
             "--jobs",
-            "1",  # this also tests multi threading since we have one job per primary
+            "2",
             "--debug",
-            "--jobs-per-primary"
         ],
         catch_exceptions=False
     )
@@ -161,9 +161,41 @@ def test_job_per_primary(
     # assert event_header.equals(event_header_2)
     # assert ps.equals(ps_2)
 
-    assert event_header_2.shape[0] == 2
-    print(event_header_2.keys())
+    assert event_header_2.shape[0] == 4
+    assert run_header_2.shape[0] == 4
     assert len(event_header_2["particle_id"].unique()) == 2
+
+
+def test_multi_job_fail(
+    tmp_path,
+    test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
+    corsika_path=Path(__file__).parent.parent
+    / "corsika-77420"
+    / "run"
+    / "corsika77420Linux_SIBYLL_urqmd",
+    compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
+):
+    runner = CliRunner()
+    with pytest.raises(ValueError, match="n_jobs must be smaller or equa"):
+        result = runner.invoke(
+            cli,
+            [
+                "run",
+                f"{test_file_path}",
+                "--primary",
+                "{2212: 1, 1000260560: 1}",  # proton and iron
+                "--corsika",
+                f"{corsika_path}",
+                "--output",
+                f"{tmp_path}",
+                "--seed",
+                "137",
+                "--jobs",
+                "2",
+                "--debug",
+            ],
+            catch_exceptions=False
+    )
 
 
 def test_cli(
@@ -190,7 +222,7 @@ def test_cli(
             "--seed",
             "137",
             "--jobs",
-            "1",  # this also tests multi threading since we have one job per primary
+            "1",  
             "--debug",
         ],
         catch_exceptions=False
