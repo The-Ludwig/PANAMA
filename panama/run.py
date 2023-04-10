@@ -9,7 +9,6 @@ from random import randrange
 from random import seed as set_seed
 from subprocess import PIPE, Popen, TimeoutExpired
 from time import sleep
-from typing import Any
 
 from particle import Corsika7ID, Particle
 from tqdm import tqdm
@@ -37,26 +36,25 @@ class CorsikaJob:
             shutil.copy(str(p.absolute()), str((corsika_copy_dir / p.name).absolute()))
         self.this_corsika_path = self.corsika_copy_dir / corsika_executable.name
 
-        self.running = None
-        self.config = None
-        self.stream = None
+        self.running: None | Popen[bytes] = None
+        self.config: None | dict[str, str] = None
+        self.stream: None | NBSR = None
         self.n_showers = 0
         self.finished_showers = 0
         self.output = b""
-        self.finished = []
 
     def __del__(self) -> None:
         shutil.rmtree(self.corsika_copy_dir)
 
     @property
-    def is_finished(self):
+    def is_finished(self) -> bool:
         return self.running is None
 
-    def start(self, corsika_config: dir[str, Any]) -> None:
+    def start(self, corsika_config: dict[str, str]) -> None:
         if self.running is not None:
             raise RuntimeError("Can't use this CorsikaJob, it's still running!")
 
-        self.n_showers = corsika_config["n_show"]
+        self.n_showers = int(corsika_config["n_show"])
         self.finished_showers = 0
         self.running = Popen(
             self.this_corsika_path.absolute(),
@@ -66,7 +64,6 @@ class CorsikaJob:
         )
 
         self.config = corsika_config
-        self.config["n_show"] = f"{self.n_showers}"
 
         # this is what is expected...
         # Feels like a hack...
@@ -76,6 +73,7 @@ class CorsikaJob:
                 timeout=1,
             )
 
+        assert self.running.stdout is not None
         self.stream = NBSR(self.running.stdout)
 
     def poll(self) -> int | None:
@@ -96,6 +94,8 @@ class CorsikaJob:
             return self.join()
 
         finished = 0
+
+        assert self.stream is not None
 
         line = self.stream.readline()
         if line is not None:
@@ -119,6 +119,7 @@ class CorsikaJob:
         """
         if self.running is None:
             raise RuntimeError("Job is already finished")
+        assert self.stream is not None
 
         (last_stdout, last_stderr_data) = self.running.communicate()
         line = self.stream.readline()
@@ -143,7 +144,7 @@ class CorsikaJob:
 
         return finished
 
-    def _reset(self):
+    def _reset(self) -> None:
         self.running = None
         self.config = None
         self.stream = None
@@ -159,7 +160,7 @@ class CorsikaRunner:
         output: Path,
         corsika_executable: Path,
         corsika_tmp_dir: Path,
-        seed=None,
+        seed: None | int = None,
     ) -> None:
         """
         TODO: Good Docstring, Types
@@ -196,7 +197,7 @@ class CorsikaRunner:
                 )
             )
 
-    def wait_for_jobs(self):
+    def wait_for_jobs(self) -> None:
         n_events = sum([job.n_showers for job in self.job_pool])
         # show progressbar until close to end
         try:
@@ -250,11 +251,11 @@ class CorsikaRunner:
         n_show: int,
         primary_corsikaid: int,
         first_event_idx: int = 1,
-    ) -> dir[str, str]:
+    ) -> dict[str, str]:
         return {
             "run_idx": f"{run_idx}",
             "first_event_idx": f"{first_event_idx}",
-            "n_show": n_show,
+            "n_show": f"{n_show}",
             "dir": str(self.output.absolute()) + "/",
             "seed_1": f"{randrange(1, 900_000_000)}",
             "seed_2": f"{randrange(1, 900_000_000)}",
