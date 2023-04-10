@@ -102,7 +102,7 @@ class CorsikaJob:
             self.output = b""
         while line is not None:
             logging.debug(line.decode("ASCII"))
-            logging.info(f"finished events = {line.count(CORSIKA_EVENT_FINISHED)}")
+            logging.debug(f"finished events = {line.count(CORSIKA_EVENT_FINISHED)}")
             finished += line.count(CORSIKA_EVENT_FINISHED)
             self.output += line
             line = self.stream.readline()
@@ -216,8 +216,9 @@ class CorsikaRunner:
         self.output.mkdir(parents=True, exist_ok=True)
 
         for idx, (pdgid, n_events) in enumerate(self.primary.items()):
+            logging.info("#" * 50)
             logging.info(
-                f"Processing primary {Particle.from_pdgid(pdgid).name} ({pdgid})"
+                f"Running primary '{Particle.from_pdgid(pdgid).name}' (pdgid: {pdgid})"
             )
 
             corsikaid = int(Corsika7ID.from_pdgid(pdgid))
