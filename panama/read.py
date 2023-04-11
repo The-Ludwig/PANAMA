@@ -401,6 +401,23 @@ def read_DAT(
                 df_particles["hadron_gen"].values
                 - df_particles["mother_hadr_gen"].values
             )
+
+            is_pion_decay = (dif == 51) & (
+                (df_particles["mother_pdgid"].values == 111)
+                | (df_particles["mother_pdgid"].values == 211)
+                | (df_particles["mother_pdgid"].values == -211)
+            )
+
+            df_particles["cleaned_mother_pdgid"] = df_particles["mother_pdgid"]
+            df_particles.loc[
+                ~(
+                    (((dif == 1) | (dif == 0)) & ~mother_is_resonance)
+                    | mother_has_charm
+                    | is_pion_decay
+                ),
+                "cleaned_mother_pdgid",
+            ] = pdg_error_val
+
             df_particles["is_prompt"] = df_particles["has_mother"].values & (
                 (
                     (mother_lifetimes.values <= lifetime_limit)
@@ -422,9 +439,6 @@ def read_DAT(
             inplace=True,
         )
 
-        # Numba version...
-        # df["mother_run_idx"], df["mother_event_idx"], df["mother_particle_idx"] = mother_idx_numba(df.loc[:, "is_mother"].values, df.loc[:, "run_number"].values, df.loc[:, "event_number"].values, df.loc[:, "particle_number"].values)
-
     if drop_non_particles:
         df_particles.drop(
             index=df_particles.query("pdgid == 0").index.values, inplace=True
@@ -433,8 +447,5 @@ def read_DAT(
     df_particles.set_index(
         keys=["run_number", "event_number", "particle_number"], inplace=True
     )
-
-    # if additional_columns:
-    #    df["mother_idx"] = mother_idx(df["is_mother"].values, df.index.values)
 
     return df_run_headers, df_event_headers, df_particles
