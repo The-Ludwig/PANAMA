@@ -1,5 +1,6 @@
-from .parallel_run import run_corsika_parallel
+from .cli import cli
 from .read import read_DAT
+from .run import CorsikaRunner
 from .weights import add_weight, add_weight_prompt, add_weight_prompt_per_event
 
 __all__ = (
@@ -7,5 +8,6 @@ __all__ = (
     "add_weight",
     "add_weight_prompt",
     "add_weight_prompt_per_event",
-    "run_corsika_parallel",
+    "CorsikaRunner",
+    "cli",
 )

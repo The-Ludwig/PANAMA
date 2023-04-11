@@ -20,6 +20,8 @@ def cli(
     """
     if debug:
         logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
 
 
 cli.add_command(hdf5)
