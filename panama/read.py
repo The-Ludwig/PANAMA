@@ -373,7 +373,6 @@ def read_DAT(
             }
 
             # this follows the MCEq definition
-            lifetime_limit = Particle.from_name("D0").lifetime * 10
             lifetimes = {
                 pdgid: Particle.from_pdgid(pdgid).lifetime
                 if pdgid != pdg_error_val
@@ -384,15 +383,21 @@ def read_DAT(
                 if lifetimes[pdgid] is None:
                     lifetimes[pdgid] = 0
 
+            is_resonance = {
+                pdgid: "*" in Particle.from_pdgid(pdgid).name
+                if pdgid != pdg_error_val
+                else False
+                for pdgid in pdgids
+            }
+
             mother_has_charm = df_particles["mother_pdgid"].map(
                 has_charm, na_action=None
             )
             mother_lifetimes = df_particles["mother_pdgid"].map(
                 lifetimes, na_action=None
             )
-
-            mother_is_resonance = (df_particles["mother_corsikaid"].values <= 65) & (
-                df_particles["mother_corsikaid"].values >= 62
+            mother_is_resonance = df_particles["mother_pdgid"].map(
+                is_resonance, na_action=None
             )
 
             df_particles["mother_has_charm"] = mother_has_charm.values
@@ -418,20 +423,7 @@ def read_DAT(
                 "cleaned_mother_pdgid",
             ] = pdg_error_val
 
-            df_particles["is_prompt"] = df_particles["has_mother"].values & (
-                (
-                    (mother_lifetimes.values <= lifetime_limit)
-                    & (
-                        (np.abs(dif) <= 1 & ~mother_is_resonance)
-                        # np.abs because of some very weird stuff going on in ehist
-                        | ((dif == 30) & mother_has_charm.values)
-                    )
-                )
-                | (
-                    (df_particles["mother_pdgid"].abs().values == 13)
-                    & (df_particles["hadron_gen"] < 3)
-                )  # mother is muon (and in early generation)
-            )
+            df_particles["is_prompt"] = is_prompt_lifetime_limit(df_particles)
 
     if drop_mothers:
         df_particles.drop(
