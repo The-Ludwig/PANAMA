@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import shutil
 from contextlib import suppress
+from os import symlink
 from pathlib import Path
 from random import randrange
 from random import seed as set_seed
@@ -28,12 +29,11 @@ class CorsikaJob:
         self.corsika_copy_dir.mkdir(parents=True, exist_ok=False)
         self.card_template = card_template
 
-        # copy all files in the corsika run dir, except for the DAT files
-        # which are often created, if you test corsika in the run dir
-        for p in corsika_executable.absolute().parent.glob("[!DAT]*"):
+        # symlink all files in the corsika run dir
+        for p in corsika_executable.absolute().parent.glob("*"):
             if not p.is_file():
                 continue
-            shutil.copy(str(p.absolute()), str((corsika_copy_dir / p.name).absolute()))
+            symlink(str(p.absolute()), str((corsika_copy_dir / p.name).absolute()))
         self.this_corsika_path = self.corsika_copy_dir / corsika_executable.name
 
         self.running: None | Popen[bytes] = None
