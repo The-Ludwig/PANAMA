@@ -8,8 +8,10 @@ from corsikaio import CorsikaParticleFile
 from corsikaio.subblocks import event_header_types, particle_data_dtype
 from particle import Corsika7ID, Particle
 from tqdm import tqdm
+from math import inf
 
-D0_LIFETIME = Particle.from_name("D0").lifetime
+from .prompt import is_prompt_lifetime_limit
+
 DEFAULT_RUN_HEADER_FEATURES = [
     "run_number",
     "date",
@@ -57,6 +59,7 @@ def read_DAT(
     drop_mothers: bool = True,
     drop_non_particles: bool = True,
     noparse: bool = True,
+    pdg_error_val: int = 0
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Read CORSIKA DAT files to Pandas.DataFrame.
@@ -113,6 +116,8 @@ def read_DAT(
     noparse:
         Use the "noparse" feature of pycorsikaio, which theoretically
         makes reading in the corsika files faster
+    pdg_error_val:
+        The PDG value an unknown/error particle will take
 
     Returns
     -------
@@ -301,9 +306,6 @@ def read_DAT(
         )
         df_particles["is_mother"] = df_particles["particle_description"] < 0
 
-        pdg_error_val = (
-            0  # This non-existing pdgid will be our error value for now, since
-        )
         # the use of pd.NA is currently experimental in Int64 type columns
         corsikaids = df_particles["corsikaid"].unique()
         pdg_map = {
@@ -368,7 +370,7 @@ def read_DAT(
             has_charm = {
                 pdgid: "c" in Particle.from_pdgid(pdgid).quarks.lower()
                 if pdgid != pdg_error_val
-                else pd.NA
+                else False
                 for pdgid in pdgids
             }
 
@@ -376,7 +378,7 @@ def read_DAT(
             lifetimes = {
                 pdgid: Particle.from_pdgid(pdgid).lifetime
                 if pdgid != pdg_error_val
-                else lifetime_limit + 10
+                else inf
                 for pdgid in pdgids
             }
             for pdgid in lifetimes:
@@ -390,17 +392,15 @@ def read_DAT(
                 for pdgid in pdgids
             }
 
-            mother_has_charm = df_particles["mother_pdgid"].map(
+            df_particles["mother_has_charm"] = df_particles["mother_pdgid"].map(
                 has_charm, na_action=None
             )
-            mother_lifetimes = df_particles["mother_pdgid"].map(
+            df_particles["mother_lifetimes"] = df_particles["mother_pdgid"].map(
                 lifetimes, na_action=None
-            )
-            mother_is_resonance = df_particles["mother_pdgid"].map(
+            ).array
+            df_particles["mother_is_resonance"] = df_particles["mother_pdgid"].map(
                 is_resonance, na_action=None
             )
-
-            df_particles["mother_has_charm"] = mother_has_charm.values
 
             dif = (
                 df_particles["hadron_gen"].to_numpy(copy=False)
@@ -413,14 +413,20 @@ def read_DAT(
                 | (df_particles["mother_pdgid"].to_numpy(copy=False) == -211)
             )
 
-            df_particles["cleaned_mother_pdgid"] = df_particles["mother_pdgid"]
-            df_particles.loc[
-                ~(
-                    (((dif == 1) | (dif == 0)) & ~mother_is_resonance)
-                    | mother_has_charm
+            # this adds a cleaned version of the mother_pdgid
+            # where the pdgid is replaced with the pdg error value 
+            # if we can't tell the motherpdgid for sure
+            df_particles["mother_pdgid_cleaned"] = df_particles["mother_pdgid"]
+            no_true_mother_idxs = ~(
+                    (((dif == 1) | (dif == 0)) & ~df_particles["mother_is_resonance"].to_numpy(copy=False)
+                    | df_particles["mother_has_charm"].to_numpy(copy=False)
                     | is_pion_decay
-                ),
-                "cleaned_mother_pdgid",
+                    )
+                )
+            print(no_true_mother_idxs.dtype)
+            df_particles.loc[
+                no_true_mother_idxs,
+                "mother_pdgid_cleaned",
             ] = pdg_error_val
 
             df_particles["is_prompt"] = is_prompt_lifetime_limit(df_particles)
