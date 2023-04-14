@@ -339,30 +339,30 @@ def read_DAT(
             grandmother_index[0] = df_particles.shape[0] - 1
 
             df_particles["has_mother"] = (
-                df_particles["is_mother"].iloc[mother_index].values
-                & df_particles["is_mother"].iloc[grandmother_index].values
+                df_particles["is_mother"].iloc[mother_index].to_numpy(copy=False)
+                & df_particles["is_mother"].iloc[grandmother_index].to_numpy(copy=False)
             )
 
             df_particles["mother_pdgid"] = (
-                df_particles["pdgid"].iloc[mother_index].values
+                df_particles["pdgid"].iloc[mother_index].to_numpy(copy=False)
             )
             df_particles.loc[
-                ~df_particles["has_mother"].values, "mother_pdgid"
+                ~df_particles["has_mother"].array, "mother_pdgid"
             ] = pdg_error_val
 
             df_particles["mother_corsikaid"] = (
-                df_particles["corsikaid"].iloc[mother_index].values
+                df_particles["corsikaid"].iloc[mother_index].array
             )
             df_particles.loc[
-                ~df_particles["has_mother"].values, "mother_corsikaid"
+                ~df_particles["has_mother"].array, "mother_corsikaid"
             ] = pdg_error_val
 
             df_particles["mother_hadr_gen"] = (
-                np.abs(df_particles["particle_description"].iloc[mother_index].values)
+                np.abs(df_particles["particle_description"].iloc[mother_index].array)
                 % 100
             )
             df_particles.loc[
-                ~df_particles["has_mother"].values, "mother_hadr_gen"
+                ~df_particles["has_mother"].array, "mother_hadr_gen"
             ] = pd.NA
 
             has_charm = {
@@ -403,14 +403,14 @@ def read_DAT(
             df_particles["mother_has_charm"] = mother_has_charm.values
 
             dif = (
-                df_particles["hadron_gen"].values
-                - df_particles["mother_hadr_gen"].values
+                df_particles["hadron_gen"].to_numpy(copy=False)
+                - df_particles["mother_hadr_gen"].to_numpy(copy=False)
             )
 
             is_pion_decay = (dif == 51) & (
-                (df_particles["mother_pdgid"].values == 111)
-                | (df_particles["mother_pdgid"].values == 211)
-                | (df_particles["mother_pdgid"].values == -211)
+                (df_particles["mother_pdgid"].to_numpy(copy=False) == 111)
+                | (df_particles["mother_pdgid"].to_numpy(copy=False) == 211)
+                | (df_particles["mother_pdgid"].to_numpy(copy=False) == -211)
             )
 
             df_particles["cleaned_mother_pdgid"] = df_particles["mother_pdgid"]
@@ -427,13 +427,13 @@ def read_DAT(
 
     if drop_mothers:
         df_particles.drop(
-            index=df_particles.query("particle_description < 0").index.values,
+            index=df_particles.query("particle_description < 0").index.array,
             inplace=True,
         )
 
     if drop_non_particles:
         df_particles.drop(
-            index=df_particles.query("pdgid == 0").index.values, inplace=True
+            index=df_particles.query("pdgid == 0").index.array, inplace=True
         )
 
     df_particles.set_index(
