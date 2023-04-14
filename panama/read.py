@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import inf
 from pathlib import Path
 
 import numpy as np
@@ -9,7 +10,8 @@ from corsikaio.subblocks import event_header_types, particle_data_dtype
 from particle import Corsika7ID, Particle
 from tqdm import tqdm
 
-D0_LIFETIME = Particle.from_name("D0").lifetime
+from .prompt import is_prompt_lifetime_limit
+
 DEFAULT_RUN_HEADER_FEATURES = [
     "run_number",
     "date",
@@ -57,6 +59,7 @@ def read_DAT(
     drop_mothers: bool = True,
     drop_non_particles: bool = True,
     noparse: bool = True,
+    pdg_error_val: int = 0,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Read CORSIKA DAT files to Pandas.DataFrame.
@@ -113,6 +116,8 @@ def read_DAT(
     noparse:
         Use the "noparse" feature of pycorsikaio, which theoretically
         makes reading in the corsika files faster
+    pdg_error_val:
+        The PDG value an unknown/error particle will take
 
     Returns
     -------
@@ -301,9 +306,6 @@ def read_DAT(
         )
         df_particles["is_mother"] = df_particles["particle_description"] < 0
 
-        pdg_error_val = (
-            0  # This non-existing pdgid will be our error value for now, since
-        )
         # the use of pd.NA is currently experimental in Int64 type columns
         corsikaids = df_particles["corsikaid"].unique()
         pdg_map = {
@@ -338,103 +340,111 @@ def read_DAT(
             grandmother_index = np.arange(-1, df_particles.shape[0] - 1)
             grandmother_index[0] = df_particles.shape[0] - 1
 
-            df_particles["has_mother"] = (
-                df_particles["is_mother"].iloc[mother_index].values
-                & df_particles["is_mother"].iloc[grandmother_index].values
+            df_particles["has_mother"] = df_particles["is_mother"].iloc[
+                mother_index
+            ].to_numpy(copy=False) & df_particles["is_mother"].iloc[
+                grandmother_index
+            ].to_numpy(
+                copy=False
             )
 
             df_particles["mother_pdgid"] = (
-                df_particles["pdgid"].iloc[mother_index].values
+                df_particles["pdgid"].iloc[mother_index].to_numpy(copy=False)
             )
             df_particles.loc[
-                ~df_particles["has_mother"].values, "mother_pdgid"
+                ~df_particles["has_mother"].array, "mother_pdgid"
             ] = pdg_error_val
 
             df_particles["mother_corsikaid"] = (
-                df_particles["corsikaid"].iloc[mother_index].values
+                df_particles["corsikaid"].iloc[mother_index].array
             )
             df_particles.loc[
-                ~df_particles["has_mother"].values, "mother_corsikaid"
+                ~df_particles["has_mother"].array, "mother_corsikaid"
             ] = pdg_error_val
 
             df_particles["mother_hadr_gen"] = (
-                np.abs(df_particles["particle_description"].iloc[mother_index].values)
+                np.abs(df_particles["particle_description"].iloc[mother_index].array)
                 % 100
             )
             df_particles.loc[
-                ~df_particles["has_mother"].values, "mother_hadr_gen"
+                ~df_particles["has_mother"].array, "mother_hadr_gen"
             ] = pd.NA
 
             has_charm = {
                 pdgid: "c" in Particle.from_pdgid(pdgid).quarks.lower()
                 if pdgid != pdg_error_val
-                else pd.NA
+                else False
                 for pdgid in pdgids
             }
 
             # this follows the MCEq definition
-            lifetime_limit = Particle.from_name("D0").lifetime * 10
             lifetimes = {
                 pdgid: Particle.from_pdgid(pdgid).lifetime
                 if pdgid != pdg_error_val
-                else lifetime_limit + 10
+                else inf
                 for pdgid in pdgids
             }
             for pdgid in lifetimes:
                 if lifetimes[pdgid] is None:
                     lifetimes[pdgid] = 0
 
-            mother_has_charm = df_particles["mother_pdgid"].map(
+            is_resonance = {
+                pdgid: "*" in Particle.from_pdgid(pdgid).name
+                if pdgid != pdg_error_val
+                else False
+                for pdgid in pdgids
+            }
+
+            df_particles["mother_has_charm"] = df_particles["mother_pdgid"].map(
                 has_charm, na_action=None
             )
-            mother_lifetimes = df_particles["mother_pdgid"].map(
-                lifetimes, na_action=None
+            df_particles["mother_lifetimes"] = (
+                df_particles["mother_pdgid"].map(lifetimes, na_action=None).array
+            )
+            df_particles["mother_is_resonance"] = df_particles["mother_pdgid"].map(
+                is_resonance, na_action=None
             )
 
-            mother_is_resonance = (df_particles["mother_corsikaid"].values <= 65) & (
-                df_particles["mother_corsikaid"].values >= 62
+            dif = df_particles["hadron_gen"].to_numpy(copy=False) - df_particles[
+                "mother_hadr_gen"
+            ].to_numpy(copy=False)
+
+            is_pion_decay = (dif == 51) & (
+                (df_particles["mother_pdgid"].to_numpy(copy=False) == 111)
+                | (df_particles["mother_pdgid"].to_numpy(copy=False) == 211)
+                | (df_particles["mother_pdgid"].to_numpy(copy=False) == -211)
             )
 
-            df_particles["mother_has_charm"] = mother_has_charm.values
+            # this adds a cleaned version of the mother_pdgid
+            # where the pdgid is replaced with the pdg error value
+            # if we can't tell the motherpdgid for sure
+            df_particles["mother_pdgid_cleaned"] = df_particles["mother_pdgid"]
+            no_true_mother_idxs = ~(
+                ((dif == 1) | (dif == 0))
+                & ~df_particles["mother_is_resonance"].to_numpy(copy=False)
+                | df_particles["mother_has_charm"].to_numpy(copy=False)
+                | is_pion_decay
+            )
+            df_particles.loc[
+                no_true_mother_idxs,
+                "mother_pdgid_cleaned",
+            ] = pdg_error_val
 
-            dif = (
-                df_particles["hadron_gen"].values
-                - df_particles["mother_hadr_gen"].values
-            )
-            df_particles["is_prompt"] = df_particles["has_mother"].values & (
-                (
-                    (mother_lifetimes.values <= lifetime_limit)
-                    & (
-                        (np.abs(dif) <= 1 & ~mother_is_resonance)
-                        # np.abs because of some very weird stuff going on in ehist
-                        | ((dif == 30) & mother_has_charm.values)
-                    )
-                )
-                | (
-                    (df_particles["mother_pdgid"].abs().values == 13)
-                    & (df_particles["hadron_gen"] < 3)
-                )  # mother is muon (and in early generation)
-            )
+            df_particles["is_prompt"] = is_prompt_lifetime_limit(df_particles)
 
     if drop_mothers:
         df_particles.drop(
-            index=df_particles.query("particle_description < 0").index.values,
+            index=df_particles.query("particle_description < 0").index.array,
             inplace=True,
         )
 
-        # Numba version...
-        # df["mother_run_idx"], df["mother_event_idx"], df["mother_particle_idx"] = mother_idx_numba(df.loc[:, "is_mother"].values, df.loc[:, "run_number"].values, df.loc[:, "event_number"].values, df.loc[:, "particle_number"].values)
-
     if drop_non_particles:
         df_particles.drop(
-            index=df_particles.query("pdgid == 0").index.values, inplace=True
+            index=df_particles.query("pdgid == 0").index.array, inplace=True
         )
 
     df_particles.set_index(
         keys=["run_number", "event_number", "particle_number"], inplace=True
     )
-
-    # if additional_columns:
-    #    df["mother_idx"] = mother_idx(df["is_mother"].values, df.index.values)
 
     return df_run_headers, df_event_headers, df_particles
