@@ -4,6 +4,7 @@ from particle import Particle
 
 D0_LIFETIME = Particle.from_name("D0").lifetime
 
+
 def is_prompt_lifetime_limit(
     df_particles: pd.DataFrame, lifetime_limit_ns: float = D0_LIFETIME * 10
 ) -> np.ndarray:
@@ -20,16 +21,18 @@ def is_prompt_lifetime_limit(
     A numpy boolean array, True for prompt, False for conventional
     """
 
-    dif = (
-        df_particles["hadron_gen"].to_numpy(copy=False)
-        - df_particles["mother_hadr_gen"].to_numpy(copy=False)
-    )
+    dif = df_particles["hadron_gen"].to_numpy(copy=False) - df_particles[
+        "mother_hadr_gen"
+    ].to_numpy(copy=False)
 
     return df_particles["has_mother"].to_numpy(copy=False) & (
         (
             (df_particles["mother_lifetimes"].to_numpy(copy=False) <= lifetime_limit_ns)
             & (
-                (np.abs(dif) <= 1 & ~df_particles["mother_is_resonance"].to_numpy(copy=False))
+                (
+                    np.abs(dif)
+                    <= 1 & ~df_particles["mother_is_resonance"].to_numpy(copy=False)
+                )
                 # np.abs because of some very weird stuff going on in ehist
                 | ((dif == 30) & df_particles["mother_has_charm"].to_numpy(copy=False))
             )

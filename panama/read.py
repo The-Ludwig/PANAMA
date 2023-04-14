@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import inf
 from pathlib import Path
 
 import numpy as np
@@ -8,7 +9,6 @@ from corsikaio import CorsikaParticleFile
 from corsikaio.subblocks import event_header_types, particle_data_dtype
 from particle import Corsika7ID, Particle
 from tqdm import tqdm
-from math import inf
 
 from .prompt import is_prompt_lifetime_limit
 
@@ -59,7 +59,7 @@ def read_DAT(
     drop_mothers: bool = True,
     drop_non_particles: bool = True,
     noparse: bool = True,
-    pdg_error_val: int = 0
+    pdg_error_val: int = 0,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Read CORSIKA DAT files to Pandas.DataFrame.
@@ -340,9 +340,12 @@ def read_DAT(
             grandmother_index = np.arange(-1, df_particles.shape[0] - 1)
             grandmother_index[0] = df_particles.shape[0] - 1
 
-            df_particles["has_mother"] = (
-                df_particles["is_mother"].iloc[mother_index].to_numpy(copy=False)
-                & df_particles["is_mother"].iloc[grandmother_index].to_numpy(copy=False)
+            df_particles["has_mother"] = df_particles["is_mother"].iloc[
+                mother_index
+            ].to_numpy(copy=False) & df_particles["is_mother"].iloc[
+                grandmother_index
+            ].to_numpy(
+                copy=False
             )
 
             df_particles["mother_pdgid"] = (
@@ -395,17 +398,16 @@ def read_DAT(
             df_particles["mother_has_charm"] = df_particles["mother_pdgid"].map(
                 has_charm, na_action=None
             )
-            df_particles["mother_lifetimes"] = df_particles["mother_pdgid"].map(
-                lifetimes, na_action=None
-            ).array
+            df_particles["mother_lifetimes"] = (
+                df_particles["mother_pdgid"].map(lifetimes, na_action=None).array
+            )
             df_particles["mother_is_resonance"] = df_particles["mother_pdgid"].map(
                 is_resonance, na_action=None
             )
 
-            dif = (
-                df_particles["hadron_gen"].to_numpy(copy=False)
-                - df_particles["mother_hadr_gen"].to_numpy(copy=False)
-            )
+            dif = df_particles["hadron_gen"].to_numpy(copy=False) - df_particles[
+                "mother_hadr_gen"
+            ].to_numpy(copy=False)
 
             is_pion_decay = (dif == 51) & (
                 (df_particles["mother_pdgid"].to_numpy(copy=False) == 111)
@@ -414,16 +416,15 @@ def read_DAT(
             )
 
             # this adds a cleaned version of the mother_pdgid
-            # where the pdgid is replaced with the pdg error value 
+            # where the pdgid is replaced with the pdg error value
             # if we can't tell the motherpdgid for sure
             df_particles["mother_pdgid_cleaned"] = df_particles["mother_pdgid"]
             no_true_mother_idxs = ~(
-                    (((dif == 1) | (dif == 0)) & ~df_particles["mother_is_resonance"].to_numpy(copy=False)
-                    | df_particles["mother_has_charm"].to_numpy(copy=False)
-                    | is_pion_decay
-                    )
-                )
-            print(no_true_mother_idxs.dtype)
+                ((dif == 1) | (dif == 0))
+                & ~df_particles["mother_is_resonance"].to_numpy(copy=False)
+                | df_particles["mother_has_charm"].to_numpy(copy=False)
+                | is_pion_decay
+            )
             df_particles.loc[
                 no_true_mother_idxs,
                 "mother_pdgid_cleaned",
