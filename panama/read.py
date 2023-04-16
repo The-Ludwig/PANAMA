@@ -316,6 +316,14 @@ def read_DAT(
                 copy=False
             )
 
+            df_particles["mother_hadr_gen"] = (
+                np.abs(df_particles["particle_description"].iloc[mother_index].array)
+                % 100
+            )
+            df_particles.loc[
+                ~df_particles["has_mother"].array, "mother_hadr_gen"
+            ] = pd.NA
+
             # copy mother values to daughter columns so we can drop them later
             for name, error_val in (
                 ("pdgid", PDGID_ERROR_VAL),
