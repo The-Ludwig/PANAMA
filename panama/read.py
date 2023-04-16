@@ -323,12 +323,12 @@ def read_DAT(
                 ~df_particles["has_mother"].array, "mother_pdgid"
             ] = PDGID_ERROR_VAL
 
-            df_particles["mother_corsikaid"] = (
-                df_particles["corsikaid"].iloc[mother_index].array
-            )
-            df_particles.loc[
-                ~df_particles["has_mother"].array, "mother_corsikaid"
-            ] = PDGID_ERROR_VAL
+            # df_particles["mother_corsikaid"] = (
+            #     df_particles["corsikaid"].iloc[mother_index].array
+            # )
+            # df_particles.loc[
+            #     ~df_particles["has_mother"].array, "mother_corsikaid"
+            # ] = PDGID_ERROR_VAL
 
             df_particles["mother_hadr_gen"] = (
                 np.abs(df_particles["particle_description"].iloc[mother_index].array)
