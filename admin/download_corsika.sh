@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CORSIKA=corsika-77420
+CORSIKA=corsika-77500
 DOWNLOAD_LINK=https://web.iap.kit.edu/corsika/download/corsika-v770/$CORSIKA.tar.gz
 
 if [ ! -n "$CORSIKA_PW" ]
