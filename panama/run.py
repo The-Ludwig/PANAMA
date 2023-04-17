@@ -87,8 +87,8 @@ class CorsikaJob:
 
         if (return_code := self.running.poll()) is not None:
             if return_code != 0:
-                raise RuntimeError(
-                    "Return code of corsika not 0 (should not be possible)"
+                logging.warning(
+                    f"Return code of corsika not 0, but {return_code} (should not be possible)"
                 )
 
             return self.join()
