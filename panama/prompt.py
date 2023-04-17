@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
-from particle import Particle
 
-D0_LIFETIME = Particle.from_name("D0").lifetime
+from .constants import D0_LIFETIME, PDGID_ERROR_VAL
 
 
 def is_prompt_lifetime_limit(
@@ -42,3 +41,54 @@ def is_prompt_lifetime_limit(
             & (df_particles["hadron_gen"] < 3)
         )  # mother is muon (and in early generation)
     )
+
+
+def is_prompt_pion_kaon(df_particles: pd.DataFrame) -> np.ndarray:
+    """Return a numpy array of prompt labels for the input dataframe differentiating it by the pdgid (cleaned)
+    of the mother particle. If the mother is a pion or a kaon it is not prompt, otherwise it is.
+
+    Parameters
+    ----------
+    df_particles: dataframe with the corsika particles, additional_columns have to be present when running `read_DAT`
+
+    Returns
+    -------
+    A numpy boolean array, True for prompt, False for conventional
+    """
+
+    is_prompt = np.ones(df_particles.shape[0], dtype=bool)
+
+    pdgidc = np.abs(df_particles["mother_pdgid_cleaned"].to_numpy(copy=False))
+
+    is_prompt[(pdgidc == 211) | (pdgidc == 321) | (pdgidc == PDGID_ERROR_VAL)] = False
+
+    return is_prompt
+
+
+def is_prompt_energy(df_particles: pd.DataFrame, s: float = 2) -> np.ndarray:
+    """Return a numpy array of prompt labels for the input dataframe differentiating it by energy of the mother particle.
+
+    Parameters
+    ----------
+    df_particles: dataframe with the corsika particles, additional_columns have to be present when running `read_DAT`
+    s: scaling factor. How much bigger does the decay length has to be compared to the interaction length
+
+    Returns
+    -------
+    A numpy boolean array, True for prompt, False for conventional
+    """
+
+    energy_limit_conversion_factor = 21681.666  # GeV
+
+    limit = (
+        energy_limit_conversion_factor
+        * df_particles["mother_mass"]
+        / df_particles["mother_lifetimes"]
+        / s
+    )
+
+    is_prompt = df_particles["mother_energy"].to_numpy(copy=False) < limit.to_numpy(
+        copy=False
+    )
+
+    return is_prompt

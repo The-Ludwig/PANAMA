@@ -10,42 +10,13 @@ from corsikaio.subblocks import event_header_types, particle_data_dtype
 from particle import Corsika7ID, Particle
 from tqdm import tqdm
 
+from .constants import (
+    CORSIKA_FIELD_BYTE_LEN,
+    DEFAULT_EVENT_HEADER_FEATURES,
+    DEFAULT_RUN_HEADER_FEATURES,
+    PDGID_ERROR_VAL,
+)
 from .prompt import is_prompt_lifetime_limit
-
-DEFAULT_RUN_HEADER_FEATURES = [
-    "run_number",
-    "date",
-    "version",
-    "n_observation_levels",
-    "observation_height",
-    "energy_spectrum_slope",
-    "energy_min",
-    "energy_max",
-    "energy_cutoff_hadrons",
-    "energy_cutoff_muons",
-    "energy_cutoff_electrons",
-    "energy_cutoff_photons",
-    "n_showers",
-]
-DEFAULT_EVENT_HEADER_FEATURES = [
-    "event_number",
-    "run_number",
-    "particle_id",
-    "total_energy",
-    "starting_altitude",
-    "first_interaction_height",
-    "momentum_x",
-    "momentum_y",
-    "momentum_minus_z",
-    "zenith",
-    "azimuth",
-    "low_energy_hadron_model",
-    "high_energy_hadron_model",
-    "sybill_interaction_flag",
-    "sybill_cross_section_flag",
-    "explicit_charm_generation_flag",
-]
-CORSIKA_FIELD_BYTE_LEN = 4
 
 
 def read_DAT(
@@ -59,7 +30,6 @@ def read_DAT(
     drop_mothers: bool = True,
     drop_non_particles: bool = True,
     noparse: bool = True,
-    pdg_error_val: int = 0,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Read CORSIKA DAT files to Pandas.DataFrame.
@@ -116,8 +86,6 @@ def read_DAT(
     noparse:
         Use the "noparse" feature of pycorsikaio, which theoretically
         makes reading in the corsika files faster
-    pdg_error_val:
-        The PDG value an unknown/error particle will take
 
     Returns
     -------
@@ -311,7 +279,7 @@ def read_DAT(
         pdg_map = {
             corsikaid: int(Corsika7ID(corsikaid).to_pdgid())
             if Corsika7ID(corsikaid).is_particle()
-            else pdg_error_val  # This will be our error value
+            else PDGID_ERROR_VAL  # This will be our error value
             for corsikaid in corsikaids
         }
         df_particles["pdgid"] = (
@@ -322,7 +290,7 @@ def read_DAT(
 
         mass_map = {}
         for pdgid in pdgids:
-            if pdgid == pdg_error_val:
+            if pdgid == PDGID_ERROR_VAL:
                 mass_map[pdgid] = 0
             else:
                 mass = Particle.from_pdgid(pdgid).mass
@@ -348,20 +316,6 @@ def read_DAT(
                 copy=False
             )
 
-            df_particles["mother_pdgid"] = (
-                df_particles["pdgid"].iloc[mother_index].to_numpy(copy=False)
-            )
-            df_particles.loc[
-                ~df_particles["has_mother"].array, "mother_pdgid"
-            ] = pdg_error_val
-
-            df_particles["mother_corsikaid"] = (
-                df_particles["corsikaid"].iloc[mother_index].array
-            )
-            df_particles.loc[
-                ~df_particles["has_mother"].array, "mother_corsikaid"
-            ] = pdg_error_val
-
             df_particles["mother_hadr_gen"] = (
                 np.abs(df_particles["particle_description"].iloc[mother_index].array)
                 % 100
@@ -370,9 +324,22 @@ def read_DAT(
                 ~df_particles["has_mother"].array, "mother_hadr_gen"
             ] = pd.NA
 
+            # copy mother values to daughter columns so we can drop them later
+            for name, error_val in (
+                ("pdgid", PDGID_ERROR_VAL),
+                ("energy", pd.NA),
+                ("mass", pd.NA),
+            ):
+                df_particles[f"mother_{name}"] = (
+                    df_particles[name].iloc[mother_index].to_numpy(copy=False)
+                )
+                df_particles.loc[
+                    ~df_particles["has_mother"].array, f"mother_{name}"
+                ] = error_val
+
             has_charm = {
                 pdgid: "c" in Particle.from_pdgid(pdgid).quarks.lower()
-                if pdgid != pdg_error_val
+                if pdgid != PDGID_ERROR_VAL
                 else False
                 for pdgid in pdgids
             }
@@ -380,7 +347,7 @@ def read_DAT(
             # this follows the MCEq definition
             lifetimes = {
                 pdgid: Particle.from_pdgid(pdgid).lifetime
-                if pdgid != pdg_error_val
+                if pdgid != PDGID_ERROR_VAL
                 else inf
                 for pdgid in pdgids
             }
@@ -390,7 +357,7 @@ def read_DAT(
 
             is_resonance = {
                 pdgid: "*" in Particle.from_pdgid(pdgid).name
-                if pdgid != pdg_error_val
+                if pdgid != PDGID_ERROR_VAL
                 else False
                 for pdgid in pdgids
             }
@@ -428,7 +395,7 @@ def read_DAT(
             df_particles.loc[
                 no_true_mother_idxs,
                 "mother_pdgid_cleaned",
-            ] = pdg_error_val
+            ] = PDGID_ERROR_VAL
 
             df_particles["is_prompt"] = is_prompt_lifetime_limit(df_particles)
 
