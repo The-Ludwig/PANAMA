@@ -7,6 +7,9 @@ from click.testing import CliRunner
 from panama import read_DAT
 import pytest
 
+CORSIKA_VERSION = "corsika-77500"
+CORSIKA_EXECUTABLE = "corsika77500Linux_SIBYLL_urqmd"
+
 def test_run_fail(
     test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
 ):
@@ -31,9 +34,9 @@ def test_corsika_runner(
     tmp_path,
     test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
     corsika_path=Path(__file__).parent.parent
-    / "corsika-77420"
+    / CORSIKA_VERSION
     / "run"
-    / "corsika77420Linux_SIBYLL_urqmd",
+    / CORSIKA_EXECUTABLE,
     compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
 ):
     runner = CorsikaRunner(primary={2212: 1, 1000260560: 1},
@@ -83,9 +86,9 @@ def test_different_primary_type(
     tmp_path,
     test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
     corsika_path=Path(__file__).parent.parent
-    / "corsika-77420"
+    / CORSIKA_VERSION
     / "run"
-    / "corsika77420Linux_SIBYLL_urqmd",
+    / CORSIKA_EXECUTABLE,
     compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
 ):
     runner = CliRunner()
@@ -124,9 +127,9 @@ def test_multi_job(
     tmp_path,
     test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
     corsika_path=Path(__file__).parent.parent
-    / "corsika-77420"
+    / CORSIKA_VERSION
    / "run"
-    / "corsika77420Linux_SIBYLL_urqmd",
+    / CORSIKA_EXECUTABLE,
     compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
 ):
     runner = CliRunner()
@@ -170,9 +173,9 @@ def test_multi_job_fail(
     tmp_path,
     test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
     corsika_path=Path(__file__).parent.parent
-    / "corsika-77420"
+    / CORSIKA_VERSION
     / "run"
-    / "corsika77420Linux_SIBYLL_urqmd",
+    / CORSIKA_EXECUTABLE,
     compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
 ):
     runner = CliRunner()
@@ -202,9 +205,9 @@ def test_cli(
     tmp_path,
     test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
     corsika_path=Path(__file__).parent.parent
-    / "corsika-77420"
+    / CORSIKA_VERSION
     / "run"
-    / "corsika77420Linux_SIBYLL_urqmd",
+    / CORSIKA_EXECUTABLE,
     compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
 ):
     runner = CliRunner()
