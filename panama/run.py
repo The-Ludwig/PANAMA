@@ -88,7 +88,7 @@ class CorsikaJob:
         if (return_code := self.running.poll()) is not None:
             if return_code != 0:
                 logging.error(
-                    f"Return code of corsika is {return_code} this indicates a failed run."
+                    f"Return code of corsika is {return_code}. This indicates a failed run."
                 )
 
             return self.join()
