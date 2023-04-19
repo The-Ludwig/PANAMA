@@ -24,3 +24,14 @@ def test_prompt_definitions_similar(test_file_path=GLOB_TEST_FILE):
     assert np.sum(prompt_baseline != prompt_pion_kaon)/len(prompt_baseline) < 0.01
     assert np.sum(prompt_baseline != prompt_energy)/len(prompt_baseline) < 0.15
 
+
+def test_weight_prompt(test_file_path=GLOB_TEST_FILE):
+    df_run, df_event, df = panama.read_DAT(
+        glob=test_file_path, drop_non_particles=False, mother_columns=True, drop_mothers=True
+    )
+    
+    panama.add_weight_prompt(df, 137.420)
+    panama.add_weight_prompt_per_event(df, 137.420)
+
+    assert np.all(df.query("is_prompt == True")["weight_prompt_per_event"] == 137.420)
+    assert np.all(df.query("is_prompt == True")["weight_prompt"] == 137.420)
