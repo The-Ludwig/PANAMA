@@ -81,7 +81,9 @@ def add_weight_prompt(
         df.sort_index(inplace=True)
 
     df[weight_col_name] = 1.0
-    df.loc[df[is_prompt_col_name] is True, weight_col_name] = prompt_factor
+    df.loc[
+        df[is_prompt_col_name] == True, weight_col_name  # noqa: E712
+    ] = prompt_factor
 
 
 def add_weight_prompt_per_event(
