@@ -90,7 +90,7 @@ def test_spectral_index(test_file_path=GLOB_TEST_FILE):
     )
 
     # add weights
-    panama.add_weight(df_run, df_event, df)
+    df["weight"] = panama.get_weight(df_run, df_event, df)
 
     assert np.sum(np.isnan(df["weight"])) == 0
 
@@ -149,7 +149,7 @@ def test_spectral_index_proton_only(
     )
 
     # add weights
-    panama.add_weight(df_run, df_event, df, model=panama.fluxes.FastThunmanCO())
+    df["weight"] = panama.get_weight(df_run, df_event, df, model=panama.fluxes.FastThunmanCO())
 
     assert np.sum(np.isnan(df["weight"])) == 0
 
