@@ -11,12 +11,12 @@ from .fluxes import FastHillasGaisser2012, FastPrimaryFlux
 DEFAULT_FLUX = FastHillasGaisser2012(model="H3a")
 
 
-def add_weight(
+def get_weights(
     df_run: pd.DataFrame,
     df_event: pd.DataFrame,
     df: pd.DataFrame,
     model: FastPrimaryFlux = DEFAULT_FLUX,
-) -> None:
+) -> pd.DataFrame:
     """
     Adds the column "weight" too df_particle to reweight for given primary flux.
 
@@ -26,6 +26,11 @@ def add_weight(
     df_event: The event dataframe (as returned by `read_corsika_particle_files_to_dataframe`)
     df: The particle dataframe (as returned by `read_corsika_particle_files_to_dataframe`)
     model: The Cosmic Ray primary flux model (instance of CRFlux)
+
+    Returns
+    -------
+    weights: A dataframe with the weights labeled by the run and event index.
+    Can be used like this: `df['weights'] = panama.get_weights(df_run, df_event, df)`
     """
     if not df_event.index.is_monotonic_increasing:
         df_event.sort_index(inplace=True)
@@ -60,19 +65,31 @@ def add_weight(
 
         weights += [flux(energy) / ext_pdf]
 
-    df["weight"] = pd.concat(weights)
-    df_event["weight"] = pd.concat(weights)
+    return pd.concat(weights)
 
 
-def add_weight_prompt(df: pd.DataFrame, prompt_factor: float) -> None:
+def add_weight_prompt(
+    df: pd.DataFrame,
+    prompt_factor: float,
+    weight_col_name: str = "weight_prompt",
+    is_prompt_col_name: str = "is_prompt",
+) -> None:
     """
     Adds column "weight_prompt" to df, to set a weight for every prompt particle, non prompt particles get weight 1
     """
-    df["weight_prompt"] = 1.0
-    df.loc[df["is_prompt"] is True, "weight_prompt"] = prompt_factor
+    if not df.index.is_monotonic_increasing:
+        df.sort_index(inplace=True)
+
+    df[weight_col_name] = 1.0
+    df.loc[df[is_prompt_col_name] is True, weight_col_name] = prompt_factor
 
 
-def add_weight_prompt_per_event(df: pd.DataFrame, prompt_factor: float) -> None:
+def add_weight_prompt_per_event(
+    df: pd.DataFrame,
+    prompt_factor: float,
+    weight_col_name: str = "weight_prompt_per_event",
+    is_prompt_col_name: str = "is_prompt",
+) -> None:
     """
     Adds column "weight_prompt_per_event" to df, which will be `prompt_factor` for every particle, which is inside
     a shower, which has at least one prompt muon. For every other particle, it will be 1.
@@ -81,12 +98,12 @@ def add_weight_prompt_per_event(df: pd.DataFrame, prompt_factor: float) -> None:
     if not df.index.is_monotonic_increasing:
         df.sort_index(inplace=True)
 
-    df["weight_prompt_per_event"] = 1.0
+    df[weight_col_name] = 1.0
 
-    indexes = df.query("is_prompt == True").index
+    indexes = df.query(f"{is_prompt_col_name} == True").index
     evt_idxs: dict[int, set[Any]] = {i[0]: set() for i in indexes}
     for i in indexes:
         evt_idxs[i[0]].add(i[1])
 
     for i in evt_idxs:
-        df.loc[i].loc[list(evt_idxs[i]), "weight_prompt_per_event"] = prompt_factor
+        df.loc[i].loc[list(evt_idxs[i]), weight_col_name] = prompt_factor
