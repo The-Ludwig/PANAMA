@@ -104,7 +104,3 @@ exclude = ["tests/"]
 module = "tests"
 follow_imports = "skip"
 strict = false
-
-[[tool.mypy.overrides]]
-module = "panama.fluxes"
-follow_imports = "skip"

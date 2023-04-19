@@ -1,63 +1,80 @@
 """
-Faster implementations of some fluxes from the crflux package.
-I basically only used numpy at the right places, that was it.
+Implementations of some fluxes, heavily inspired from the crflux package.
+Care is taken to make the flux models fast enough to be able to apply them 
+to millions of data points when using numpy.
+This should make them applicable for reweighting.
 """
+from __future__ import annotations
+
 import numpy as np
+from abc import ABC, abstractmethod
 from crflux.models import PrimaryFlux
+from particle import Particle, PDGID, pdgid
+from typing import List
 
-
-class FastPrimaryFlux(PrimaryFlux):
+class Flux(ABC):
     """
-    Fast version of PrimaryFlux, which uses numpy where applicable.
+    Abstract class to model a particle flux of some sort.
     """
+    
+    REFERENCE = ""
 
-    def p_and_n_flux(self, E):
-        """Returns tuple with proton fraction, proton flux and neutron flux.
+    def __init__(self, validPDGIDs: List[PDGID]):
+        self.validPDGIDs = validPDGIDs
 
-        The proton fraction is defined as :math:`\\frac{\\Phi_p}{\\Phi_p + \\Phi_n}`.
+    @abstractmethod
+    def flux(self, pdgid: PDGID, *args,  **kwargs) -> np.ndarray:
+        pass
 
-        Args:
-          E (float): laboratory energy of nucleons in GeV
-        Returns:
-          (float,float,float): proton fraction, proton flux, neutron flux
-        """
+    def total_flux(self, E: np.ndarray , *args, **kwargs) -> np.ndarray:
+        total_flux = np.zeros(E.shape)
+        for id in self.validPDGIDs:
+            total_flux += self.flux(id, E, *args, **kwargs)
+
+        return total_flux
+    
+class CosmicRayFlux(Flux, ABC):
+
+    def __init__(self, validPDGIDs: List[PDGID]):
+        
+        self.valid_leptons = (pdgid.literals.e_minus, pdgid.literals.e_plus)
+
+        for id in validPDGIDs:
+            if not (id.is_nucleus or id in self.valid_leptons):
+                raise ValueError(f"{Particle.from_pdgid(id).name} (pdgid: {id}) is not a cosmic ray.")
+        super(validPDGIDs)
+
+    def total_p_and_n_flux(self, E: float | np.ndarray):
+        """Returns tuple with the total number of protons and neutrons in the flux."""
+        
+        if isinstance(E, float):
+            E = np.array([E])
+
+        p_flux = np.zeros(shape=E.shape)
+        n_flux = np.zeros(shape=E.shape)
+        
+        for id in self.validPDGIDs: 
+            if id in self.valid_leptons:
+                continue
+            nucleon_flux = self.flux(id, E=E*id.A)     
+            p_flux += id.Z*nucleon_flux
+            n_flux += (id.A-id.Z)*nucleon_flux
+
+        return p_flux, n_flux 
+
         za = self.Z_A
         nuc_flux = self.nucleus_flux
 
-        p_flux = sum(
-            [
-                za(corsika_id)[0]
-                * za(corsika_id)[1]
-                * nuc_flux(corsika_id, E * za(corsika_id)[1])
-                for corsika_id in self.nucleus_ids
-            ]
-        )
-
-        n_flux = sum(
-            [
-                (za(corsika_id)[1] - za(corsika_id)[0])
-                * za(corsika_id)[1]
-                * nuc_flux(corsika_id, E * za(corsika_id)[1])
-                for corsika_id in self.nucleus_ids
-            ]
-        )
-
-        return p_flux / (p_flux + n_flux), p_flux, n_flux
-
-
-class FastHillasGaisser2012(FastPrimaryFlux):
+class HillasGaisser(CosmicRayFlux, ABC):
     """Gaisser, T.K., Astroparticle Physics 35, 801 (2012).
-
-    Fast version of HillasGaisser2012,if numpy is used.
 
     Args:
       model (str): can be either H3a or H4a.
     """
+    
+    REFERENCE = "https://doi.org/10.1016/j.astropartphys.2012.02.010"
 
-    def __init__(self, model="H4a"):
-        self.name = "Hillas-Gaisser (" + model + ")"
-        self.sname = model
-        self.model = model
+    def __init__(self):
         self.params = {}
         self.rid_cutoff = {}
 
@@ -99,14 +116,14 @@ class FastHillasGaisser2012(FastPrimaryFlux):
 
         self.nucleus_ids = list(self.params.keys())
 
-    def nucleus_flux(self, corsika_id, E):
-        if corsika_id not in self.params:
-            raise Exception("Unknown CorsikaID for model.")
+    def flux(self, id: PDGID, E: np.ndarray) -> np.ndarray:
+        if corsika_id not in self.validPDGIDs:
+            raise ValueError(f"Unknown PDGID {id} for model.")
 
-        flux = np.zeros(E.shape) if isinstance(E, np.ndarray) else 0.0
+        flux = np.zeros(E.shape)
 
         for i in range(1, 4):
-            p = self.params[corsika_id][i]
+            p = self.params[id][i]
             flux += p[0] * E ** (-p[1] - 1.0) * np.exp(-E / p[2] / self.rid_cutoff[i])
         return flux
 
