@@ -11,7 +11,7 @@ repository = "https://github.com/The-Ludwig/PANAMA"
 documentation = "https://github.com/The-Ludwig/PANAMA#readme"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">= 3.8, < 3.12"
 corsikaio =  "^0.3"
 numpy = "^1.23.4"
 pandas = "^2.0.0"
@@ -20,6 +20,7 @@ particle = "^0.21.0"
 tqdm = "^4.64.1"
 crflux = "^1.0.6"
 tables = "^3.8.0"
+scipy = "^1.10.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
@@ -61,7 +62,7 @@ filterwarnings = [
 [tool.ruff]
 select = [
   "E", "F", "W", # flake8
-  "B", "B904",   # flake8-bugbear
+  "B",           # flake8-bugbear
   "I",           # isort
   "C4",          # flake8-comprehensions
   "ISC",         # flake8-implicit-str-concat
