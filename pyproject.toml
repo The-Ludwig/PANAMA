@@ -85,7 +85,7 @@ src = ["panama"]
 
 [tool.mypy]
 files = [
-  "panama/*.py",
+  "panama/**",
 ]
 python_version = "3.11"
 strict = true
