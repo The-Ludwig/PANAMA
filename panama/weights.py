@@ -60,7 +60,7 @@ def get_weights(
         pdgid = Corsika7ID(primary_pid).to_pdgid()
 
         def flux(E: Any, id: PDGID = pdgid) -> Any:
-            return model.flux(id, E)
+            return model.flux(id, E, check_valid_pdgid=False)
 
         energy = df_event["total_energy"][df_event["particle_id"] == primary_pid]
         ext_pdf = energy.shape[0] * (energy**energy_slope) / N
