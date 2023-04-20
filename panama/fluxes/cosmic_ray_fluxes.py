@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
+from pathlib import Path
 
 import numpy as np
 from particle import PDGID, Particle
@@ -19,7 +20,7 @@ class CosmicRayFlux(Flux, ABC):
                 raise ValueError(
                     f"{Particle.from_pdgid(id).name} (pdgid: {id}) is not a cosmic ray."
                 )
-        super(validPDGIDs)
+        super().__init__(validPDGIDs)
 
     def total_p_and_n_flux(self, E: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Returns tuple with the total number of protons and neutrons in the flux."""
@@ -39,7 +40,7 @@ class CosmicRayFlux(Flux, ABC):
         return p_flux, n_flux
 
 
-class HillasGaisser(CosmicRayFlux, ABC):
+class HillasGaisser(CosmicRayFlux):
     """Gaisser, T.K., Astroparticle Physics 35, 801 (2012)."""
 
     REFERENCE = "https://doi.org/10.1016/j.astropartphys.2012.02.010"
@@ -51,7 +52,7 @@ class HillasGaisser(CosmicRayFlux, ABC):
     rigidity_cutoff = [4e6, 30e6, 2e9]  # GeV
 
     def __init__(self, ai3: list[float], gamma_pop_3: float) -> None:
-        super(self.validPDGIDs)
+        super().__init__(HillasGaisser.validPDGIDs)
         self.aij = {}
         # see Table 1 of reference
         self.aij[self.validPDGIDs[0]] = [7860.0, 20.0]
@@ -74,7 +75,7 @@ class HillasGaisser(CosmicRayFlux, ABC):
         for id, ai3_ in zip(self.validPDGIDs, ai3):
             self.aij[id].append(ai3_)
 
-    def __flux(self, id: PDGID, E: np.ndarray) -> np.ndarray:
+    def _flux(self, id: PDGID, E: np.ndarray) -> np.ndarray:
         flux = np.zeros(E.shape)
 
         for j in range(3):
@@ -88,12 +89,12 @@ class HillasGaisser(CosmicRayFlux, ABC):
 
 class H3a(HillasGaisser):
     def __init__(self) -> None:
-        super([1.7, 1.7, 1.14, 1.14, 1.14], 1.4)
+        super().__init__([1.7, 1.7, 1.14, 1.14, 1.14], 1.4)
 
 
 class H4a(HillasGaisser):
     def __init__(self) -> None:
-        super([200, 0, 0, 0, 0], 1.6)
+        super().__init__([200, 0, 0, 0, 0], 1.6)
 
 
 class BrokenPowerLaw(CosmicRayFlux):
@@ -105,7 +106,7 @@ class BrokenPowerLaw(CosmicRayFlux):
         energies: dict[PDGID, list[float]],
         cutoff: dict[PDGID, float | None],
     ) -> None:
-        super(self.validPDGIDs)
+        super().__init__(validPDGIDs)
 
         for id in self.validPDGIDs:
             for d in (gammas, normalizations, energies, cutoff):
@@ -114,10 +115,8 @@ class BrokenPowerLaw(CosmicRayFlux):
                     raise ValueError(
                         "Every dict of BrokenPowerLaw must have an entry for each valid PDGID"
                     )
-
-            if (
-                len(gammas[id]) != len(normalizations[id])
-                or len(gammas[id]) != len(energies[id]) - 1
+            if len(gammas[id]) != len(normalizations[id]) or len(gammas[id]) - 1 != len(
+                energies[id]
             ):
                 raise ValueError(
                     "Normalizations and indices must have the same length and energies must have one less value"
@@ -128,7 +127,7 @@ class BrokenPowerLaw(CosmicRayFlux):
         self.energies = energies
         self.cutoff = cutoff
 
-    def __flux(self, id: PDGID, E: np.ndarray) -> np.ndarray:
+    def _flux(self, id: PDGID, E: np.ndarray) -> np.ndarray:
         flux = np.empty(shape=E.shape)
 
         lowest_mask = self.energies[id][0] >= E
@@ -139,8 +138,8 @@ class BrokenPowerLaw(CosmicRayFlux):
         for norm, gamma, e_low, e_high in zip(
             self.normalizations[id][1:-1],
             self.gammas[id][1:-1],
-            self.energies[:-1],
-            self.energies[1:],
+            self.energies[id][:-1],
+            self.energies[id][1:],
         ):
             mask = e_low < E <= e_high
             flux[mask] = norm * E[mask] ** (-gamma)
@@ -161,7 +160,7 @@ class TIG(BrokenPowerLaw):
 
     def __init__(self) -> None:
         proton_pdgid: PDGID = literals.proton
-        super(  # type: ignore[call-overload]
+        super().__init__(
             validPDGIDs=[proton_pdgid],
             gammas={proton_pdgid: [2.7, 3]},
             normalizations={proton_pdgid: [1.7, 174]},
@@ -175,7 +174,7 @@ class TIGCutoff(BrokenPowerLaw):
 
     def __init__(self) -> None:
         proton_pdgid: PDGID = literals.proton
-        super(  # type: ignore[call-overload]
+        super().__init__(
             validPDGIDs=[proton_pdgid],
             gammas={proton_pdgid: [2.7, 3]},
             normalizations={proton_pdgid: [1.7, 174]},
@@ -219,17 +218,18 @@ class GlobalSplineFit(CosmicRayFlux):
     }
 
     def __init__(self) -> None:
-        data = np.genfromtxt(__file__ + "/gsf_data_table.txt")
-        self.x = data[0]
-        self.elements = data[1:]
-        self.spline = CubicSpline(self.x, self.elements, extrapolate=False)
+        data = np.genfromtxt(Path(__file__).parent / "gsf_data_table.txt")
+        self.x = data.T[0]
+        self.elements = data.T[1:]
+        self.spline = CubicSpline(self.x, self.elements, extrapolate=False, axis=1)
 
         validPDGIDs = []
-        for i in range(len(data)):
+        for i in range(self.elements.shape[0]):
             z = i + 1
             validPDGIDs.append(Particle.from_nucleus_info(z, self.z_to_a[z]).pdgid)
+        super().__init__(validPDGIDs)
 
-    def __flux(self, id: PDGID, E: np.ndarray) -> np.ndarray:
+    def _flux(self, id: PDGID, E: np.ndarray) -> np.ndarray:
         return self.spline(E)[id.Z - 1]
 
     def flux_all_particles(self, E: np.ndarray) -> np.ndarray:

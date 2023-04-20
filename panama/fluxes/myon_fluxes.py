@@ -16,9 +16,9 @@ class GaisserFlatEarthHighEnergy(MyonFlux):
     REFERENCE = "ISBN: 978-0521016469, Page 134, Eq. 6.41"
 
     def __init__(self) -> None:
-        super()
+        super().__init__()
 
-    def __flux(self, id: PDGID, E: np.ndarray, theta: float) -> np.ndarray:
+    def _flux(self, id: PDGID, E: np.ndarray, theta: float) -> np.ndarray:  # type: ignore[override]
         return (
             10_000
             * 0.14
@@ -40,9 +40,9 @@ class GaisserFlatEarth(MyonFlux):
     epsilon_mu = 1  # GeV table 5.3
 
     def __init__(self) -> None:
-        super()
+        super().__init__()
 
-    def __flux(self, id: PDGID, E: np.ndarray, theta: float) -> np.ndarray:
+    def _flux(self, id: PDGID, E: np.ndarray, theta: float) -> np.ndarray:  # type: ignore[override]
         p1 = self.epsilon_mu / (E * np.cos(theta) + self.alphaX0)
         s = (
             (self.LambdaN * np.cos(theta) / self.X0) ** p1
