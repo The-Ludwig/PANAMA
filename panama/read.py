@@ -213,7 +213,7 @@ def read_DAT(
         ]
         valid_names = event_header_types[version].names
 
-        mapper = dict(zip(valid_columns, valid_names))  # noqa: B905
+        mapper = dict(zip(valid_columns, valid_names))
 
         df_event_headers.drop(
             columns=df_event_headers.columns.difference(valid_columns), inplace=True
@@ -236,7 +236,7 @@ def read_DAT(
         ]
         valid_names = particle_data_dtype.names
 
-        mapper = dict(zip(valid_columns, valid_names))  # noqa: B905
+        mapper = dict(zip(valid_columns, valid_names))
 
         df_particles.drop(
             columns=df_particles.columns.difference(valid_columns), inplace=True
