@@ -5,17 +5,18 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from particle import PDGID, Corsika7ID
 
-from .fluxes import FastHillasGaisser2012, FastPrimaryFlux
+from .fluxes import CosmicRayFlux, H3a
 
-DEFAULT_FLUX = FastHillasGaisser2012(model="H3a")
+DEFAULT_FLUX = H3a()
 
 
 def get_weights(
     df_run: pd.DataFrame,
     df_event: pd.DataFrame,
     df: pd.DataFrame,
-    model: FastPrimaryFlux = DEFAULT_FLUX,
+    model: CosmicRayFlux = DEFAULT_FLUX,
 ) -> pd.DataFrame:
     """
     Adds the column "weight" too df_particle to reweight for given primary flux.
@@ -56,9 +57,10 @@ def get_weights(
 
     weights = []
     for primary_pid in primary_pids:
+        pdgid = Corsika7ID(primary_pid).to_pdgid()
 
-        def flux(E: Any, primary_pid: Any = primary_pid) -> Any:
-            return model.nucleus_flux(primary_pid, E)
+        def flux(E: Any, id: PDGID = pdgid) -> Any:
+            return model.flux(id, E, check_valid_pdgid=False)
 
         energy = df_event["total_energy"][df_event["particle_id"] == primary_pid]
         ext_pdf = energy.shape[0] * (energy**energy_slope) / N
