@@ -34,6 +34,7 @@ ruff = "^0.0.252"
 mypy = "^1.0.1"
 types-tqdm = "^4.65.0.1"
 codespell = "^2.2.4"
+matplotlib = "^3.7.1"
 
 [tool.poetry.scripts]
 panama = 'panama.cli:cli'
