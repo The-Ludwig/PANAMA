@@ -27,7 +27,7 @@ class Flux(ABC):
         self.validPDGIDs = validPDGIDs
 
     @abstractmethod
-    def _flux(self, id: PDGID, E: np.ndarray) -> np.ndarray:
+    def _flux(self, id: PDGID, E: np.ndarray, **kwargs: Any) -> np.ndarray:
         """Return a numpy array of the flux in $\frac{1}{m^2 s sr GeV}$
         This should not be used directly and should not throw any error for non-valid PDGids.
         This is handled by Flux.flux
@@ -64,12 +64,12 @@ class Flux(ABC):
             else:
                 return np.zeros(shape=E.shape)
 
-        return self._flux(id, E=E)
+        return self._flux(id, E=E, **kwargs)
 
-    def total_flux(self, E: np.ndarray) -> np.ndarray:
+    def total_flux(self, E: np.ndarray, **kwargs: Any) -> np.ndarray:
         """Returns the total differential flux in $\frac{1}{m^2 s sr GeV}$."""
         total_flux = np.zeros(E.shape)
         for id in self.validPDGIDs:
-            total_flux += self._flux(id, E=E)
+            total_flux += self._flux(id, E=E, **kwargs)
 
         return total_flux

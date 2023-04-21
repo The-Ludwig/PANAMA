@@ -1,4 +1,5 @@
 from panama.fluxes import H3a, H4a, TIG, TIGCutoff, GlobalSplineFit
+from panama.fluxes import muon_fluxes
 import numpy as np
 from particle.pdgid import literals
 
@@ -42,3 +43,17 @@ def test_GlobalSplineFit(e = DEFAULT_ENERGY_RANGE):
     model.flux(literals.proton, e)
     model.total_flux(e)
     model.total_p_and_n_flux(e)
+
+
+def test_MuonFlux_HighEnergy(e = DEFAULT_ENERGY_RANGE):
+    model = muon_fluxes.GaisserFlatEarthHighEnergy()
+
+    model.flux(literals.mu_minus, e)
+    model.total_flux(e)
+
+
+def test_MuonFlux(e = DEFAULT_ENERGY_RANGE):
+    model = muon_fluxes.GaisserFlatEarth()
+
+    model.flux(literals.mu_plus, e)
+    model.total_flux(e)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from particle import PDGID, Particle
@@ -75,7 +76,7 @@ class HillasGaisser(CosmicRayFlux):
         for id, ai3_ in zip(self.validPDGIDs, ai3):
             self.aij[id].append(ai3_)
 
-    def _flux(self, id: PDGID, E: np.ndarray) -> np.ndarray:
+    def _flux(self, id: PDGID, E: np.ndarray, **kwargs: Any) -> np.ndarray:
         flux = np.zeros(E.shape)
 
         for j in range(3):
@@ -127,7 +128,7 @@ class BrokenPowerLaw(CosmicRayFlux):
         self.energies = energies
         self.cutoff = cutoff
 
-    def _flux(self, id: PDGID, E: np.ndarray) -> np.ndarray:
+    def _flux(self, id: PDGID, E: np.ndarray, **kwargs: Any) -> np.ndarray:
         flux = np.empty(shape=E.shape)
 
         lowest_mask = self.energies[id][0] >= E
@@ -145,7 +146,7 @@ class BrokenPowerLaw(CosmicRayFlux):
             flux[mask] = norm * E[mask] ** (-gamma)
 
         highest_mask = self.energies[id][-1] < E
-        flux[highest_mask] = self.normalizations[id][0] * E[highest_mask] ** (
+        flux[highest_mask] = self.normalizations[id][-1] * E[highest_mask] ** (
             -self.gammas[id][-1]
         )
 
@@ -229,7 +230,7 @@ class GlobalSplineFit(CosmicRayFlux):
             validPDGIDs.append(Particle.from_nucleus_info(z, self.z_to_a[z]).pdgid)
         super().__init__(validPDGIDs)
 
-    def _flux(self, id: PDGID, E: np.ndarray) -> np.ndarray:
+    def _flux(self, id: PDGID, E: np.ndarray, **kwargs: Any) -> np.ndarray:
         return self.spline(E)[id.Z - 1]
 
     def flux_all_particles(self, E: np.ndarray) -> np.ndarray:
