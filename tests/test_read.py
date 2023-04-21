@@ -3,11 +3,14 @@ from pathlib import Path
 
 import numpy as np
 import panama
+from panama.fluxes import muon_fluxes
 import pandas as pd
 import pytest
 from click.testing import CliRunner
 from corsikaio import CorsikaParticleFile
 from panama.cli import cli
+
+import matplotlib.pyplot as plt
 
 SINGLE_TEST_FILE = Path(__file__).parent / "files" / "DAT000000"
 GLOB_TEST_FILE = Path(__file__).parent / "files" / "DAT*"
@@ -82,7 +85,21 @@ def test_cli(pytestconfig, tmp_path, test_file_path=SINGLE_TEST_FILE):
     check_eq(test_file_path, run_header, event_header, particles)
 
 
-def test_spectral_index(test_file_path=GLOB_TEST_FILE):
+def save_spectral_fit_test_fig(path, model, log_e, hist, p):
+    empty = hist == 0
+    x_plot = np.linspace(np.min(log_e[~empty]), np.max(log_e[~empty]), 1000)
+    plt.plot(x_plot, p[1]+p[0]*x_plot, label="fit")
+    plt.plot(log_e[~empty], np.log10(hist[~empty]), "x", label="weighted mc")
+    plt.plot(x_plot, np.log10(model.total_flux(10.0**(x_plot))), ":", label="model")
+
+    plt.xlabel("$\log \phi$")
+    plt.ylabel("$\log E/GeV$")
+    plt.legend()
+    plt.savefig(path)
+    plt.clf()
+
+
+def test_spectral_index(tmp_path, test_file_path=GLOB_TEST_FILE):
     """Test if we can fit the muon spectral index, with the test dataset"""
 
     df_run, df_event, df = panama.read_DAT(
@@ -98,8 +115,8 @@ def test_spectral_index(test_file_path=GLOB_TEST_FILE):
 
     # fit primary index to check if weighting worked
     sel = df_event
-    bins = np.logspace(
-        np.log10(np.min(sel["total_energy"])), np.log10(np.max(sel["total_energy"])), 20
+    bins = np.geomspace(
+        np.min(sel["total_energy"]), np.max(sel["total_energy"]), 20
     )
     hist, bin_edges = np.histogram(
         sel["total_energy"], bins=bins, weights=sel["weight"]
@@ -109,8 +126,10 @@ def test_spectral_index(test_file_path=GLOB_TEST_FILE):
     log_e = np.log10((bin_edges[1:] + bin_edges[:-1]) / 2)
     # dont fit empty bins
     p, V = np.polyfit(log_e[~empty], np.log10(hist[~empty]), deg=1, cov=True)
-    # 2 sigma is good enough...
-    assert p[0] - 2 * np.sqrt(V[0, 0]) < -2.7 < p[0] + 2 * np.sqrt(V[0, 0])
+    save_spectral_fit_test_fig(tmp_path/"test_fit_h3a.pdf", panama.fluxes.H3a(), log_e, hist, p)
+    # test if fittet spectral index is between 2.7 and 3
+    assert p[0] + np.sqrt(V[0, 0]) > -3.0 
+    assert p[0] - np.sqrt(V[0, 0]) < -2.7
 
     # fit conv muon spectral index in binned fit
     sel = df.query("abs(pdgid) == 13 & is_prompt == False & energy >= 1e4")
@@ -124,7 +143,9 @@ def test_spectral_index(test_file_path=GLOB_TEST_FILE):
     # dont fit empty bins
     p, V = np.polyfit(log_e[~empty], np.log10(hist[~empty]), deg=1, cov=True)
     # conv muons follow primary spectrum -1
-    assert p[0] - np.sqrt(V[0, 0]) < -4.5 < p[0] + np.sqrt(V[0, 0])
+    save_spectral_fit_test_fig(tmp_path/"test_fit_h3a_conv.pdf", muon_fluxes.GaisserFlatEarth(), log_e, hist, p)
+    assert p[0] + 2*np.sqrt(V[0, 0]) > -4.0 
+    assert p[0] - 2*np.sqrt(V[0, 0]) < -3.7
 
     # fit prompt muon spectral index in binned fit
     sel = df.query("abs(pdgid) == 13 & is_prompt == True & energy >= 1e4")
@@ -138,10 +159,15 @@ def test_spectral_index(test_file_path=GLOB_TEST_FILE):
     # dont fit empty bins
     p, V = np.polyfit(log_e[~empty], np.log10(hist[~empty]), deg=1, cov=True)
     # Prompt muons follow primary spectrum
-    assert p[0] - np.sqrt(V[0, 0]) < -2.7 < p[0] + np.sqrt(V[0, 0])
+    save_spectral_fit_test_fig(tmp_path/"test_fit_h3a_prompt.pdf", muon_fluxes.GaisserFlatEarthHighEnergy(), log_e, hist, p)
+    assert p[0] + np.sqrt(V[0, 0]) > -3.0 
+    assert p[0] - np.sqrt(V[0, 0]) < -2.7
+
+
 
 
 def test_spectral_index_proton_only(
+    tmp_path,
     test_file_path=GLOB_TEST_FILE,
 ):
     """Test if we can fit the muon spectral index, with the test dataset"""
@@ -151,7 +177,7 @@ def test_spectral_index_proton_only(
     )
 
     # add weights
-    ws = panama.get_weights(df_run, df_event, df, model=panama.fluxes.FastThunmanCO())
+    ws = panama.get_weights(df_run, df_event, df, model=panama.fluxes.TIGCutoff())
     df["weight"] = ws
     df_event["weight"] = ws
 
@@ -159,8 +185,8 @@ def test_spectral_index_proton_only(
 
     # fit primary index to check if weighting worked
     sel = df_event
-    bins = np.logspace(
-        np.log10(np.min(sel["total_energy"])), np.log10(np.max(sel["total_energy"])), 20
+    bins = np.geomspace(
+        np.min(sel["total_energy"]), np.max(sel["total_energy"]), 20
     )
     hist, bin_edges = np.histogram(
         sel["total_energy"], bins=bins, weights=sel["weight"]
@@ -170,8 +196,10 @@ def test_spectral_index_proton_only(
     log_e = np.log10((bin_edges[1:] + bin_edges[:-1]) / 2)
     # dont fit empty bins
     p, V = np.polyfit(log_e[~empty], np.log10(hist[~empty]), deg=1, cov=True)
-    # 2 sigma is good enough...
-    assert p[0] - 2 * np.sqrt(V[0, 0]) < -2.7 < p[0] + 2 * np.sqrt(V[0, 0])
+    
+    save_spectral_fit_test_fig(tmp_path/"test_fit_proton_only.pdf", panama.fluxes.TIGCutoff(), log_e, hist, p)
+    assert p[0] + np.sqrt(V[0, 0]) > -3.0 
+    assert p[0] - np.sqrt(V[0, 0]) < -2.7
 
     # fit conv muon spectral index in binned fit
     sel = df.query("abs(pdgid) == 13 & is_prompt == False & energy >= 1e4")
@@ -184,8 +212,10 @@ def test_spectral_index_proton_only(
     log_e = np.log10((bin_edges[1:] + bin_edges[:-1]) / 2)
     # dont fit empty bins
     p, V = np.polyfit(log_e[~empty], np.log10(hist[~empty]), deg=1, cov=True)
+    save_spectral_fit_test_fig(tmp_path/"test_fit_proton_only_conv.pdf", muon_fluxes.GaisserFlatEarth(), log_e, hist, p)
     # conv muons follow primary spectrum -1
-    assert p[0] - np.sqrt(V[0, 0]) < -4.5 < p[0] + np.sqrt(V[0, 0])
+    assert p[0] + 1.5*np.sqrt(V[0, 0]) > -4.0 
+    assert p[0] - 1.5*np.sqrt(V[0, 0]) < -3.7
 
     # fit prompt muon spectral index in binned fit
     sel = df.query("abs(pdgid) == 13 & is_prompt == True & energy >= 1e4")
@@ -198,8 +228,7 @@ def test_spectral_index_proton_only(
     log_e = np.log10((bin_edges[1:] + bin_edges[:-1]) / 2)
     # dont fit empty bins
     p, V = np.polyfit(log_e[~empty], np.log10(hist[~empty]), deg=1, cov=True)
+    save_spectral_fit_test_fig(tmp_path/"test_fit_proton_only_prompt.pdf", muon_fluxes.GaisserFlatEarthHighEnergy(), log_e, hist, p)
     # Prompt muons follow primary spectrum
-    # this fails, since statistics is very low (only about 200 in test dataset)
-    # and only some of them are proton... lets just skip this for now,
-    # fix later
-    # assert p[0] - np.sqrt(V[0, 0]) < -2.7 < p[0] + np.sqrt(V[0, 0])
+    assert p[0] + 3*np.sqrt(V[0, 0]) > -3.0 
+    assert p[0] - 3*np.sqrt(V[0, 0]) < -2.7

@@ -1,3 +1,3 @@
-from .fluxes import FastHillasGaisser2012, FastPrimaryFlux, FastThunman, FastThunmanCO
+from .cosmic_ray_fluxes import TIG, CosmicRayFlux, GlobalSplineFit, H3a, H4a, TIGCutoff
 
-__all__ = ("FastPrimaryFlux", "FastHillasGaisser2012", "FastThunman", "FastThunmanCO")
+__all__ = ("H3a", "H4a", "TIG", "TIGCutoff", "GlobalSplineFit", "CosmicRayFlux")
