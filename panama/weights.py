@@ -1,6 +1,8 @@
 """
 Functions to add weights to the read in corsika dataframe
 """
+from __future__ import annotations
+
 from typing import Any
 
 import numpy as np
