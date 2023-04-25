@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from particle import PDGID, Corsika7ID
 
+from .constants import PDGID_PROTON_1
 from .fluxes import CosmicRayFlux, H3a
 
 DEFAULT_FLUX = H3a()
@@ -17,6 +18,8 @@ def get_weights(
     df_event: pd.DataFrame,
     df: pd.DataFrame,
     model: CosmicRayFlux = DEFAULT_FLUX,
+    proton_only: bool = False,
+    groups: dict[PDGID, tuple[int, int]] | None = None,
 ) -> pd.DataFrame:
     """
     Adds the column "weight" too df_particle to reweight for given primary flux.
@@ -27,12 +30,18 @@ def get_weights(
     df_event: The event dataframe (as returned by `read_corsika_particle_files_to_dataframe`)
     df: The particle dataframe (as returned by `read_corsika_particle_files_to_dataframe`)
     model: The Cosmic Ray primary flux model (instance of CRFlux)
+    proton_only: If set to true (default), only proton pdgid weights are non-zero and refer to
+        all-nucleon flux.
+    groups: The elements in the model (values: Tuple[Zmin, Zmax]) associated with the MC-primary
 
     Returns
     -------
     weights: A dataframe with the weights labeled by the run and event index.
     Can be used like this: `df['weights'] = panama.get_weights(df_run, df_event, df)`
     """
+    if groups is not None and proton_only is True:
+        raise ValueError("if proton_only is true, groups must be None")
+
     if not df_event.index.is_monotonic_increasing:
         df_event.sort_index(inplace=True)
     if not df.index.is_monotonic_increasing:
@@ -52,7 +61,7 @@ def get_weights(
         for int2 in enumerate(e_intervals[idx + 1 :]):
             if int1.overlaps(int2):
                 raise ValueError(
-                    "The energy intervals in the dataframe overlap and thus cannot be reweighted, with this code."
+                    f"The energy intervals {int1} and {int2} in the dataframe overlap and thus cannot be reweighted, with this code."
                 )
 
     if len(energy_slopes) != 1:
@@ -61,8 +70,7 @@ def get_weights(
         )
     energy_slope = energy_slopes[0]
 
-    assert len(energy_slopes) == 1
-    energy_slope = energy_slopes[0]
+    weights = []
 
     for interval in e_intervals:
         emin, emax = interval.left, interval.right
@@ -74,7 +82,6 @@ def get_weights(
             ep = energy_slope + 1
             N = (emax**ep - emin**ep) / ep
 
-        weights = []
         for primary_pid in primary_pids:
             mask = (
                 (df_event["particle_id"] == primary_pid)
@@ -84,13 +91,29 @@ def get_weights(
 
             pdgid = Corsika7ID(primary_pid).to_pdgid()
 
-            def flux(E: Any, id: PDGID = pdgid) -> Any:
-                return model.flux(id, E, check_valid_pdgid=False)
+            if proton_only and pdgid != PDGID_PROTON_1:
+                w = df_event["total_energy"][mask]
+                w[:] = 0
+                weights += [w]
+                continue
 
             energy = df_event["total_energy"][mask]
             ext_pdf = energy.shape[0] * (energy**energy_slope) / N
 
-            weights += [flux(energy) / ext_pdf]
+            if proton_only:
+                weights += [sum(model.total_p_and_n_flux(energy)) / ext_pdf]
+            elif groups is None:
+                weights += [
+                    model.flux(pdgid, energy, check_valid_pdgid=False) / ext_pdf
+                ]
+            else:
+                fluxes = []
+                for model_pdgid in model.validPDGIDs:
+                    if groups[pdgid][0] <= model_pdgid.Z <= groups[pdgid][1]:
+                        fluxes += [
+                            model.flux(model_pdgid, energy, check_valid_pdgid=True)
+                        ]
+                weights += [sum(fluxes) / ext_pdf]
 
     return pd.concat(weights)
 

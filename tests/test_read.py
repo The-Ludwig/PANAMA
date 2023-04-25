@@ -177,7 +177,7 @@ def test_spectral_index_proton_only(
     )
 
     # add weights
-    ws = panama.get_weights(df_run, df_event, df, model=panama.fluxes.TIGCutoff())
+    ws = panama.get_weights(df_run, df_event, df, model=panama.fluxes.H3a(), proton_only=True)
     df["weight"] = ws
     df_event["weight"] = ws
 
