@@ -12,8 +12,7 @@ from typing import Any
 import numpy as np
 from particle import PDGID, Particle
 
-PROTON_PDGID_1 = PDGID(2212)
-PROTON_PDGID_2 = PDGID(1000010010)
+from ..constants import PDGID_PROTON_1, PDGID_PROTON_2
 
 
 class Flux(ABC):
@@ -44,17 +43,17 @@ class Flux(ABC):
         # the proton has 2 valid PDGIDs: as a proton (2212) or as a Hydrogen nucleus (1000010010)
         # correct for that fact
         if (
-            id == PROTON_PDGID_1
+            id == PDGID_PROTON_1
             and id not in self.validPDGIDs
-            and PROTON_PDGID_2 in self.validPDGIDs
+            and PDGID_PROTON_2 in self.validPDGIDs
         ):
-            id = PROTON_PDGID_2
+            id = PDGID_PROTON_2
         elif (
-            id == PROTON_PDGID_2
+            id == PDGID_PROTON_2
             and id not in self.validPDGIDs
-            and PROTON_PDGID_1 in self.validPDGIDs
+            and PDGID_PROTON_1 in self.validPDGIDs
         ):
-            id = PROTON_PDGID_1
+            id = PDGID_PROTON_1
 
         if id not in self.validPDGIDs:
             if check_valid_pdgid:

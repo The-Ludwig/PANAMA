@@ -1,4 +1,4 @@
-from particle import Particle
+from particle import PDGID, Particle
 
 D0_LIFETIME = Particle.from_name("D0").lifetime
 
@@ -38,3 +38,6 @@ DEFAULT_EVENT_HEADER_FEATURES = [
 CORSIKA_FIELD_BYTE_LEN = 4
 
 PDGID_ERROR_VAL = 0
+
+PDGID_PROTON_1 = PDGID(2212)
+PDGID_PROTON_2 = PDGID(1000010010)
