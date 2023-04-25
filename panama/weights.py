@@ -39,33 +39,58 @@ def get_weights(
         df.sort_index(inplace=True)
     primary_pids = df_event["particle_id"].unique()
     energy_slopes = df_run["energy_spectrum_slope"].unique()
-    emaxs = df_run["energy_max"].unique()
-    emins = df_run["energy_min"].unique()
+
+    e_intervals = [
+        pd.Interval(low, high)
+        for low, high in np.unique(
+            df_run.loc[:, ("energy_min", "energy_max")].to_numpy(), axis=0
+        )
+    ]
+
+    # check if the energy intervals overlap, then this code won't work
+    for idx, int1 in enumerate(e_intervals[:-1]):
+        for int2 in enumerate(e_intervals[idx + 1 :]):
+            if int1.overlaps(int2):
+                raise ValueError(
+                    "The energy intervals in the dataframe overlap and thus cannot be reweighted, with this code."
+                )
+
+    if len(energy_slopes) != 1:
+        raise ValueError(
+            "There are multiple energy slopes in the dataframe and thus they cannot be reweighted with this code."
+        )
+    energy_slope = energy_slopes[0]
 
     assert len(energy_slopes) == 1
-    assert len(emaxs) == 1
-    assert len(emins) == 1
     energy_slope = energy_slopes[0]
-    emin, emax = emins[0], emaxs[0]
 
-    N = 1
-    if energy_slope == -1:
-        N = np.log(emax / emin)
-    else:
-        ep = energy_slope + 1
-        N = (emax**ep - emin**ep) / ep
+    for interval in e_intervals:
+        emin, emax = interval.left, interval.right
 
-    weights = []
-    for primary_pid in primary_pids:
-        pdgid = Corsika7ID(primary_pid).to_pdgid()
+        N = 1
+        if energy_slope == -1:
+            N = np.log(emax / emin)
+        else:
+            ep = energy_slope + 1
+            N = (emax**ep - emin**ep) / ep
 
-        def flux(E: Any, id: PDGID = pdgid) -> Any:
-            return model.flux(id, E, check_valid_pdgid=False)
+        weights = []
+        for primary_pid in primary_pids:
+            mask = (
+                (df_event["particle_id"] == primary_pid)
+                & (df_event["energy_min"] == emin)
+                & (df_event["energy_max"] == emax)
+            )
 
-        energy = df_event["total_energy"][df_event["particle_id"] == primary_pid]
-        ext_pdf = energy.shape[0] * (energy**energy_slope) / N
+            pdgid = Corsika7ID(primary_pid).to_pdgid()
 
-        weights += [flux(energy) / ext_pdf]
+            def flux(E: Any, id: PDGID = pdgid) -> Any:
+                return model.flux(id, E, check_valid_pdgid=False)
+
+            energy = df_event["total_energy"][mask]
+            ext_pdf = energy.shape[0] * (energy**energy_slope) / N
+
+            weights += [flux(energy) / ext_pdf]
 
     return pd.concat(weights)
 
