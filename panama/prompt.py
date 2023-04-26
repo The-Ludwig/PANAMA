@@ -1,5 +1,8 @@
+from math import inf
+
 import numpy as np
 import pandas as pd
+from particle import Particle
 
 from .constants import D0_LIFETIME, PDGID_ERROR_VAL
 
@@ -43,6 +46,102 @@ def is_prompt_lifetime_limit(
     )
 
 
+def add_cleaned_mother_cols(df_particles: pd.DataFrame) -> None:
+    """
+    Adds mother_lifetime_cleaned, mother_mass_cleaned and mother_energy_cleaned if not present in the dataframe
+    """
+    if "mother_lifetime_cleaned" not in df_particles:
+        pdgids = df_particles["mother_pdgid_cleaned"].unique()
+        lifetimes = {
+            pdgid: Particle.from_pdgid(pdgid).lifetime
+            if pdgid != PDGID_ERROR_VAL
+            else inf
+            for pdgid in pdgids
+        }
+        for pdgid in lifetimes:
+            if lifetimes[pdgid] is None:
+                lifetimes[pdgid] = 0
+
+        df_particles["mother_lifetime_cleaned"] = (
+            df_particles["mother_pdgid_cleaned"].map(lifetimes, na_action=None).array
+        )
+
+    if "mother_mass_cleaned" not in df_particles:
+        pdgids = df_particles["mother_pdgid_cleaned"].unique()
+        masses = {
+            pdgid: Particle.from_pdgid(pdgid).mass / 1000
+            if pdgid != PDGID_ERROR_VAL
+            else 0
+            for pdgid in pdgids
+        }
+        for pdgid in masses:
+            if masses[pdgid] is None:
+                masses[pdgid] = 0
+
+        df_particles["mother_mass_cleaned"] = (
+            df_particles["mother_pdgid_cleaned"].map(masses, na_action=None).array
+        )
+
+    if "mother_energy_cleaned" not in df_particles:
+        energy_cleaned = df_particles["mother_energy"].to_numpy(copy=False)
+        energy_cleaned[
+            df_particles["mother_pdgid_cleaned"].to_numpy(copy=False) == PDGID_ERROR_VAL
+        ] = inf
+        df_particles["mother_energy_cleaned"] = energy_cleaned
+
+
+def is_prompt_lifetime_limit_cleaned(
+    df_particles: pd.DataFrame, lifetime_limit_ns: float = D0_LIFETIME * 10
+) -> np.ndarray:
+    """Return a numpy array of prompt labels for the input dataframe differentiating it by lifetime of the mother particle.
+    It considers the cleaned particle type of the mother.
+    Parameters
+    ----------
+    df_particles: dataframe with the corsika particles, additional_columns have to be present when running `read_DAT`
+    Returns
+    -------
+    A numpy boolean array, True for prompt, False for conventional
+    """
+    add_cleaned_mother_cols(df_particles)
+
+    is_prompt = np.ones(df_particles.shape[0], dtype=bool)
+
+    lifetimes = df_particles["mother_lifetime_cleaned"].to_numpy(copy=False)
+
+    is_prompt[lifetimes >= lifetime_limit_ns] = False
+
+    return is_prompt
+
+
+def is_prompt_energy(df_particles: pd.DataFrame, s: float = 2) -> np.ndarray:
+    """Return a numpy array of prompt labels for the input dataframe differentiating it by energy of the mother particle,
+       with considering the cleaned particle type of the mother.
+    Parameters
+    ----------
+    df_particles: dataframe with the corsika particles, additional_columns have to be present when running `read_DAT`
+    s: scaling factor. How much bigger does the decay length has to be compared to the interaction length
+    Returns
+    -------
+    A numpy boolean array, True for prompt, False for conventional
+    """
+    add_cleaned_mother_cols(df_particles)
+
+    energy_limit_conversion_factor = 21681.666  # GeV
+
+    limit = (
+        energy_limit_conversion_factor
+        * df_particles["mother_mass_cleaned"]
+        / df_particles["mother_lifetime_cleaned"]
+        / s
+    )
+
+    is_prompt = df_particles["mother_energy_cleaned"].to_numpy(
+        copy=False
+    ) < limit.to_numpy(copy=False)
+
+    return is_prompt
+
+
 def is_prompt_pion_kaon(df_particles: pd.DataFrame) -> np.ndarray:
     """Return a numpy array of prompt labels for the input dataframe differentiating it by the pdgid (cleaned)
     of the mother particle. If the mother is a pion or a kaon it is not prompt, otherwise it is.
@@ -65,7 +164,31 @@ def is_prompt_pion_kaon(df_particles: pd.DataFrame) -> np.ndarray:
     return is_prompt
 
 
-def is_prompt_energy(df_particles: pd.DataFrame, s: float = 2) -> np.ndarray:
+def is_prompt_pion_kaon_wrong_pdgid(df_particles: pd.DataFrame) -> np.ndarray:
+    """Return a numpy array of prompt labels for the input dataframe differentiating it by the pdgid (cleaned)
+    of the mother particle. If the mother is a pion or a kaon it is not prompt, otherwise it is.
+
+    Parameters
+    ----------
+    df_particles: dataframe with the corsika particles, additional_columns have to be present when running `read_DAT`
+
+    Returns
+    -------
+    A numpy boolean array, True for prompt, False for conventional
+    """
+
+    is_prompt = np.ones(df_particles.shape[0], dtype=bool)
+
+    pdgidc = np.abs(df_particles["mother_pdgid"].to_numpy(copy=False))
+
+    is_prompt[(pdgidc == 211) | (pdgidc == 321) | (pdgidc == PDGID_ERROR_VAL)] = False
+
+    return is_prompt
+
+
+def is_prompt_energy_wrong_pdgid(
+    df_particles: pd.DataFrame, s: float = 2
+) -> np.ndarray:
     """Return a numpy array of prompt labels for the input dataframe differentiating it by energy of the mother particle.
 
     Parameters

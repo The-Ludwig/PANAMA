@@ -224,6 +224,10 @@ class GlobalSplineFit(CosmicRayFlux):
         self.elements = data.T[1:]
         self.spline = CubicSpline(self.x, self.elements, extrapolate=False, axis=1)
 
+        self.splines = []
+        for el in self.elements:
+            self.splines += [CubicSpline(self.x, el, extrapolate=False, axis=0)]
+
         validPDGIDs = []
         for i in range(self.elements.shape[0]):
             z = i + 1
@@ -231,7 +235,8 @@ class GlobalSplineFit(CosmicRayFlux):
         super().__init__(validPDGIDs)
 
     def _flux(self, id: PDGID, E: np.ndarray, **kwargs: Any) -> np.ndarray:
-        return self.spline(E)[id.Z - 1]
+        return self.splines[id.Z - 1](E)
 
     def flux_all_particles(self, E: np.ndarray) -> np.ndarray:
+        """Will be removed in panama 6.x"""
         return self.spline(E)
