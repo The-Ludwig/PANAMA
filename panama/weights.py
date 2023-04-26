@@ -60,7 +60,7 @@ def get_weights(
 
     # check if the energy intervals overlap, then this code won't work
     for idx, int1 in enumerate(e_intervals[:-1]):
-        for int2 in enumerate(e_intervals[idx + 1 :]):
+        for int2 in e_intervals[idx + 1 :]:
             if int1.overlaps(int2):
                 raise ValueError(
                     f"The energy intervals {int1} and {int2} in the dataframe overlap and thus cannot be reweighted, with this code."
