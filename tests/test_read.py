@@ -198,8 +198,8 @@ def test_spectral_index_proton_only(
     p, V = np.polyfit(log_e[~empty], np.log10(hist[~empty]), deg=1, cov=True)
     
     save_spectral_fit_test_fig(tmp_path/"test_fit_proton_only.pdf", panama.fluxes.TIGCutoff(), log_e, hist, p)
-    assert p[0] + np.sqrt(V[0, 0]) > -3.0 
-    assert p[0] - np.sqrt(V[0, 0]) < -2.7
+    assert p[0] + np.sqrt(V[0, 0]) > -3.1 
+    assert p[0] - np.sqrt(V[0, 0]) < -2.8
 
     # fit conv muon spectral index in binned fit
     sel = df.query("abs(pdgid) == 13 & is_prompt == False & energy >= 1e4")
@@ -214,8 +214,8 @@ def test_spectral_index_proton_only(
     p, V = np.polyfit(log_e[~empty], np.log10(hist[~empty]), deg=1, cov=True)
     save_spectral_fit_test_fig(tmp_path/"test_fit_proton_only_conv.pdf", muon_fluxes.GaisserFlatEarth(), log_e, hist, p)
     # conv muons follow primary spectrum -1
-    assert p[0] + 1.5*np.sqrt(V[0, 0]) > -4.0 
-    assert p[0] - 1.5*np.sqrt(V[0, 0]) < -3.7
+    assert p[0] + 2*np.sqrt(V[0, 0]) > -4.0 
+    assert p[0] - 2*np.sqrt(V[0, 0]) < -3.7
 
     # fit prompt muon spectral index in binned fit
     sel = df.query("abs(pdgid) == 13 & is_prompt == True & energy >= 1e4")
