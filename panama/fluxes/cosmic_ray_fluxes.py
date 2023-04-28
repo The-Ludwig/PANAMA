@@ -50,9 +50,8 @@ class HillasGaisser(CosmicRayFlux):
         Particle.from_nucleus_info(z, a).pdgid
         for z, a in [(1, 1), (2, 4), (6, 12), (14, 28), (26, 54)]
     ]
-    rigidity_cutoff = [4e6, 30e6, 2e9]  # GeV
 
-    def __init__(self, ai3: list[float], gamma_pop_3: float) -> None:
+    def __init__(self, ai3: list[float], gamma_pop_3: float, r_pop_3: float) -> None:
         super().__init__(HillasGaisser.validPDGIDs)
         self.aij = {}
         # see Table 1 of reference
@@ -68,6 +67,8 @@ class HillasGaisser(CosmicRayFlux):
         self.gammaij[self.validPDGIDs[2]] = [1.63, 1.4]
         self.gammaij[self.validPDGIDs[3]] = [1.67, 1.4]
         self.gammaij[self.validPDGIDs[4]] = [1.63, 1.4]
+
+        self.rigidity_cutoff = [4e6, 30e6, r_pop_3]  # GeV
 
         # These will come from the instances
         for id in self.validPDGIDs:
@@ -90,12 +91,12 @@ class HillasGaisser(CosmicRayFlux):
 
 class H3a(HillasGaisser):
     def __init__(self) -> None:
-        super().__init__([1.7, 1.7, 1.14, 1.14, 1.14], 1.4)
+        super().__init__([1.7, 1.7, 1.14, 1.14, 1.14], 1.4, 2e9)
 
 
 class H4a(HillasGaisser):
     def __init__(self) -> None:
-        super().__init__([200, 0, 0, 0, 0], 1.6)
+        super().__init__([200, 0, 0, 0, 0], 1.6, 60e9)
 
 
 class BrokenPowerLaw(CosmicRayFlux):
