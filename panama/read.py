@@ -301,7 +301,7 @@ def read_DAT(
         df_particles["zenith"] = df_particles.eval("arccos(pz/sqrt(px**2+py**2+pz**2))")
 
         if mother_columns:
-            add_mother_columns(df_particles)
+            add_mother_columns(df_particles, pdgids)
 
     if drop_mothers:
         df_particles.drop(
@@ -320,21 +320,27 @@ def read_DAT(
 
     return df_run_headers, df_event_headers, df_particles
 
-def add_mother_columns(df_particles: pd.DataFrame) -> None:
+
+def add_mother_columns(df_particles: pd.DataFrame, pdgids: list[int] | None) -> None:
     """
-    Adds the information from mother and grandmother rows to 
+    Adds the information from mother and grandmother rows to
     the particle column.
 
-    This looks so complicated, since in the table different rows 
-    depend on each other. To do this in a numpy-friendly way is not 
+    This looks so complicated, since in the table different rows
+    depend on each other. To do this in a numpy-friendly way is not
     that trivial. (We do not want to iterate through the rows -> python loops)
     So this is done via a shifted index array.
 
     Parameters
     ----------
     df_particles : DataFrame
-        
+        the particle dataframe with additional columns from read_DAT
+    pdgids : list[int] | None
+        The unique pdgids in the dataframe. If none, they are calculated.
     """
+    if pdgids is None:
+        pdgids = df_particles["pdgid"].unique()
+
     mother_index = np.arange(-2, df_particles.shape[0] - 2)
     mother_index[0] = df_particles.shape[0] - 2
     mother_index[1] = df_particles.shape[0] - 1
@@ -342,21 +348,14 @@ def add_mother_columns(df_particles: pd.DataFrame) -> None:
     grandmother_index = np.arange(-1, df_particles.shape[0] - 1)
     grandmother_index[0] = df_particles.shape[0] - 1
 
-    df_particles["has_mother"] = df_particles["is_mother"].iloc[
-        mother_index
-    ].to_numpy(copy=False) & df_particles["is_mother"].iloc[
-        grandmother_index
-    ].to_numpy(
+    df_particles["has_mother"] = df_particles["is_mother"].iloc[mother_index].to_numpy(
         copy=False
-    )
+    ) & df_particles["is_mother"].iloc[grandmother_index].to_numpy(copy=False)
 
     df_particles["mother_hadr_gen"] = (
-        np.abs(df_particles["particle_description"].iloc[mother_index].array)
-        % 100
+        np.abs(df_particles["particle_description"].iloc[mother_index].array) % 100
     )
-    df_particles.loc[
-        ~df_particles["has_mother"].array, "mother_hadr_gen"
-    ] = pd.NA
+    df_particles.loc[~df_particles["has_mother"].array, "mother_hadr_gen"] = pd.NA
 
     # copy mother values to daughter columns so we can drop them later
     for name, error_val in (
@@ -371,6 +370,15 @@ def add_mother_columns(df_particles: pd.DataFrame) -> None:
             ~df_particles["has_mother"].array, f"mother_{name}"
         ] = error_val
 
+    # copy grandmother values to daughter columns so we can drop them later
+    for name, error_val in (("pdgid", PDGID_ERROR_VAL),):
+        df_particles[f"grandmother_{name}"] = (
+            df_particles[name].iloc[grandmother_index].to_numpy(copy=False)
+        )
+        df_particles.loc[
+            ~df_particles["has_mother"].array, f"mother_{name}"
+        ] = error_val
+
     has_charm = {
         pdgid: "c" in Particle.from_pdgid(pdgid).quarks.lower()
         if pdgid != PDGID_ERROR_VAL
@@ -380,9 +388,7 @@ def add_mother_columns(df_particles: pd.DataFrame) -> None:
 
     # this follows the MCEq definition
     lifetimes = {
-        pdgid: Particle.from_pdgid(pdgid).lifetime
-        if pdgid != PDGID_ERROR_VAL
-        else inf
+        pdgid: Particle.from_pdgid(pdgid).lifetime if pdgid != PDGID_ERROR_VAL else inf
         for pdgid in pdgids
     }
     for pdgid in lifetimes:
@@ -432,4 +438,3 @@ def add_mother_columns(df_particles: pd.DataFrame) -> None:
     ] = PDGID_ERROR_VAL
 
     df_particles["is_prompt"] = is_prompt_lifetime_limit(df_particles)
-
