@@ -2,6 +2,7 @@ from math import inf
 
 import numpy as np
 import pandas as pd
+from numpy.typing import ArrayLike
 from particle import Particle
 
 from .constants import D0_LIFETIME, PDGID_ERROR_VAL
@@ -9,7 +10,7 @@ from .constants import D0_LIFETIME, PDGID_ERROR_VAL
 
 def is_prompt_lifetime_limit(
     df_particles: pd.DataFrame, lifetime_limit_ns: float = D0_LIFETIME * 10
-) -> np.ndarray:
+) -> ArrayLike:
     """Return a numpy array of prompt labels for the input dataframe differentiating it by the lifetime of the mother particle.
 
     Parameters
@@ -92,7 +93,7 @@ def add_cleaned_mother_cols(df_particles: pd.DataFrame) -> None:
 
 def is_prompt_lifetime_limit_cleaned(
     df_particles: pd.DataFrame, lifetime_limit_ns: float = D0_LIFETIME * 10
-) -> np.ndarray:
+) -> ArrayLike:
     """Return a numpy array of prompt labels for the input dataframe differentiating it by lifetime of the mother particle.
     It considers the cleaned particle type of the mother.
     Parameters
@@ -113,7 +114,7 @@ def is_prompt_lifetime_limit_cleaned(
     return is_prompt
 
 
-def is_prompt_energy(df_particles: pd.DataFrame, s: float = 2) -> np.ndarray:
+def is_prompt_energy(df_particles: pd.DataFrame, s: float = 2) -> ArrayLike:
     """Return a numpy array of prompt labels for the input dataframe differentiating it by energy of the mother particle,
        with considering the cleaned particle type of the mother.
     Parameters
@@ -142,7 +143,7 @@ def is_prompt_energy(df_particles: pd.DataFrame, s: float = 2) -> np.ndarray:
     return is_prompt
 
 
-def is_prompt_pion_kaon(df_particles: pd.DataFrame) -> np.ndarray:
+def is_prompt_pion_kaon(df_particles: pd.DataFrame) -> ArrayLike:
     """Return a numpy array of prompt labels for the input dataframe differentiating it by the pdgid (cleaned)
     of the mother particle. If the mother is a pion or a kaon it is not prompt, otherwise it is.
 
@@ -164,7 +165,33 @@ def is_prompt_pion_kaon(df_particles: pd.DataFrame) -> np.ndarray:
     return is_prompt
 
 
-def is_prompt_pion_kaon_wrong_pdgid(df_particles: pd.DataFrame) -> np.ndarray:
+def is_prompt_pion_kaon_grandmother(df_particles: pd.DataFrame) -> ArrayLike:
+    """Return a numpy array of prompt labels for the input dataframe differentiating it by the pdgid (cleaned)
+    of the mother particle. If the mother is a pion or a kaon it is not prompt, otherwise it is.
+
+    Parameters
+    ----------
+    df_particles: dataframe with the corsika particles, additional_columns have to be present when running `read_DAT`
+
+    Returns
+    -------
+    A numpy boolean array, True for prompt, False for conventional
+    """
+
+    is_prompt = np.ones(df_particles.shape[0], dtype=bool)
+
+    pdgidc = np.abs(df_particles["mother_pdgid_cleaned"].to_numpy(copy=False))
+    pdgidgm = np.abs(df_particles["grandmother_pdgid"].to_numpy(copy=False))
+
+    is_prompt[(pdgidc == 211) | (pdgidc == 321) | (pdgidc == PDGID_ERROR_VAL)] = False
+    is_prompt[
+        (pdgidgm == 211) | (pdgidgm == 321) | (pdgidgm == PDGID_ERROR_VAL)
+    ] = False
+
+    return is_prompt
+
+
+def is_prompt_pion_kaon_wrong_pdgid(df_particles: pd.DataFrame) -> ArrayLike:
     """Return a numpy array of prompt labels for the input dataframe differentiating it by the pdgid (cleaned)
     of the mother particle. If the mother is a pion or a kaon it is not prompt, otherwise it is.
 
@@ -186,9 +213,7 @@ def is_prompt_pion_kaon_wrong_pdgid(df_particles: pd.DataFrame) -> np.ndarray:
     return is_prompt
 
 
-def is_prompt_energy_wrong_pdgid(
-    df_particles: pd.DataFrame, s: float = 2
-) -> np.ndarray:
+def is_prompt_energy_wrong_pdgid(df_particles: pd.DataFrame, s: float = 2) -> ArrayLike:
     """Return a numpy array of prompt labels for the input dataframe differentiating it by energy of the mother particle.
 
     Parameters
