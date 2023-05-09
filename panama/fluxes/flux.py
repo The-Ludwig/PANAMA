@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import numpy as np
+from numpy.typing import ArrayLike
 from particle import PDGID, Particle
 
 from ..constants import PDGID_PROTON_1, PDGID_PROTON_2
@@ -26,7 +27,7 @@ class Flux(ABC):
         self.validPDGIDs = validPDGIDs
 
     @abstractmethod
-    def _flux(self, id: PDGID, E: np.ndarray, **kwargs: Any) -> np.ndarray:
+    def _flux(self, id: PDGID, E: ArrayLike, **kwargs: Any) -> ArrayLike:
         """Return a numpy array of the flux in $\frac{1}{m^2 s sr GeV}$
         This should not be used directly and should not throw any error for non-valid PDGids.
         This is handled by Flux.flux
@@ -36,8 +37,8 @@ class Flux(ABC):
         )
 
     def flux(
-        self, id: PDGID, E: np.ndarray, check_valid_pdgid: bool = True, **kwargs: Any
-    ) -> np.ndarray:
+        self, id: PDGID, E: ArrayLike, check_valid_pdgid: bool = True, **kwargs: Any
+    ) -> ArrayLike:
         """Returns the differential flux in $\frac{1}{m^2 s sr GeV}$ for particle with PDGid id."""
 
         # the proton has 2 valid PDGIDs: as a proton (2212) or as a Hydrogen nucleus (1000010010)
@@ -65,7 +66,7 @@ class Flux(ABC):
 
         return self._flux(id, E=E, **kwargs)
 
-    def total_flux(self, E: np.ndarray, **kwargs: Any) -> np.ndarray:
+    def total_flux(self, E: ArrayLike, **kwargs: Any) -> ArrayLike:
         """Returns the total differential flux in $\frac{1}{m^2 s sr GeV}$."""
         total_flux = np.zeros(E.shape)
         for id in self.validPDGIDs:

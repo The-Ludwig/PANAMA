@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
+from numpy.typing import ArrayLike
 from particle import PDGID, pdgid
 from scipy.special import gamma
 
@@ -20,7 +21,7 @@ class GaisserFlatEarthHighEnergy(MuonFlux):
     def __init__(self) -> None:
         super().__init__()
 
-    def _flux(self, id: PDGID, E: np.ndarray, **kwargs: Any) -> np.ndarray:
+    def _flux(self, id: PDGID, E: ArrayLike, **kwargs: Any) -> ArrayLike:
         theta = kwargs["theta"] if "theta" in kwargs else 0
 
         return (
@@ -47,7 +48,7 @@ class GaisserFlatEarth(MuonFlux):
     def __init__(self) -> None:
         super().__init__()
 
-    def _flux(self, id: PDGID, E: np.ndarray, **kwargs: Any) -> np.ndarray:
+    def _flux(self, id: PDGID, E: ArrayLike, **kwargs: Any) -> ArrayLike:
         theta = kwargs["theta"] if "theta" in kwargs else 0
 
         p1 = self.epsilon_mu / (E * np.cos(theta) + self.alphaX0)

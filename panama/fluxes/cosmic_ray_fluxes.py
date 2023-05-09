@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from numpy.typing import ArrayLike
 from particle import PDGID, Particle
 from particle.pdgid import literals
 from scipy.interpolate import CubicSpline
@@ -23,7 +24,7 @@ class CosmicRayFlux(Flux, ABC):
                 )
         super().__init__(validPDGIDs)
 
-    def total_p_and_n_flux(self, E: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def total_p_and_n_flux(self, E: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
         """Returns tuple with the total number of protons and neutrons in the flux."""
 
         p_flux = np.zeros(shape=E.shape)
@@ -77,7 +78,7 @@ class HillasGaisser(CosmicRayFlux):
         for id, ai3_ in zip(self.validPDGIDs, ai3):
             self.aij[id].append(ai3_)
 
-    def _flux(self, id: PDGID, E: np.ndarray, **kwargs: Any) -> np.ndarray:
+    def _flux(self, id: PDGID, E: ArrayLike, **kwargs: Any) -> ArrayLike:
         flux = np.zeros(E.shape)
 
         for j in range(3):
@@ -129,7 +130,7 @@ class BrokenPowerLaw(CosmicRayFlux):
         self.energies = energies
         self.cutoff = cutoff
 
-    def _flux(self, id: PDGID, E: np.ndarray, **kwargs: Any) -> np.ndarray:
+    def _flux(self, id: PDGID, E: ArrayLike, **kwargs: Any) -> ArrayLike:
         flux = np.empty(shape=E.shape)
 
         lowest_mask = self.energies[id][0] >= E
@@ -235,9 +236,9 @@ class GlobalSplineFit(CosmicRayFlux):
             validPDGIDs.append(Particle.from_nucleus_info(z, self.z_to_a[z]).pdgid)
         super().__init__(validPDGIDs)
 
-    def _flux(self, id: PDGID, E: np.ndarray, **kwargs: Any) -> np.ndarray:
+    def _flux(self, id: PDGID, E: ArrayLike, **kwargs: Any) -> ArrayLike:
         return self.splines[id.Z - 1](E)
 
-    def flux_all_particles(self, E: np.ndarray) -> np.ndarray:
+    def flux_all_particles(self, E: ArrayLike) -> ArrayLike:
         """Will be removed in panama 6.x"""
         return self.spline(E)
