@@ -42,6 +42,45 @@ class CosmicRayFlux(Flux, ABC):
         return p_flux, n_flux
 
 
+class GlobalFitGST(CosmicRayFlux):
+    REFERENCE = "https://arxiv.org/pdf/1303.3565v1.pdf"
+    # H He CNO MgAlSi Fe
+    validPDGIDs = [
+        Particle.from_nucleus_info(z, a).pdgid
+        for z, a in [(1, 1), (2, 4), (6, 12), (14, 28), (26, 54)]
+    ]
+
+    def __init__(self) -> None:
+        super().__init__(HillasGaisser.validPDGIDs)
+        self.aij = {}
+        # see Table 3 of reference
+        self.aij[self.validPDGIDs[0]] = [7000, 150.0, 14.0]
+        self.aij[self.validPDGIDs[1]] = [3200, 65.0, 0.0]
+        self.aij[self.validPDGIDs[2]] = [100, 6.0, 0.0]
+        self.aij[self.validPDGIDs[3]] = [130, 7.0, 0.0]
+        self.aij[self.validPDGIDs[4]] = [60, 2.3, 0.025]
+
+        self.gammaij = {}
+        self.gammaij[self.validPDGIDs[0]] = [1.66, 1.4, 1.4]
+        self.gammaij[self.validPDGIDs[1]] = [1.58, 1.3, 0]
+        self.gammaij[self.validPDGIDs[2]] = [1.4, 1.3, 0]
+        self.gammaij[self.validPDGIDs[3]] = [1.4, 1.3, 0]
+        self.gammaij[self.validPDGIDs[4]] = [1.3, 1.2, 1.2]
+
+        self.rigidity_cutoff = [120e3, 4e6, 1.3e9]  # GeV
+
+    def _flux(self, id: PDGID, E: ArrayLike, **kwargs: Any) -> ArrayLike:
+        flux = np.zeros(E.shape)
+
+        for j in range(3):
+            flux += (
+                self.aij[id][j]
+                * E ** (-self.gammaij[id][j] - 1.0)
+                * np.exp(-E / id.Z / self.rigidity_cutoff[j])
+            )
+        return flux
+
+
 class HillasGaisser(CosmicRayFlux):
     """Gaisser, T.K., Astroparticle Physics 35, 801 (2012)."""
 
