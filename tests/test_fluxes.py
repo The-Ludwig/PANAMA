@@ -1,4 +1,4 @@
-from panama.fluxes import H3a, H4a, TIG, TIGCutoff, GlobalSplineFit
+from panama.fluxes import H3a, H4a, TIG, TIGCutoff, GlobalSplineFit, GlobalFitGST
 from panama.fluxes import muon_fluxes
 import numpy as np
 from particle.pdgid import literals
@@ -39,6 +39,14 @@ def test_TIGCutoff(e = DEFAULT_ENERGY_RANGE):
 
 def test_GlobalSplineFit(e = DEFAULT_ENERGY_RANGE):
     model = GlobalSplineFit()
+
+    model.flux(literals.proton, e)
+    model.total_flux(e)
+    model.total_p_and_n_flux(e)
+
+
+def test_GST(e = DEFAULT_ENERGY_RANGE):
+    model = GlobalFitGST()
 
     model.flux(literals.proton, e)
     model.total_flux(e)
