@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "corsika-panama"
-version = "0.5.3"
+version = "0.5.4"
 description = "PANdas And Multicore utils for corsikA7"
 authors = ["Ludwig Neste <ludwig.neste@tu-dortmund.de>"]
 license = "MIT"
