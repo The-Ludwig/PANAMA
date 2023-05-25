@@ -402,9 +402,6 @@ def add_mother_columns(df_particles: pd.DataFrame, pdgids: list[int] | None) -> 
         for pdgid in pdgids
     }
 
-    df_particles["mother_has_charm"] = df_particles["mother_pdgid"].map(
-        has_charm, na_action=None
-    )
     df_particles["mother_lifetimes"] = (
         df_particles["mother_pdgid"].map(lifetimes, na_action=None).array
     )
@@ -415,6 +412,10 @@ def add_mother_columns(df_particles: pd.DataFrame, pdgids: list[int] | None) -> 
     dif = df_particles["hadron_gen"].to_numpy(copy=False) - df_particles[
         "mother_hadr_gen"
     ].to_numpy(copy=False)
+
+    df_particles["mother_has_charm"] = df_particles["mother_pdgid"].map(
+        has_charm, na_action=None
+    ) & (dif == 30)
 
     is_pion_decay = (dif == 51) & (
         (df_particles["mother_pdgid"].to_numpy(copy=False) == 111)
@@ -427,8 +428,10 @@ def add_mother_columns(df_particles: pd.DataFrame, pdgids: list[int] | None) -> 
     # if we can't tell the motherpdgid for sure
     df_particles["mother_pdgid_cleaned"] = df_particles["mother_pdgid"]
     no_true_mother_idxs = ~(
-        ((dif == 1) | (dif == 0))
-        & ~df_particles["mother_is_resonance"].to_numpy(copy=False)
+        (
+            ((dif == 1) | (dif == 0))
+            & ~df_particles["mother_is_resonance"].to_numpy(copy=False)
+        )
         | df_particles["mother_has_charm"].to_numpy(copy=False)
         | is_pion_decay
     )
