@@ -68,8 +68,8 @@ class Flux(ABC):
 
     def total_flux(self, E: ArrayLike, **kwargs: Any) -> ArrayLike:
         """Returns the total differential flux in $\frac{1}{m^2 s sr GeV}$."""
-        total_flux = np.zeros(E.shape)
-        for id in self.validPDGIDs:
+        total_flux = self._flux(self.validPDGIDs[0], E=E, **kwargs)
+        for id in self.validPDGIDs[1:]:
             total_flux += self._flux(id, E=E, **kwargs)
 
         return total_flux
