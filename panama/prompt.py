@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from math import inf
 
 import numpy as np
@@ -5,7 +7,7 @@ import pandas as pd
 from numpy.typing import ArrayLike
 from particle import Particle
 
-from .constants import D0_LIFETIME, PDGID_ERROR_VAL
+from .constants import D0_LIFETIME, PDGID_ERROR_VAL, PDGIDS_PION_KAON
 
 
 def is_prompt_lifetime_limit(
@@ -143,8 +145,48 @@ def is_prompt_energy(df_particles: pd.DataFrame, s: float = 2) -> ArrayLike:
     return is_prompt
 
 
+def is_abs_id_not_in(
+    df_particles: pd.DataFrame, pdgids: list[int], pdgid_col: str
+) -> ArrayLike:
+    """Return a numpy array which is true if abs(pdgid_col) is not in pdgids, false otherwise.
+
+    Parameters
+    ----------
+    df_particles: DataFrame
+        dataframe with the corsika particles, additional_columns have to be present when running `read_DAT`
+    pdgids: list[int]
+        list of ints with the pdgids to check
+    pdgid_col: str
+        column to check if abs value is not equal to any value in pdgids
+
+    Returns
+    -------
+    A numpy boolean array, True if abs value of col is not in pdgids, False otherwise
+    """
+
+    pdgidc = np.abs(df_particles[pdgid_col].to_numpy(copy=False))
+
+    return ~np.isin(pdgidc.astype(int), pdgids)
+
+
 def is_prompt_pion_kaon(df_particles: pd.DataFrame) -> ArrayLike:
     """Return a numpy array of prompt labels for the input dataframe differentiating it by the pdgid (cleaned)
+    of the mother particle. If the mother is a pion or a kaon it is not prompt, otherwise it is.
+
+    Parameters
+    ----------
+    df_particles: dataframe with the corsika particles, additional_columns have to be present when running `read_DAT`
+    pion_kaon_pdgids
+
+    Returns
+    -------
+    A numpy boolean array, True for prompt, False for conventional
+    """
+    return is_abs_id_not_in(df_particles, PDGIDS_PION_KAON, "mother_pdgid_cleaned")
+
+
+def is_prompt_pion_kaon_wrong_pdgid(df_particles: pd.DataFrame) -> ArrayLike:
+    """Return a numpy array of prompt labels for the input dataframe differentiating it by the pdgid (uncleaned)
     of the mother particle. If the mother is a pion or a kaon it is not prompt, otherwise it is.
 
     Parameters
@@ -156,13 +198,7 @@ def is_prompt_pion_kaon(df_particles: pd.DataFrame) -> ArrayLike:
     A numpy boolean array, True for prompt, False for conventional
     """
 
-    is_prompt = np.ones(df_particles.shape[0], dtype=bool)
-
-    pdgidc = np.abs(df_particles["mother_pdgid_cleaned"].to_numpy(copy=False))
-
-    is_prompt[(pdgidc == 211) | (pdgidc == 321) | (pdgidc == PDGID_ERROR_VAL)] = False
-
-    return is_prompt
+    return is_abs_id_not_in(df_particles, PDGIDS_PION_KAON, "mother_pdgid")
 
 
 def is_prompt_pion_kaon_grandmother(df_particles: pd.DataFrame) -> ArrayLike:
@@ -178,43 +214,16 @@ def is_prompt_pion_kaon_grandmother(df_particles: pd.DataFrame) -> ArrayLike:
     A numpy boolean array, True for prompt, False for conventional
     """
 
-    is_prompt = np.ones(df_particles.shape[0], dtype=bool)
-
     pdgidc = np.abs(df_particles["mother_pdgid_cleaned"].to_numpy(copy=False))
     pdgidgm = np.abs(df_particles["grandmother_pdgid"].to_numpy(copy=False))
 
-    is_prompt[(pdgidc == 211) | (pdgidc == 321) | (pdgidc == PDGID_ERROR_VAL)] = False
-    is_prompt[
-        (pdgidgm == 211) | (pdgidgm == 321) | (pdgidgm == PDGID_ERROR_VAL)
-    ] = False
-
-    return is_prompt
-
-
-def is_prompt_pion_kaon_wrong_pdgid(df_particles: pd.DataFrame) -> ArrayLike:
-    """Return a numpy array of prompt labels for the input dataframe differentiating it by the pdgid (cleaned)
-    of the mother particle. If the mother is a pion or a kaon it is not prompt, otherwise it is.
-
-    Parameters
-    ----------
-    df_particles: dataframe with the corsika particles, additional_columns have to be present when running `read_DAT`
-
-    Returns
-    -------
-    A numpy boolean array, True for prompt, False for conventional
-    """
-
-    is_prompt = np.ones(df_particles.shape[0], dtype=bool)
-
-    pdgidc = np.abs(df_particles["mother_pdgid"].to_numpy(copy=False))
-
-    is_prompt[(pdgidc == 211) | (pdgidc == 321) | (pdgidc == PDGID_ERROR_VAL)] = False
-
-    return is_prompt
+    return ~np.isin(pdgidc.astype(int), PDGIDS_PION_KAON) & ~np.isin(
+        pdgidgm.astype(int), PDGIDS_PION_KAON
+    )
 
 
 def is_prompt_energy_wrong_pdgid(df_particles: pd.DataFrame, s: float = 2) -> ArrayLike:
-    """Return a numpy array of prompt labels for the input dataframe differentiating it by energy of the mother particle.
+    """Return a numpy array of prompt labels for the input dataframe differentiating it by energy of the mother particle (uncleaned).
 
     Parameters
     ----------
