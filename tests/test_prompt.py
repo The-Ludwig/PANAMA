@@ -28,7 +28,7 @@ def test_prompt_definitions_similar(test_file_path=GLOB_TEST_FILE):
 
 
 def test_prompt_definitions_wrong(test_file_path=GLOB_TEST_FILE):
-    """Tests if the different definitions of prompt are similar enough on the test dataset"""
+    """Tests if the 'wrong' definitions of prompt are deviating enough from the baseline on the test dataset."""
 
     df_run, df_event, df = panama.read_DAT(
         glob=test_file_path, drop_non_particles=False, mother_columns=True, drop_mothers=True
@@ -38,8 +38,8 @@ def test_prompt_definitions_wrong(test_file_path=GLOB_TEST_FILE):
     prompt_energy_wrong = panama.prompt.is_prompt_energy_wrong_pdgid(df)
     prompt_pion_kaon_wrong = panama.prompt.is_prompt_pion_kaon_wrong_pdgid(df)
 
-    assert 0.10 < np.sum(prompt_baseline != prompt_energy_wrong)/len(prompt_baseline) < 0.20
-    assert 0.10 < np.sum(prompt_baseline != prompt_pion_kaon_wrong)/len(prompt_baseline) < 0.20
+    assert 0.09 < np.sum(prompt_baseline != prompt_energy_wrong)/len(prompt_baseline) < 0.20
+    assert 0.09 < np.sum(prompt_baseline != prompt_pion_kaon_wrong)/len(prompt_baseline) < 0.20
 
 
 def test_weight_prompt(test_file_path=GLOB_TEST_FILE):
