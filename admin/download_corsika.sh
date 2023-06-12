@@ -2,7 +2,7 @@
 
 if [ ! -n "$CORSIKA_VERSION" ]
 then
-	>&2 echo "Please set env variable CORSIKA_VERSION to the corsika version pw"
+	>&2 echo "Please set env variable CORSIKA_VERSION to the corsika version you want to use."
 	exit 1
 fi
 
