@@ -109,6 +109,7 @@ def run(
     corsika: Path,
     seed: int,
     tmp: Path,
+    save_std: bool,
     debug: bool,
 ) -> None:
     """
@@ -142,5 +143,7 @@ def run(
             "Looks like --events was given and --primary was provided a dict. --events is ignored."
         )
 
-    runner = CorsikaRunner(primary, jobs, template, Path(output), corsika, p, seed)
+    runner = CorsikaRunner(
+        primary, jobs, template, Path(output), corsika, p, seed, save_std
+    )
     runner.run()
