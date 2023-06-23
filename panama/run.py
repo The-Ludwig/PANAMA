@@ -82,8 +82,8 @@ class CorsikaJob:
                 timeout=1,
             )
 
-        if self.save_std_file is not None:
-            self.save_std_file.write(stdout.decode("ASCII"))
+            if self.save_std_file is not None:
+                self.save_std_file.write(stdout.decode("ASCII"))
 
         assert self.running.stdout is not None
         self.stream = NBSR(self.running.stdout)
