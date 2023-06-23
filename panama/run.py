@@ -82,6 +82,9 @@ class CorsikaJob:
                 timeout=1,
             )
 
+        if self.save_std_file is not None:
+            self.save_std_file.write(stdout.decode("ASCII"))
+
         assert self.running.stdout is not None
         self.stream = NBSR(self.running.stdout)
 
@@ -115,10 +118,10 @@ class CorsikaJob:
             finished += line.count(CORSIKA_EVENT_FINISHED)
             self.output += line
 
-            line = self.stream.readline()
+            if self.save_std_file is not None:
+                self.save_std_file.write(line.decode("ASCII"))
 
-        if self.save_std_file is not None:
-            self.save_std_file.write(self.output.decode("ASCII"))
+            line = self.stream.readline()
 
         self.finished_showers += finished
 
@@ -142,6 +145,8 @@ class CorsikaJob:
         while line is not None:
             finished += line.count(CORSIKA_EVENT_FINISHED)
             self.output += line
+            if self.save_std_file is not None:
+                self.save_std_file.write(line.decode("ASCII"))
             line = self.stream.readline()
 
         finished += last_stdout.count(CORSIKA_EVENT_FINISHED)
@@ -149,7 +154,7 @@ class CorsikaJob:
         logging.debug(f"{self.output.decode('ASCII')}")
 
         if self.save_std_file is not None:
-            self.save_std_file.write(self.output.decode("ASCII"))
+            self.save_std_file.write(last_stdout.decode("ASCII"))
 
         if CORSIKA_RUN_END not in self.output:
             logging.warning(
@@ -264,7 +269,10 @@ class CorsikaRunner:
                 )
 
             if self.save_std:
-                save_std_path = self.output.absolute() / f"prim{pdgid}_job{i}.log"
+                save_std_path = (
+                    self.output.absolute()
+                    / f"prim{pdgid}_job{len(self.job_pool)-1}.log"
+                )
             else:
                 save_std_path = None
             self.job_pool[-1].start(
