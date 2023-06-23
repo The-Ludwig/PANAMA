@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import io
 import logging
 import shutil
 from contextlib import suppress
@@ -42,6 +43,7 @@ class CorsikaJob:
         self.n_showers = 0
         self.finished_showers = 0
         self.output = b""
+        self.save_std_file: None | io.TextIOWrapper = None
 
     def __del__(self) -> None:
         shutil.rmtree(self.corsika_copy_dir)
@@ -50,7 +52,9 @@ class CorsikaJob:
     def is_finished(self) -> bool:
         return self.running is None
 
-    def start(self, corsika_config: dict[str, str]) -> None:
+    def start(
+        self, corsika_config: dict[str, str], save_std: Path | None = None
+    ) -> None:
         if self.running is not None:
             raise RuntimeError("Can't use this CorsikaJob, it's still running!")
 
@@ -64,6 +68,11 @@ class CorsikaJob:
         )
 
         self.config = corsika_config
+
+        assert self.save_std_file is None
+
+        if save_std is not None:
+            self.save_std_file = open(save_std, "w")
 
         # this is what is expected...
         # Feels like a hack...
@@ -105,7 +114,11 @@ class CorsikaJob:
             logging.debug(f"finished events = {line.count(CORSIKA_EVENT_FINISHED)}")
             finished += line.count(CORSIKA_EVENT_FINISHED)
             self.output += line
+
             line = self.stream.readline()
+
+        if self.save_std_file is not None:
+            self.save_std_file.write(self.output.decode("ASCII"))
 
         self.finished_showers += finished
 
@@ -135,6 +148,9 @@ class CorsikaJob:
         self.output += last_stdout
         logging.debug(f"{self.output.decode('ASCII')}")
 
+        if self.save_std_file is not None:
+            self.save_std_file.write(self.output.decode("ASCII"))
+
         if CORSIKA_RUN_END not in self.output:
             logging.warning(
                 f"Corsika Output:\n {self.output.decode('ASCII')} \n'END OF RUN' not in corsika output. May indicate failed run. See the output above."
@@ -149,6 +165,9 @@ class CorsikaJob:
         self.config = None
         self.stream = None
         self.finished_showers = 0
+        if self.save_std_file is not None:
+            self.save_std_file.close()
+            self.save_std_file = None
 
 
 class CorsikaRunner:
@@ -161,6 +180,7 @@ class CorsikaRunner:
         corsika_executable: Path,
         corsika_tmp_dir: Path,
         seed: None | int = None,
+        save_std: bool = False,
     ) -> None:
         """
         TODO: Good Docstring, Types
@@ -173,6 +193,7 @@ class CorsikaRunner:
         self.output = Path(output)
         self.corsika_executable = Path(corsika_executable)
         self.corsika_tmp_dir = Path(corsika_tmp_dir)
+        self.save_std = save_std
 
         # we always need at least n_showers if we want to run n_jobs
         if not all(n_jobs <= n_showers for n_showers in primary.values()):
@@ -229,19 +250,30 @@ class CorsikaRunner:
             )
 
             for i, job in enumerate(self.job_pool[:-1]):
+                if self.save_std:
+                    save_std_path = self.output.absolute() / f"prim{pdgid}_job{i}.log"
+                else:
+                    save_std_path = None
                 job.start(
                     self._get_corsika_config(
                         self.n_jobs * idx + i,
                         events_per_job,
                         corsikaid,
-                    )
+                    ),
+                    save_std_path,
                 )
+
+            if self.save_std:
+                save_std_path = self.output.absolute() / f"prim{pdgid}_job{i}.log"
+            else:
+                save_std_path = None
             self.job_pool[-1].start(
                 self._get_corsika_config(
                     self.n_jobs * idx + (self.n_jobs - 1),
                     last_events_per_job,
                     corsikaid,
-                )
+                ),
+                save_std_path,
             )
 
             self.wait_for_jobs()

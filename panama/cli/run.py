@@ -92,6 +92,13 @@ INT_OR_DICT = IntOrDictParamType()
     type=click.Path(file_okay=False),
     help="Path to the default temp folder to copy corsika to. Can also be set using the `TMP_DIR` environment variable.",
 )
+@click.option(
+    "--save-std",
+    "-l",
+    default=False,
+    is_flag=True,
+    help="Save CORSIKAs std_out to a log file in output directory.",
+)
 @click.option("--debug", "-d", default=False, is_flag=True, help="Enable debug output")
 def run(
     template: Path,
