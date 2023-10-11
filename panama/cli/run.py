@@ -58,7 +58,7 @@ INT_OR_DICT = IntOrDictParamType()
     "-p",
     type=INT_OR_DICT,
     help="PDGid of primary to inject. Default is proton. "
-    "Can be a python dict with diffrerent primaries as keys and values the number of events to generate for that. "
+    "Can be a python dict with different primaries as keys and values the number of events to generate for that. "
     "In this case, --events is ignored. "
     "Example with proton and iron: {2212: 100_000, 1000260560: 1000}",
     default=2212,
