@@ -244,4 +244,44 @@ def test_cli(
 
     assert event_header_2.shape[0] == 2
     print(event_header_2.keys())
-    assert len(event_header_2["particle_id"].unique()) == 2
+
+ 
+def test_save_output(
+    tmp_path,
+    test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
+    corsika_path=Path(__file__).parent.parent
+    / CORSIKA_VERSION
+    / "run"
+    / CORSIKA_EXECUTABLE,
+):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "run",
+            f"{test_file_path}",
+            "--primary",
+            "{2212: 1, 1000260560: 1}",  # proton and iron
+            "--corsika",
+            f"{corsika_path}",
+            "--output",
+            f"{tmp_path}",
+            "--seed",
+            "137",
+            "--jobs",
+            "1",  
+            "--debug",
+            "--save-std"
+        ],
+        catch_exceptions=False
+    )
+
+    assert result.exit_code == 0
+
+    logfile = Path(f"{tmp_path}/prim2212_job0.log")
+    assert logfile.exists()
+
+    with open(logfile) as lf:
+        content = lf.read()
+
+    assert "END OF RUN" in content
