@@ -71,8 +71,10 @@ class CorsikaJob:
 
         assert self.save_std_file is None
 
+        # TODO: This is not really nice...
+        # I don't see how context handlers can be easily used here
         if save_std is not None:
-            self.save_std_file = open(save_std, "w")
+            self.save_std_file = open(save_std, "w")  # noqa: SIM115
 
         # this is what is expected...
         # Feels like a hack...
