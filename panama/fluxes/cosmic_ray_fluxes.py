@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -45,13 +45,13 @@ class CosmicRayFlux(Flux, ABC):
 class GlobalFitGST(CosmicRayFlux):
     REFERENCE = "https://arxiv.org/pdf/1303.3565v1.pdf"
     # H He CNO MgAlSi Fe
-    validPDGIDs = [
+    ValidPDGIDs: ClassVar = [
         Particle.from_nucleus_info(z, a).pdgid
         for z, a in [(1, 1), (2, 4), (6, 12), (14, 28), (26, 54)]
     ]
 
     def __init__(self) -> None:
-        super().__init__(HillasGaisser.validPDGIDs)
+        super().__init__(GlobalFitGST.ValidPDGIDs)
         self.aij = {}
         # see Table 3 of reference
         self.aij[self.validPDGIDs[0]] = [7000, 150.0, 14.0]
@@ -86,13 +86,13 @@ class HillasGaisser(CosmicRayFlux):
 
     REFERENCE = "https://doi.org/10.1016/j.astropartphys.2012.02.010"
     # H He CNO MgAlSi Fe
-    validPDGIDs = [
+    ValidPDGIDs: ClassVar = [
         Particle.from_nucleus_info(z, a).pdgid
         for z, a in [(1, 1), (2, 4), (6, 12), (14, 28), (26, 54)]
     ]
 
     def __init__(self, ai3: list[float], gamma_pop_3: float, r_pop_3: float) -> None:
-        super().__init__(HillasGaisser.validPDGIDs)
+        super().__init__(HillasGaisser.ValidPDGIDs)
         self.aij = {}
         # see Table 1 of reference
         self.aij[self.validPDGIDs[0]] = [7860.0, 20.0]
@@ -228,7 +228,7 @@ class TIGCutoff(BrokenPowerLaw):
 class GlobalSplineFit(CosmicRayFlux):
     REFERENCE = "https://doi.org/10.48550/arXiv.1711.11432"
 
-    z_to_a = {
+    z_to_a: ClassVar = {
         1: 1,
         2: 4,
         3: 7,

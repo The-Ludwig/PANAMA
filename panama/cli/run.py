@@ -58,7 +58,7 @@ INT_OR_DICT = IntOrDictParamType()
     "-p",
     type=INT_OR_DICT,
     help="PDGid of primary to inject. Default is proton. "
-    "Can be a python dict with diffrerent primaries as keys and values the number of events to generate for that. "
+    "Can be a python dict with different primaries as keys and values the number of events to generate for that. "
     "In this case, --events is ignored. "
     "Example with proton and iron: {2212: 100_000, 1000260560: 1000}",
     default=2212,
@@ -92,6 +92,13 @@ INT_OR_DICT = IntOrDictParamType()
     type=click.Path(file_okay=False),
     help="Path to the default temp folder to copy corsika to. Can also be set using the `TMP_DIR` environment variable.",
 )
+@click.option(
+    "--save-std",
+    "-l",
+    default=False,
+    is_flag=True,
+    help="Save CORSIKAs std_out to a log file in output directory.",
+)
 @click.option("--debug", "-d", default=False, is_flag=True, help="Enable debug output")
 def run(
     template: Path,
@@ -102,6 +109,7 @@ def run(
     corsika: Path,
     seed: int,
     tmp: Path,
+    save_std: bool,
     debug: bool,
 ) -> None:
     """
@@ -135,5 +143,7 @@ def run(
             "Looks like --events was given and --primary was provided a dict. --events is ignored."
         )
 
-    runner = CorsikaRunner(primary, jobs, template, Path(output), corsika, p, seed)
+    runner = CorsikaRunner(
+        primary, jobs, template, Path(output), corsika, p, seed, save_std
+    )
     runner.run()
