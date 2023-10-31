@@ -16,9 +16,9 @@ dependencies = [
     "ipython>=8.12.3",
 ]
 name = "PANAMA"
-version = "0.6.2"
 description = "\"PANdas And Multicore utils for corsikA7\""
 readme = "README.md"
+dynamic = ["version"]
 
 [project.urls]
 homepage = "https://github.com/The-Ludwig/PANAMA"
@@ -32,6 +32,7 @@ panama = "panama.cli:cli"
 plugins = [
     "sync-pre-commit-lock"
 ]
+version = { source = "file", path = "panama/__init__.py" }
 
 [tool.pdm.dev-dependencies]
 dev = [
