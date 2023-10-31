@@ -18,6 +18,9 @@ jobs:
         corsika-version: ["77500"]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - name: Set up PDM
