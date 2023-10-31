@@ -63,6 +63,8 @@ minversion = "6.0"
 xfail_strict = true
 addopts = [
     "-ra",
+    "--strict-config",
+    "--strict-markers"
 ]
 testpaths = [
     "tests",
