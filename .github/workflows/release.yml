@@ -5,6 +5,10 @@ on:
   release:
     types: [published]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   release:
     strategy:
@@ -16,14 +20,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install poetry
-        run: pipx install poetry==${{ matrix.poetry-version }}
-      - uses: actions/setup-python@v4
+      - name: Set up PDM
+        uses: pdm-project/setup-pdm@v3
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "poetry"
+
       - name: Install dependencies
-        run: poetry install --with dev
+        run: |
+          pdm sync -d -G testing
       - name: Cache Corsika7
         id: cache-corsika
         uses: actions/cache@v3
@@ -37,15 +41,14 @@ jobs:
         env:
           CORSIKA_PW: ${{ secrets.CORSIKA_PW }}
           CORSIKA_VERSION: ${{ matrix.corsika-version }}
-      - name: Run tests
-        run: poetry run coverage run --include="panama/**" -m pytest
+      - name: Run Tests
+        run: |
+          pdm run -v coverage run --include="panama/**" -m pytest
       - name: Produce coverage xml
-        run: poetry run coverage xml
+        run: pdm run -v coverage xml
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Deploy to PyPi
-        env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
-        run: poetry publish --build
+        run: pdm publish

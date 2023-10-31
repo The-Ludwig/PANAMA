@@ -4,7 +4,7 @@ from .read import read_DAT
 from .run import CorsikaRunner
 from .weights import add_weight_prompt, add_weight_prompt_per_event, get_weights
 
-__version__ = "0.6.1"
+__version__ = "0.7.0"
 
 __all__ = (
     "read_DAT",
