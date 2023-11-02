@@ -15,7 +15,7 @@ dependencies = [
     "scipy<2.0.0,>=1.10.1",
     "ipython>=8.12.3",
 ]
-name = "PANAMA"
+name = "corsika-panama"
 description = "\"PANdas And Multicore utils for corsikA7\""
 readme = "README.md"
 dynamic = ["version"]
@@ -23,7 +23,7 @@ dynamic = ["version"]
 [project.urls]
 homepage = "https://github.com/The-Ludwig/PANAMA"
 repository = "https://github.com/The-Ludwig/PANAMA"
-documentation = "https://github.com/The-Ludwig/PANAMA#readme"
+documentation = "https://panama.readthedocs.io/en/latest/"
 
 [project.scripts]
 panama = "panama.cli:cli"
