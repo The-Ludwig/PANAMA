@@ -305,14 +305,12 @@ def read_DAT(
 
     if drop_mothers:
         df_particles.drop(
-            index=df_particles.query("particle_description < 0").index.array,
+            index=df_particles.query("particle_description < 0").index,
             inplace=True,
         )
 
     if drop_non_particles:
-        df_particles.drop(
-            index=df_particles.query("pdgid == 0").index.array, inplace=True
-        )
+        df_particles.drop(index=df_particles.query("pdgid == 0").index, inplace=True)
 
     df_particles.set_index(
         keys=["run_number", "event_number", "particle_number"], inplace=True
@@ -353,9 +351,9 @@ def add_mother_columns(df_particles: pd.DataFrame, pdgids: list[int] | None) -> 
     ) & df_particles["is_mother"].iloc[grandmother_index].to_numpy(copy=False)
 
     df_particles["mother_hadr_gen"] = (
-        np.abs(df_particles["particle_description"].iloc[mother_index].array) % 100
+        np.abs(df_particles["particle_description"].iloc[mother_index]) % 100
     )
-    df_particles.loc[~df_particles["has_mother"].array, "mother_hadr_gen"] = pd.NA
+    df_particles.loc[~df_particles["has_mother"], "mother_hadr_gen"] = pd.NA
 
     # copy mother values to daughter columns so we can drop them later
     for name, error_val in (
@@ -366,18 +364,14 @@ def add_mother_columns(df_particles: pd.DataFrame, pdgids: list[int] | None) -> 
         df_particles[f"mother_{name}"] = (
             df_particles[name].iloc[mother_index].to_numpy(copy=False)
         )
-        df_particles.loc[
-            ~df_particles["has_mother"].array, f"mother_{name}"
-        ] = error_val
+        df_particles.loc[~df_particles["has_mother"], f"mother_{name}"] = error_val
 
     # copy grandmother values to daughter columns so we can drop them later
     for name, error_val in (("pdgid", PDGID_ERROR_VAL),):
         df_particles[f"grandmother_{name}"] = (
             df_particles[name].iloc[grandmother_index].to_numpy(copy=False)
         )
-        df_particles.loc[
-            ~df_particles["has_mother"].array, f"mother_{name}"
-        ] = error_val
+        df_particles.loc[~df_particles["has_mother"], f"mother_{name}"] = error_val
 
     has_charm = {
         pdgid: "c" in Particle.from_pdgid(pdgid).quarks.lower()
@@ -402,8 +396,8 @@ def add_mother_columns(df_particles: pd.DataFrame, pdgids: list[int] | None) -> 
         for pdgid in pdgids
     }
 
-    df_particles["mother_lifetimes"] = (
-        df_particles["mother_pdgid"].map(lifetimes, na_action=None).array
+    df_particles["mother_lifetimes"] = df_particles["mother_pdgid"].map(
+        lifetimes, na_action=None
     )
     df_particles["mother_is_resonance"] = df_particles["mother_pdgid"].map(
         is_resonance, na_action=None
