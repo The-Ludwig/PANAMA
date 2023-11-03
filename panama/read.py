@@ -225,9 +225,14 @@ def read_DAT(
         df_event_headers = pd.DataFrame(event_headers, columns=event_header_features)
     df_event_headers.set_index(keys=["run_number", "event_number"], inplace=True)
 
+    # finished parsing if no particles reached observation level
+    if len(particles) == 0:
+        return df_run_headers, df_event_headers, pd.DataFrame([])
+
     if noparse:
         # necessary since we can have a different number of particles in each event
         df_particles_l = [pd.DataFrame(p) for p in particles]
+
         df_particles = pd.concat(df_particles_l, ignore_index=True)
 
         valid_columns = [
