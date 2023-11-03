@@ -6,6 +6,7 @@ import subprocess
 from click.testing import CliRunner
 from panama import read_DAT
 import pytest
+import numpy as np
 
 CORSIKA_VERSION = "corsika-77500"
 CORSIKA_EXECUTABLE = "corsika77500Linux_SIBYLL_urqmd"
@@ -55,6 +56,36 @@ def test_corsika_runner(
     assert event_header_2.shape[0] == 2
     print(event_header_2.keys())
     assert len(event_header_2["particle_id"].unique()) == 2
+
+
+def test_file_output_compare(
+    tmp_path,
+    test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
+    corsika_path=Path(__file__).parent.parent
+    / CORSIKA_VERSION
+    / "run"
+    / CORSIKA_EXECUTABLE,
+    compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
+):
+    runner = CorsikaRunner(primary={2212: 1, 1000260560: 1},
+                           n_jobs=1,
+                           template_path=test_file_path,
+                           output=tmp_path,
+                           corsika_executable=corsika_path,
+                           corsika_tmp_dir=tmp_path,
+                           seed=137,
+                           )
+
+    runner.run()
+
+    run_header_1, event_header_1, ps_1 = read_DAT(glob=compare_files)
+    run_header_2, event_header_2, ps_2 = read_DAT(glob=f"{tmp_path}/DAT*")
+
+    for df_1, df_2 in ((event_header_1, event_header_2), (run_header_1, run_header_2), (ps_1, ps_2)):
+        for k in df_1:
+            dif = (df_1[k]-df_2[k]).sum()
+            if isinstance(dif, float):
+                assert dif < 1e-10
 
 
 def test_cli_missing_executable(
