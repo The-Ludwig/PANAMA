@@ -1,0 +1,26 @@
+RUNNR   {run_idx}                      run number
+EVTNR   {first_event_idx}              number of first shower event
+NSHOW   {n_show}                       number of showers to generate
+PRMPAR  {primary}                      particle type of prim. particle
+ESLOPE  -1                             slope of primary energy spectrum
+ERANGE  1.E1  1.E3                     energy range of primary particle
+THETAP  0.     0.                      range of zenith angle (degree)
+PHIP    -180.  180.                    range of azimuth angle (degree)
+SEED    {seed_1}   0   0               seed for 1. random number sequence
+SEED    {seed_2}   0   0               seed for 2. random number sequence
+OBSLEV  110.E2                         observation level (in cm)
+FIXCHI  0.                             starting altitude (g/cm**2)
+MAGNET  16.811  -51.890                magnetic field at south pole (IceCube)
+HADFLG  0  0  0  0  0  2               flags hadr.interact.&fragmentation
+ECUTS   1.0E1  1.0E1  1.0E20  1.0E20   energy cuts for particles
+MUADDI  T                              additional info for muons
+MUMULT  T                              muon multiple scattering angle
+ELMFLG  T   T                          em. interaction flags (NKG,EGS)
+STEPFC  1.0                            mult. scattering step length fact.
+RADNKG  200.E2                         outer radius for NKG lat.dens.distr.
+LONGI   F  10.  F  F                   longit.distr. & step size & fit & out
+MAXPRT  1                              max. number of printed events
+DIRECT  {dir}                          output directory
+USER    you                            user
+DEBUG   F  6  F  1000000               debug flag and log.unit for out
+EXIT                                   terminates input
