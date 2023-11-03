@@ -7,6 +7,7 @@ from typing import Any
 
 import click
 
+from .._logo import get_logo
 from ..run import CorsikaRunner
 
 DEFAULT_TMP_DIR = environ.get("TMP_DIR", "/tmp/PANAMA")
@@ -125,6 +126,8 @@ def run(
     """
     if debug:
         logging.basicConfig(level=logging.DEBUG)
+
+    logging.info(get_logo())
 
     if tmp == DEFAULT_TMP_DIR:
         n = 0

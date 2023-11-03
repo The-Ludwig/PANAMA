@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import click
 
+from .._logo import get_logo
 from ..read import read_DAT
 
 
@@ -34,6 +36,7 @@ from ..read import read_DAT
     is_flag=True,
     help="Drop all rows which don't really represent a particle. (Like decay or additional information)",
 )
+@click.option("--debug", "-d", default=False, is_flag=True, help="Enable debug output")
 def hdf5(
     input: list[Path],
     output: Path,
@@ -41,6 +44,7 @@ def hdf5(
     mother: bool,
     dropmother: bool,
     dropnonparticles: bool,
+    debug: bool,
 ) -> None:
     """
     Convert CORSIKA7 DAT files to hdf5 files.
@@ -52,6 +56,11 @@ def hdf5(
 
     https://github.com/The-Ludwig/PANAMA#readme
     """
+
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    logging.info(get_logo())
 
     files = list(input)
 
