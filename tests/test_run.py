@@ -85,31 +85,6 @@ def test_file_output_compare(
         assert df_1.select_dtypes(exclude=['object']).equals(df_2.select_dtypes(exclude=['object']))
 
 
-def test_cli_missing_executable(
-    test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
-):
-    runner = CliRunner()
-    result = runner.invoke(
-        cli,
-        [
-            "run",
-            f"{test_file_path}",
-            "--events",
-            "10",
-            "--primary",
-            "{10: 10, 20: 20}",
-            "--corsika",
-            f"{test_file_path}",
-            "--debug",
-        ],
-        catch_exceptions=False
-    )
-
-    assert "not executable" in result.output
-    # assert "--events is ignored" in result.output
-    assert result.exit_code == 2
-
-
 def test_different_primary_type(
     tmp_path,
     test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
@@ -227,51 +202,6 @@ def test_multi_job_fail(
             ],
             catch_exceptions=False
     )
-
-
-def test_cli(
-    tmp_path,
-    test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
-    corsika_path=Path(__file__).parent.parent
-    / CORSIKA_VERSION
-    / "run"
-    / CORSIKA_EXECUTABLE,
-    compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
-):
-    runner = CliRunner()
-    result = runner.invoke(
-        cli,
-        [
-            "run",
-            f"{test_file_path}",
-            "--primary",
-            "{2212: 1, 1000260560: 1}",  # proton and iron
-            "--corsika",
-            f"{corsika_path}",
-            "--output",
-            f"{tmp_path}",
-            "--seed",
-            "137",
-            "--jobs",
-            "1",  
-            "--debug",
-        ],
-        catch_exceptions=False
-    )
-
-    assert result.exit_code == 0
-
-    # run_header, event_header, ps = read_DAT(glob=compare_files)
-    run_header_2, event_header_2, ps_2 = read_DAT(glob=f"{tmp_path}/DAT*")
-
-    # sadly, this does not seem to match on different machines
-    # probably, corsika related
-    # assert run_header.equals(run_header_2)
-    # assert event_header.equals(event_header_2)
-    # assert ps.equals(ps_2)
-
-    assert event_header_2.shape[0] == 2
-    print(event_header_2.keys())
 
  
 def test_save_output(

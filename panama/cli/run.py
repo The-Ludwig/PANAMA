@@ -124,10 +124,13 @@ def run(
 
     https://github.com/The-Ludwig/PANAMA#readme
     """
+    logger = logging.getLogger("panama")
     if debug:
         logging.basicConfig(level=logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
+        logger.debug("debug log level activated")
 
-    logging.info(get_logo())
+    logger.info(get_logo())
 
     if tmp == DEFAULT_TMP_DIR:
         n = 0
@@ -142,7 +145,7 @@ def run(
         primary = {primary: events}
 
     if events != DEFAULT_N_EVENTS and len(primary) > 1:
-        logging.warning(
+        logger.warning(
             "Looks like --events was given and --primary was provided a dict. --events is ignored."
         )
 

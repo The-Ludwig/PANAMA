@@ -21,6 +21,8 @@ CORSIKA_FILE_ERROR = "STOP FILOPN: FATAL PROBLEM OPENING FILE"
 CORSIKA_EVENT_FINISHED = b"PRIMARY PARAMETERS AT FIRST INTERACTION POINT AT HEIGHT"
 CORSIKA_RUN_END = b"END OF RUN"
 
+logger = logging.getLogger("panama")
+
 
 class CorsikaJob:
     def __init__(
@@ -101,7 +103,7 @@ class CorsikaJob:
 
         if (return_code := self.running.poll()) is not None:
             if return_code != 0:
-                logging.error(
+                logger.error(
                     f"Return code of corsika is {return_code}. This indicates a failed run."
                 )
 
@@ -115,8 +117,8 @@ class CorsikaJob:
         if line is not None:
             self.output = b""
         while line is not None:
-            logging.debug(line.decode("ASCII"))
-            logging.debug(f"finished events = {line.count(CORSIKA_EVENT_FINISHED)}")
+            logger.debug(line.decode("ASCII"))
+            logger.debug(f"finished events = {line.count(CORSIKA_EVENT_FINISHED)}")
             finished += line.count(CORSIKA_EVENT_FINISHED)
             self.output += line
 
@@ -153,13 +155,13 @@ class CorsikaJob:
 
         finished += last_stdout.count(CORSIKA_EVENT_FINISHED)
         self.output += last_stdout
-        logging.debug(f"{self.output.decode('ASCII')}")
+        logger.debug(f"{self.output.decode('ASCII')}")
 
         if self.save_std_file is not None:
             self.save_std_file.write(last_stdout.decode("ASCII"))
 
         if CORSIKA_RUN_END not in self.output:
-            logging.warning(
+            logger.warning(
                 f"Corsika Output:\n {self.output.decode('ASCII')} \n'END OF RUN' not in corsika output. May indicate failed run. See the output above."
             )
 
@@ -237,15 +239,15 @@ class CorsikaRunner:
                             pbar.update(update)
                     sleep(0.1)
         except KeyboardInterrupt:
-            logging.info("Interrupted by user.")
+            logger.info("Interrupted by user.")
 
     def run(self) -> None:
         # create dir if not existent
         self.output.mkdir(parents=True, exist_ok=True)
 
         for idx, (pdgid, n_events) in enumerate(self.primary.items()):
-            logging.info("#" * 50)
-            logging.info(
+            logger.info("#" * 50)
+            logger.info(
                 f"Running primary '{Particle.from_pdgid(pdgid).name}' (pdgid: {pdgid})"
             )
 
