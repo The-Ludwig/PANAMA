@@ -1,9 +1,29 @@
-from panama.fluxes import H3a, H4a, TIG, TIGCutoff, GlobalSplineFit, GlobalFitGST
+from panama.fluxes import H3a, H4a, TIG, TIGCutoff, GlobalSplineFit, GlobalFitGST, CosmicRayFlux
 from panama.fluxes import muon_fluxes
 import numpy as np
 from particle.pdgid import literals
+from typing import ClassVar
 
 DEFAULT_ENERGY_RANGE = np.geomspace(10, 1e10)
+
+def test_electron_flux(e = DEFAULT_ENERGY_RANGE):
+    class EFlux(CosmicRayFlux):
+        VALID_PDGIDS: ClassVar = [literals.e_minus]
+        
+        def __init__(self):
+            super().__init__(EFlux.VALID_PDGIDS)
+
+        def _flux(self, id, E, **kwargs):
+            if id in self.VALID_PDGIDS:
+                return E**-2
+            else:
+                return E**0-1
+
+    model = EFlux()
+
+    assert np.sum(model.flux(literals.proton, e, check_valid_pdgid=False)) == 0
+    assert np.all(model.total_flux(e, check_valid_pdgid=False) == e**-2)
+    assert np.sum(model.total_p_and_n_flux(e)) == 0
 
 def test_H3a(e = DEFAULT_ENERGY_RANGE):
     model = H3a()

@@ -15,13 +15,6 @@ from .flux import Flux
 
 class CosmicRayFlux(Flux, ABC):
     def __init__(self, validPDGIDs: list[PDGID]) -> None:
-        self.valid_leptons = (literals.e_minus, literals.e_plus)
-
-        for id in validPDGIDs:
-            if not (id.is_nucleus or id in self.valid_leptons):
-                raise ValueError(
-                    f"{Particle.from_pdgid(id).name} (pdgid: {id}) is not a cosmic ray."
-                )
         super().__init__(validPDGIDs)
 
     def total_p_and_n_flux(self, E: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
@@ -31,7 +24,7 @@ class CosmicRayFlux(Flux, ABC):
         n_flux = np.zeros(shape=E.shape)
 
         for id in self.validPDGIDs:
-            if id in self.valid_leptons:
+            if not id.is_nucleus:
                 continue
             nucleon_flux = id.A * self.flux(
                 id, E=E * id.A
