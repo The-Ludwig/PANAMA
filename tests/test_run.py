@@ -247,3 +247,81 @@ def test_save_output(
         content = lf.read()
 
     assert "END OF RUN" in content
+
+def test_run_multitemp(
+    tmp_path,
+    caplog,
+    test_file_path=Path(__file__).parent / "files" / "example_corsika_low_energy.template",
+    corsika_path=Path(__file__).parent.parent
+    / CORSIKA_VERSION
+    / "run"
+    / CORSIKA_EXECUTABLE,
+    compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
+):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--debug",
+            "run",
+            f"{test_file_path}",
+            "--primary",
+            "2212", # proton
+            "-n",
+            "1",
+            "--corsika",
+            f"{corsika_path}",
+            "--output",
+            f"{tmp_path}/1",
+            "--tmp",
+            f"{tmp_path}/tmp",
+            "--seed",
+            "137",
+            "--jobs",
+            "1",  
+            "--debug",
+        ],
+        catch_exceptions=False
+    )
+    
+    with open(f"{tmp_path}/tmp/touch", "w") as file:
+        file.write("I am touched")
+
+    runner2 = CliRunner()
+    result2 = runner2.invoke(
+        cli,
+        [
+            "--debug",
+            "run",
+            f"{test_file_path}",
+            "--primary",
+            "2212", # proton
+            "-n",
+            "1",
+            "--corsika",
+            f"{corsika_path}",
+            "--output",
+            f"{tmp_path}/2",
+            "--tmp",
+            f"{tmp_path}/tmp",
+            "--seed",
+            "69",
+            "--jobs",
+            "1",  
+            "--debug",
+        ],
+        catch_exceptions=False
+    )
+
+    assert result.exit_code == 0
+    assert result2.exit_code == 0
+    assert Path(f"{tmp_path}/tmp/touch").exists()
+
+    run_header_1, event_header_1, ps_1 = read_DAT(glob=f"{tmp_path}/1/DAT*")
+    run_header_2, event_header_2, ps_2 = read_DAT(glob=f"{tmp_path}/2/DAT*")
+
+    assert event_header_1.shape[0] == 1
+    assert event_header_2.shape[0] == 1
+    assert not event_header_1.select_dtypes(exclude=["object"]).equals(event_header_2.select_dtypes(exclude=["object"]))
+    assert "DEBUG" in caplog.text
+

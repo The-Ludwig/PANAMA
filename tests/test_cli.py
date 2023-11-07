@@ -149,6 +149,50 @@ def test_cli_fast(
     assert "DEBUG" in caplog.text
 
 
+def test_cli_double_arg(
+    tmp_path,
+    caplog,
+    test_file_path=Path(__file__).parent / "files" / "example_corsika_low_energy.template",
+    corsika_path=Path(__file__).parent.parent
+    / CORSIKA_VERSION
+    / "run"
+    / CORSIKA_EXECUTABLE,
+    compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
+):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--debug",
+            "run",
+            f"{test_file_path}",
+            "--primary",
+            "{2212: 1}", # proton
+            "-n",
+            "1",
+            "--corsika",
+            f"{corsika_path}",
+            "--output",
+            f"{tmp_path}",
+            "--seed",
+            "137",
+            "--jobs",
+            "1",  
+            "--debug",
+        ],
+        catch_exceptions=False
+    )
+
+    assert result.exit_code == 0
+
+    run_header_2, event_header_2, ps_2 = read_DAT(glob=f"{tmp_path}/DAT*")
+
+    assert event_header_2.shape[0] == 1
+    assert "DEBUG" in caplog.text
+    assert "WARNING" in caplog.text
+    assert "--events is ignored" in caplog.text
+
+
 def test_cli_no_debug(
     tmp_path,
     caplog,

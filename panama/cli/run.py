@@ -22,7 +22,10 @@ class IntOrDictParamType(click.ParamType):  # type: ignore[misc]
     name = "int or py dict"
 
     def convert(self, value: int | str, param: Any, ctx: Any) -> int | dict[int, int]:
-        if isinstance(value, int):
+        # this might be coverage-hacking, but the tutorial says
+        # to write it this way, but apparently this won't be evaluated
+        # even if ints are passed
+        if isinstance(value, int):  # pragma: no cover
             return value
 
         try:
@@ -91,7 +94,7 @@ INT_OR_DICT = IntOrDictParamType()
     "-t",
     default=DEFAULT_TMP_DIR,
     type=click.Path(file_okay=False),
-    help="Path to the default temp folder to copy corsika to. Can also be set using the `TMP_DIR` environment variable.",
+    help="Path to the default temp folder to copy corsika to, will be appended by _n if it is not empty. Can also be set using the `TMP_DIR` environment variable.",
 )
 @click.option(
     "--save-std",
@@ -132,19 +135,15 @@ def run(
 
     logger.info(get_logo())
 
-    if tmp == DEFAULT_TMP_DIR:
-        n = 0
-        p = Path(tmp)
-        while p.exists() and next(p.iterdir(), True) is not True:
-            n += 1
-            p = Path(DEFAULT_TMP_DIR + f"_{n}")
-    else:
-        p = Path(tmp)
+    n = 0
+    p = Path(tmp)
+    while p.exists() and next(p.iterdir(), True) is not True:
+        n += 1
+        p = Path(DEFAULT_TMP_DIR + f"_{n}")
 
     if isinstance(primary, int):
         primary = {primary: events}
-
-    if events != DEFAULT_N_EVENTS and len(primary) > 1:
+    elif events != DEFAULT_N_EVENTS:
         logger.warning(
             "Looks like --events was given and --primary was provided a dict. --events is ignored."
         )
