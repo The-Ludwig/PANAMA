@@ -82,6 +82,10 @@ def test_file_output_compare(
     run_header_2, event_header_2, ps_2 = read_DAT(glob=f"{tmp_path}/DAT*")
 
     for df_1, df_2 in ((event_header_1, event_header_2), (run_header_1, run_header_2), (ps_1, ps_2)):
+        # remove references to dates
+        dates = list(filter(lambda name: "date" in str(name), df_1.columns))
+        df_1.drop(dates, axis="columns", inplace=True)
+        df_2.drop(dates, axis="columns", inplace=True)
         assert df_1.select_dtypes(exclude=['object']).equals(df_2.select_dtypes(exclude=['object']))
 
 

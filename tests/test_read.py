@@ -65,12 +65,13 @@ def test_read_corsia_file(test_file_path=SINGLE_TEST_FILE):
 
 # Do not turn the PyTables performance warning into an error
 @pytest.mark.filterwarnings("ignore::pandas.errors.PerformanceWarning")
-def test_cli(pytestconfig, tmp_path, test_file_path=SINGLE_TEST_FILE):
+def test_cli(pytestconfig, tmp_path, caplog, test_file_path=SINGLE_TEST_FILE):
     runner = CliRunner()
     result = runner.invoke(
         cli,
         [
             "hdf5",
+            "--debug",
             f"{test_file_path}",
             f"{tmp_path}/output.hdf5",
         ],
@@ -84,6 +85,7 @@ def test_cli(pytestconfig, tmp_path, test_file_path=SINGLE_TEST_FILE):
 
     check_eq(test_file_path, run_header, event_header, particles)
 
+    assert "DEBUG" in caplog.text
 
 def save_spectral_fit_test_fig(path, model, log_e, hist, p):
     empty = hist == 0

@@ -3,6 +3,7 @@ from pathlib import Path
 from panama.cli import cli
 from click.testing import CliRunner
 from panama import read_DAT
+import pytest
 
 CORSIKA_VERSION = "corsika-77500"
 CORSIKA_EXECUTABLE = "corsika77500Linux_SIBYLL_urqmd"
@@ -32,6 +33,80 @@ def test_cli_missing_executable(
     assert result.exit_code == 2
 
 
+def test_cli_not_valid_python_fail(
+    tmp_path,
+    caplog,
+    test_file_path=Path(__file__).parent / "files" / "example_corsika_low_energy.template",
+    corsika_path=Path(__file__).parent.parent
+    / CORSIKA_VERSION
+    / "run"
+    / CORSIKA_EXECUTABLE,
+    compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
+):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--debug",
+            "run",
+            f"{test_file_path}",
+            "--primary",
+            "{sdfs; s}", # proton
+            "--corsika",
+            f"{corsika_path}",
+            "--output",
+            f"{tmp_path}",
+            "--seed",
+            "137",
+            "--jobs",
+            "1",  
+            "--debug",
+        ],
+        catch_exceptions=False
+    )
+
+    assert result.exit_code == 2
+    assert "Error: Invalid value for" in result.stdout 
+    assert "not a valid python expression" in result.stdout 
+
+
+def test_cli_not_a_dict(
+    tmp_path,
+    caplog,
+    test_file_path=Path(__file__).parent / "files" / "example_corsika_low_energy.template",
+    corsika_path=Path(__file__).parent.parent
+    / CORSIKA_VERSION
+    / "run"
+    / CORSIKA_EXECUTABLE,
+    compare_files=Path(__file__).parent / "files" / "compare" / "DAT*",
+):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--debug",
+            "run",
+            f"{test_file_path}",
+            "--primary",
+            "[1, 2, 3]", # proton
+            "--corsika",
+            f"{corsika_path}",
+            "--output",
+            f"{tmp_path}",
+            "--seed",
+            "137",
+            "--jobs",
+            "1",  
+            "--debug",
+        ],
+        catch_exceptions=False
+    )
+
+    assert result.exit_code == 2
+    assert "Error: Invalid value for" in result.stdout 
+    assert "is a valid python expression, but not a dict" in result.stdout 
+
+
 def test_cli_fast(
     tmp_path,
     caplog,
@@ -50,7 +125,9 @@ def test_cli_fast(
             "run",
             f"{test_file_path}",
             "--primary",
-            "{2212: 1}",  # proton and iron
+            "2212", # proton
+            "-n",
+            "1",
             "--corsika",
             f"{corsika_path}",
             "--output",

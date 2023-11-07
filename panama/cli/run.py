@@ -34,10 +34,10 @@ class IntOrDictParamType(click.ParamType):  # type: ignore[misc]
                     ctx,
                 )
             return d
-        except ValueError:
+        except SyntaxError:
             self.fail(f"{value!r} is not a valid python expression", param, ctx)
 
-        raise RuntimeError("Unreachable code")
+        raise RuntimeError("Unreachable code")  # pragma: no cover
 
 
 INT_OR_DICT = IntOrDictParamType()
