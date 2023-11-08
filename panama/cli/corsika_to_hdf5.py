@@ -5,8 +5,8 @@ from pathlib import Path
 
 import click
 
-from .._logo import get_logo
 from ..read import read_DAT
+from ..version import __logo__
 
 
 @click.command(context_settings={"show_default": True})
@@ -64,7 +64,7 @@ def hdf5(
         logger.setLevel(logging.DEBUG)
         logger.debug("debug log level activated")
 
-    logger.info(get_logo())
+    logger.info(__logo__)
 
     files = list(input)
 

@@ -2,15 +2,15 @@ import logging
 
 import click
 
+from ..version import __logo__
 from .corsika_to_hdf5 import hdf5
 from .run import run
 
 
 @click.group()
 @click.option("--debug", "-d", default=False, is_flag=True, help="Enable debug output")
-def cli(
-    debug: bool,
-) -> None:
+@click.version_option(version=__logo__)
+def cli(debug: bool, version: bool) -> None:
     """
     Command line interface for PANAMA, providing useful CORSIKA utilities.
 

@@ -1,6 +1,6 @@
 [project]
 authors = [
-    {name = "Ludwig Neste", email = "ludwig.neste@tu-dortmund.de"},
+    {name = "Ludwig Neste", email = "ludwig.neste@fysik.su.se"},
 ]
 license = {text = "MIT"}
 requires-python = ">= 3.8,<3.12"
@@ -104,7 +104,7 @@ strict = false
 plugins = [
     "sync-pre-commit-lock"
 ]
-version = { source = "file", path = "panama/__init__.py" }
+version = { source = "file", path = "panama/version.py" }
 
 [tool.pdm.dev-dependencies]
 dev = [
