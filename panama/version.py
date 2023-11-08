@@ -1,3 +1,8 @@
+# from importlib.metadata import version, packages_distributions
+# __version__ = version(__distribution__)
+# __distribution__ = packages_distributions["panama"][0]
+__version__ = "0.8.0"
+
 LOGO_TEMPLATE = r"""
 ,-.----.                           ,--.das     nd               ____ ulticore utils for corsik  7
 \    /  \     ,---,              ,--.'|   ,---,               ,'  , `.                    ,---,
@@ -15,8 +20,4 @@ LOGO_TEMPLATE = r"""
   `---`                   '---'                       '---'                                     {}
 """
 
-
-def get_logo() -> str:
-    from . import __version__
-
-    return LOGO_TEMPLATE.format(f"v{__version__}")
+__logo__ = LOGO_TEMPLATE.format(f"v{__version__}")
