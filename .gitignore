@@ -1,3 +1,4 @@
+.tox
 .pdm-python
 .coverage
 __pycache__
