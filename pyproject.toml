@@ -28,33 +28,6 @@ documentation = "https://panama.readthedocs.io/en/latest/"
 [project.scripts]
 panama = "panama.cli:cli"
 
-[tool.pdm]
-plugins = [
-    "sync-pre-commit-lock"
-]
-version = { source = "file", path = "panama/__init__.py" }
-
-[tool.pdm.dev-dependencies]
-dev = [
-    "black<23.0.0,>=22.10.0",
-    "pytest<8.0.0,>=7.2.0",
-    "coverage<8.0.0,>=7.1.0",
-    "pre-commit<4.0.0,>=3.0.4",
-    "sphinx<7.0.0,>=6.1.3",
-    "m2r2<0.3.3",
-    "sphinx-rtd-theme<2.0.0,>=1.2.0",
-    "sphinx-click<5.0.0,>=4.4.0",
-    "ruff<1.0.0,>=0.0.252",
-    "mypy<2.0.0,>=1.0.1",
-    "types-tqdm<5.0.0.0,>=4.65.0.1",
-    "codespell<3.0.0,>=2.2.4",
-    "matplotlib<4.0.0,>=3.7.1",
-    "toml<1.0.0,>=0.10.2",
-    "types-toml<1.0.0.0,>=0.10.8.7",
-]
-
-[tool.pdm.build]
-includes = ["panama"]
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
@@ -126,3 +99,32 @@ exclude = ["tests/"]
 module = "tests"
 follow_imports = "skip"
 strict = false
+
+[tool.pdm]
+plugins = [
+    "sync-pre-commit-lock"
+]
+version = { source = "file", path = "panama/__init__.py" }
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "black<23.0.0,>=22.10.0",
+    "pytest<8.0.0,>=7.2.0",
+    "coverage<8.0.0,>=7.1.0",
+    "pre-commit<4.0.0,>=3.0.4",
+    "sphinx<7.0.0,>=6.1.3",
+    "m2r2<0.3.3",
+    "sphinx-rtd-theme<2.0.0,>=1.2.0",
+    "sphinx-click<5.0.0,>=4.4.0",
+    "ruff<1.0.0,>=0.0.252",
+    "mypy<2.0.0,>=1.0.1",
+    "types-tqdm<5.0.0.0,>=4.65.0.1",
+    "codespell<3.0.0,>=2.2.4",
+    "matplotlib<4.0.0,>=3.7.1",
+    "toml<1.0.0,>=0.10.2",
+    "types-toml<1.0.0.0,>=0.10.8.7",
+    "python-lsp-server>=1.8.2",
+]
+
+[tool.pdm.build]
+includes = ["panama"]

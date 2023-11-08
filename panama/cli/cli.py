@@ -18,14 +18,16 @@ def cli(
 
     https://github.com/The-Ludwig/PANAMA#readme
     """
+    logger = logging.getLogger("panama")
+
     if debug:
         logging.basicConfig(level=logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
+        logger.debug("debug log level activated")
     else:
+        logger.setLevel(logging.INFO)
         logging.basicConfig(level=logging.INFO)
 
 
 cli.add_command(hdf5)
 cli.add_command(run)
-
-if __name__ == "__main__":
-    cli()

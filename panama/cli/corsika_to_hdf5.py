@@ -57,10 +57,14 @@ def hdf5(
     https://github.com/The-Ludwig/PANAMA#readme
     """
 
+    logger = logging.getLogger("panama")
+
     if debug:
         logging.basicConfig(level=logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
+        logger.debug("debug log level activated")
 
-    logging.info(get_logo())
+    logger.info(get_logo())
 
     files = list(input)
 
