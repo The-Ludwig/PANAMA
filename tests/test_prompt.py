@@ -20,11 +20,26 @@ def test_prompt_definitions_similar(test_file_path=GLOB_TEST_FILE):
     prompt_lifetime_cleaned = panama.prompt.is_prompt_lifetime_limit_cleaned(df)
     prompt_pion_kaon = panama.prompt.is_prompt_pion_kaon(df)
     prompt_energy = panama.prompt.is_prompt_energy(df, 10)
+    prompt_grandmother = panama.prompt.is_prompt_pion_kaon_grandmother(df)
 
     assert np.sum(prompt_baseline != prompt_lifetime)/len(prompt_baseline) < 0.01
     assert np.sum(prompt_baseline != prompt_pion_kaon)/len(prompt_baseline) < 0.01
     assert np.sum(prompt_baseline != prompt_energy)/len(prompt_baseline) < 0.01
     assert np.sum(prompt_baseline != prompt_lifetime_cleaned)/len(prompt_baseline) < 0.01
+    assert np.sum(prompt_baseline != prompt_grandmother)/len(prompt_baseline) < 0.01
+
+
+def test_none_lifetime(test_file_path=GLOB_TEST_FILE):
+    df_run, df_event, df = panama.read_DAT(
+        glob=test_file_path, drop_non_particles=False, mother_columns=True, drop_mothers=True
+    )
+
+    df.loc[:, "mother_pdgid_cleaned"] = 3101 # whatever this particle is, it has None mass and lifetime
+
+
+    panama.prompt.add_cleaned_mother_cols(df)
+
+    assert None not in df["mother_lifetime_cleaned"]
 
 
 def test_prompt_definitions_wrong(test_file_path=GLOB_TEST_FILE):

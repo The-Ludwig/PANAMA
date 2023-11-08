@@ -86,7 +86,10 @@ class CorsikaJob:
                 timeout=1,
             )
 
-            if self.save_std_file is not None:
+            # this code is only reachable when corsika takes less then 1 second to run, which
+            # is very unlikely and hard to test, thus we do not consider these
+            # lines for coverage
+            if self.save_std_file is not None:  # pragma: no cover
                 self.save_std_file.write(stdout.decode("ASCII"))
 
         assert self.running.stdout is not None
@@ -160,7 +163,9 @@ class CorsikaJob:
         if self.save_std_file is not None:
             self.save_std_file.write(last_stdout.decode("ASCII"))
 
-        if CORSIKA_RUN_END not in self.output:
+        # this is really hard to test, since corsika must crash, not only
+        # encounter e.g. bad input
+        if CORSIKA_RUN_END not in self.output:  # pragma: no cover
             logger.warning(
                 f"Corsika Output:\n {self.output.decode('ASCII')} \n'END OF RUN' not in corsika output. May indicate failed run. See the output above."
             )
@@ -238,7 +243,8 @@ class CorsikaRunner:
                         if update is not None:
                             pbar.update(update)
                     sleep(0.1)
-        except KeyboardInterrupt:
+        # testing keyboard interrupt is hard
+        except KeyboardInterrupt:  # pragma: no cover
             logger.info("Interrupted by user.")
 
     def run(self) -> None:

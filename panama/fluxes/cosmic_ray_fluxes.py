@@ -176,7 +176,7 @@ class BrokenPowerLaw(CosmicRayFlux):
             self.energies[id][:-1],
             self.energies[id][1:],
         ):
-            mask = e_low < E <= e_high
+            mask = (e_low < E) & (e_high >= E)
             flux[mask] = norm * E[mask] ** (-gamma)
 
         highest_mask = self.energies[id][-1] < E
@@ -270,7 +270,3 @@ class GlobalSplineFit(CosmicRayFlux):
 
     def _flux(self, id: PDGID, E: ArrayLike, **kwargs: Any) -> ArrayLike:
         return self.splines[id.Z - 1](E)
-
-    def flux_all_particles(self, E: ArrayLike) -> ArrayLike:
-        """Will be removed in panama 6.x"""
-        return self.spline(E)

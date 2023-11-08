@@ -41,7 +41,7 @@ class NonBlockingStreamReader:
     def __del__(self) -> None:
         self._is_alive = False
         self._t.join(timeout=self._wait)
-        if self._t.is_alive():
+        if self._t.is_alive():  # pragma: no cover
             raise RuntimeError("Could not kill thread in NonBlockingStreamReader")
 
     def readline(self, timeout: int | None = None) -> bytes | None:

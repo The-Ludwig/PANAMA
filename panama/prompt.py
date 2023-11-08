@@ -72,14 +72,14 @@ def add_cleaned_mother_cols(df_particles: pd.DataFrame) -> None:
     if "mother_mass_cleaned" not in df_particles:
         pdgids = df_particles["mother_pdgid_cleaned"].unique()
         masses = {
-            pdgid: Particle.from_pdgid(pdgid).mass / 1000
-            if pdgid != PDGID_ERROR_VAL
-            else 0
+            pdgid: Particle.from_pdgid(pdgid).mass if pdgid != PDGID_ERROR_VAL else 0
             for pdgid in pdgids
         }
-        for pdgid in masses:
-            if masses[pdgid] is None:
-                masses[pdgid] = 0
+        for pdgid, mass in masses.items():
+            mass_ = mass
+            if mass is None:
+                mass_ = 0
+            masses[pdgid] = mass_ / 1000
 
         df_particles["mother_mass_cleaned"] = (
             df_particles["mother_pdgid_cleaned"].map(masses, na_action=None).array

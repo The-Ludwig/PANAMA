@@ -27,6 +27,27 @@ def test_noparse(test_file_path=SINGLE_TEST_FILE):
     assert df_np.equals(df)
 
 
+def test_mother_columns_later(test_file_path=SINGLE_TEST_FILE):
+    df_run_1, df_event_1, df_1 = panama.read_DAT(
+        test_file_path, drop_non_particles=False, mother_columns=True, drop_mothers=False
+    )
+    df_run_2, df_event_2, df_2 = panama.read_DAT(
+        test_file_path, drop_non_particles=False, mother_columns=False, drop_mothers=False
+    )
+
+    panama.read.add_mother_columns(df_particles=df_2)
+
+    assert df_1.equals(df_2)
+
+
+def test_max_events(test_file_path=SINGLE_TEST_FILE):
+    df_run, df_event, df = panama.read_DAT(
+        test_file_path, max_events=2
+    )
+
+    assert len(df_event) == 2
+
+
 def check_eq(file, df_run, df_event, particles, skip_mother=False):
     with CorsikaParticleFile(file, parse_blocks=True) as cf:
         num = 0
@@ -44,6 +65,12 @@ def test_noadd(test_file_path=SINGLE_TEST_FILE):
         df_run, df_event, particles = panama.read_DAT(
             test_file_path, drop_non_particles=True, additional_columns=False
         )
+
+    with pytest.raises(ValueError, match="requires"):
+        df_run, df_event, particles = panama.read_DAT(
+            test_file_path, drop_non_particles=False, mother_columns=True, additional_columns=False
+        )
+
 
     df_run, df_event, particles = panama.read_DAT(
         test_file_path, drop_non_particles=False, additional_columns=True
@@ -100,6 +127,13 @@ def save_spectral_fit_test_fig(path, model, log_e, hist, p):
     plt.savefig(path)
     plt.clf()
 
+
+def test_read_none():
+    with pytest.raises(ValueError, match="can't both be None"):
+        df_run, df_event, df = panama.read_DAT()
+
+    with pytest.raises(ValueError, match="can't both be not None"):
+        df_run, df_event, df = panama.read_DAT(files = ["bla1", "bla2"], glob="bla*")
 
 def test_spectral_index(tmp_path, test_file_path=GLOB_TEST_FILE):
     """Test if we can fit the muon spectral index, with the test dataset"""

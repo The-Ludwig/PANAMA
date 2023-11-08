@@ -149,7 +149,7 @@ def add_weight_prompt_per_event(
     a shower, which has at least one prompt muon. For every other particle, it will be 1.
     """
     # For some weird reason this makes a difference, as the last line of this function does not work otherwise
-    if not df.index.is_monotonic_increasing:
+    if not df.index.is_monotonic_increasing:  # pragma: no cover
         df.sort_index(inplace=True)
 
     df[weight_col_name] = 1.0
