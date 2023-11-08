@@ -7,8 +7,8 @@ from typing import Any
 
 import click
 
-from .._logo import get_logo
 from ..run import CorsikaRunner
+from ..version import __logo__
 
 DEFAULT_TMP_DIR = environ.get("TMP_DIR", "/tmp/PANAMA")
 CORSIKA_PATH = environ.get(
@@ -133,7 +133,7 @@ def run(
         logger.setLevel(logging.DEBUG)
         logger.debug("debug log level activated")
 
-    logger.info(get_logo())
+    logger.info(__logo__)
 
     n = 0
     p = Path(tmp)
