@@ -99,9 +99,9 @@ def read_DAT(
     """
 
     if files is None and glob is None:
-        raise TypeError("`file` and `glob` can't both be None")
+        raise ValueError("`file` and `glob` can't both be None")
     if files is not None and glob is not None:
-        raise TypeError("`file` and `glob` can't both be not None")
+        raise ValueError("`file` and `glob` can't both be not None")
 
     if not additional_columns:
         if drop_non_particles:
@@ -110,7 +110,7 @@ def read_DAT(
             )
         if mother_columns:
             raise ValueError(
-                "mother_columns require additional columns to be calculated"
+                "mother_columns requires additional_columns to be calculated"
             )
 
     if glob is not None:
@@ -138,9 +138,6 @@ def read_DAT(
 
     events = 0
 
-    # flag to break
-    finished = False
-
     # Check how many showers are there
     n_events = 0
     if max_events is None:
@@ -154,9 +151,6 @@ def read_DAT(
 
     with tqdm(total=n_events) as pbar:
         for file in files:
-            if finished:
-                break
-
             with CorsikaParticleFile(file, parse_blocks=not noparse) as f:
                 run_headers.append([f.run_header[key] for key in run_header_features])
                 run_idx = int(f.run_header["run_number"])
@@ -184,8 +178,7 @@ def read_DAT(
                     pbar.update(n=1)
                     events += 1
 
-                    if max_events is not None and events > max_events:
-                        finished = True
+                    if max_events is not None and events >= max_events:
                         break
 
                     # if noparse:
@@ -225,9 +218,14 @@ def read_DAT(
         df_event_headers = pd.DataFrame(event_headers, columns=event_header_features)
     df_event_headers.set_index(keys=["run_number", "event_number"], inplace=True)
 
+    # finished parsing if no particles reached observation level
+    if len(particles) == 0:
+        return df_run_headers, df_event_headers, pd.DataFrame([])
+
     if noparse:
         # necessary since we can have a different number of particles in each event
         df_particles_l = [pd.DataFrame(p) for p in particles]
+
         df_particles = pd.concat(df_particles_l, ignore_index=True)
 
         valid_columns = [
@@ -319,7 +317,9 @@ def read_DAT(
     return df_run_headers, df_event_headers, df_particles
 
 
-def add_mother_columns(df_particles: pd.DataFrame, pdgids: list[int] | None) -> None:
+def add_mother_columns(
+    df_particles: pd.DataFrame, pdgids: list[int] | None = None
+) -> None:
     """
     Adds the information from mother and grandmother rows to
     the particle column.

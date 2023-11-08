@@ -15,13 +15,6 @@ from .flux import Flux
 
 class CosmicRayFlux(Flux, ABC):
     def __init__(self, validPDGIDs: list[PDGID]) -> None:
-        self.valid_leptons = (literals.e_minus, literals.e_plus)
-
-        for id in validPDGIDs:
-            if not (id.is_nucleus or id in self.valid_leptons):
-                raise ValueError(
-                    f"{Particle.from_pdgid(id).name} (pdgid: {id}) is not a cosmic ray."
-                )
         super().__init__(validPDGIDs)
 
     def total_p_and_n_flux(self, E: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
@@ -31,7 +24,7 @@ class CosmicRayFlux(Flux, ABC):
         n_flux = np.zeros(shape=E.shape)
 
         for id in self.validPDGIDs:
-            if id in self.valid_leptons:
+            if not id.is_nucleus:
                 continue
             nucleon_flux = id.A * self.flux(
                 id, E=E * id.A
@@ -183,7 +176,7 @@ class BrokenPowerLaw(CosmicRayFlux):
             self.energies[id][:-1],
             self.energies[id][1:],
         ):
-            mask = e_low < E <= e_high
+            mask = (e_low < E) & (e_high >= E)
             flux[mask] = norm * E[mask] ** (-gamma)
 
         highest_mask = self.energies[id][-1] < E
@@ -277,7 +270,3 @@ class GlobalSplineFit(CosmicRayFlux):
 
     def _flux(self, id: PDGID, E: ArrayLike, **kwargs: Any) -> ArrayLike:
         return self.splines[id.Z - 1](E)
-
-    def flux_all_particles(self, E: ArrayLike) -> ArrayLike:
-        """Will be removed in panama 6.x"""
-        return self.spline(E)
