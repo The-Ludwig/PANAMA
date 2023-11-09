@@ -31,3 +31,14 @@ eval $(pdm venv activate in-project)
 ```bash
 pdm run $SHELL
 ```
+
+## Testing
+
+Testing is done with pytest, e.g. in the right environment run
+
+```bash
+pytest
+```
+
+Remember to install [git lfs](https://git-lfs.com/) (git lfs install) to download the large
+corsika test files when cloning this repo.
