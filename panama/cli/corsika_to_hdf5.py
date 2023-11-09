@@ -1,15 +1,13 @@
 from __future__ import annotations
 
+import importlib.util
 import logging
-from importlib.util import find_spec
 from pathlib import Path
 
 import click
 
 from ..read import read_DAT
-from ..version import __logo__
-
-__distribution__ = "corsika-panama"
+from ..version import __distribution__, __logo__
 
 
 @click.command(context_settings={"show_default": True})
@@ -70,11 +68,12 @@ def hdf5(
     logger.info(__logo__)
 
     # check if tables is importable, and hdf files can be saved
-    if find_spec("tables") is None:
+    if importlib.util.find_spec("tables") is None:
         logger.error(
             f"""Optional dependency PyTables is not installed and hdf5 saving is not available.
                      You can install it via `pip install {__distribution__}[hdf]`."""
         )
+
         raise ImportError(
             f"""Optional dependency PyTables is not installed and hdf5 saving is not available.
                      You can install it via `pip install {__distribution__}[hdf]`."""
