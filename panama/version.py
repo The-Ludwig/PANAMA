@@ -1,10 +1,14 @@
-from importlib.metadata import packages_distributions  # , version
+# Only available in python 3.10
+try:
+    from importlib.metadata import packages_distributions  # , version
 
-# __version__ = version(__distribution__)
+    pkgs = packages_distributions()
+except ImportError:
+    pkgs = {}
 
-pkgs = packages_distributions()
 __distribution__ = pkgs["panama"][0] if "panama" in pkgs else "corsika-panama"
 
+# __version__ = version(__distribution__)
 __version__ = "0.8.0"
 
 LOGO_TEMPLATE = r"""
