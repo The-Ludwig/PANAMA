@@ -1,7 +1,21 @@
-# PAN*das* A*nd* M*ulticore utils for corsik*A*7*
+```
+,-.----.                           ,--.das     nd               ____ ulticore utils for corsik  7
+\    /  \     ,---,              ,--.'|   ,---,               ,'  , `.                    ,---,
+|   :    \   '  .' \         ,--,:  : |  '  .' \           ,-+-,.' _ |                   '  .' \
+|   |  .\ : /  ;    '.    ,`--.'`|  ' : /  ;    '.      ,-+-. ;   , ||                  /  ;    '.
+.   :  |: |:  :       \   |   :  :  | |:  :       \    ,--.'|'   |  ;|                 :  :       \
+|   |   \ ::  |   /\   \  :   |   \ | ::  |   /\   \  |   |  ,', |  ':                 :  |   /\   \
+|   : .   /|  :  ' ;.   : |   : '  '; ||  :  ' ;.   : |   | /  | |  ||                 |  :  ' ;.   :
+;   | |`-' |  |  ;/  \   \'   ' ;.    ;|  |  ;/  \   \'   | :  | :  |,                 |  |  ;/  \   \
+|   | ;    '  :  | \  \ ,'|   | | \   |'  :  | \  \ ,';   . |  ; |--'                  '  :  | \  \ ,'
+:   ' |    |  |  '  '--'  '   : |  ; .'|  |  '  '--'  |   : |  | ,                     |  |  '  '--'
+:   : :    |  :  :        |   | '`--'  |  :  :        |   : '  |/                      |  :  :
+|   | :    |  | ,'        '   : |      |  | ,'        ;   | |`-'                       |  | ,'
+`---'.|    `--''          ;   |.'      `--''          |   ;/                           `--''
+  `---`                   '---'                       '---'
+```
 
-[Documentation ![Read the Docs](https://img.shields.io/readthedocs/panama?style=for-the-badge)](https://panama.readthedocs.io/en/latest/)
-
+[![Read the Docs](https://img.shields.io/readthedocs/panama?style=for-the-badge)](https://panama.readthedocs.io/en/latest/)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/The-Ludwig/PANAMA/ci.yml?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/The-Ludwig/PANAMA?label=test%20coverage&style=for-the-badge)](https://app.codecov.io/gh/The-Ludwig/PANAMA)
 [![PyPI](https://img.shields.io/pypi/v/corsika-panama?style=for-the-badge)](https://pypi.org/project/corsika-panama/)
@@ -10,12 +24,16 @@
 [![GitHub](https://img.shields.io/github/license/The-Ludwig/PANAMA?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/blob/main/LICENSE)
 [![Codestyle](https://img.shields.io/badge/codesyle-Black-black.svg?style=for-the-badge)](https://github.com/psf/black)
 
-Thanks [@Jean1995](https://github.com/Jean1995) for the silly naming idea.
-
 ## Installation
 
-```
+```bash
 pip install corsika-panama
+```
+
+If you want to convert Corsikas DAT files to HDF5 files, you need to install the optional `hdf` dependency
+
+```
+pip install corsika-panama[hdf]
 ```
 
 ## Features
@@ -54,14 +72,6 @@ $ panama run --corsika corsika-77420/run/corsika77420Linux_SIBYLL_urqmd --jobs 1
 ...
 ```
 
-### Convert CORSIKA7 DAT files to hdf5 files
-
-```sh
-$ panama hdf5 path/to/corsika/dat/files/DAT* output.hdf5
-```
-
-The data is available under the `run_header` `event_header` and `particles` key.
-
 ### Read CORSIKA7 DAT files to pandas dataframes
 
 Example: Calculate mean energy in the corsika files created in the example above:
@@ -79,6 +89,17 @@ Out[3]: 26525.611020413744
 
 If `CORSIKA7` is compiled with the `EHIST` option, then the mother particles are automatically deleted, by default (this behaviour can be changed with`drop_mothers=False`).
 If you want additional columns in the real particles storing the mother information use `mother_columns=True`.
+
+### Convert CORSIKA7 DAT files to hdf5 files
+
+For this you need to have [PyTables](https://github.com/PyTables/PyTables) installed.
+You can do that if via `pip install corsika-panama[hdf]`.
+
+```sh
+$ panama hdf5 path/to/corsika/dat/files/DAT* output.hdf5
+```
+
+The data is available under the `run_header` `event_header` and `particles` key.
 
 ### Weighting to primary spectrum
 
@@ -112,6 +133,12 @@ Weighting can be applied to different primaries, also, if they are known by the 
 `add_weight` can also be applied to dataframes loaded in from hdf5 files produced with PANAMA.
 
 TODO: Better documentation of weighting (what is weighted, how, proton/neutrons, area...?)
+
+## Name
+
+Naming idea goes back to [@Jean1995](https://github.com/Jean1995), thanks for that!
+He originally proposed "PArallel ruN of corsikA on MAny Cores", as
+the scope of this library grew bigger, it evolved into the current name.
 
 #### Notes:
 
