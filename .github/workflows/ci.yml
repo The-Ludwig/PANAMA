@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          lsf: true
+          lfs: true
       - name: Set up PDM
         uses: pdm-project/setup-pdm@v3
         with:
