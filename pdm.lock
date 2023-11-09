@@ -5,7 +5,7 @@
 groups = ["default", "dev", "hdf"]
 strategy = ["cross_platform"]
 lock_version = "4.4"
-content_hash = "sha256:0d54430ff7d504780e792ee682b18b88b90506918689812bbf170a44b259c801"
+content_hash = "sha256:85427c56ad13d3cc4797e6599cd0c7e1e523a41f262d414865fb30f0dcb3df8e"
 
 [[package]]
 name = "alabaster"
