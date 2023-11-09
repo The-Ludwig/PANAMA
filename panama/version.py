@@ -2,7 +2,7 @@
 try:
     from importlib.metadata import packages_distributions  # , version
 
-    pkgs = packages_distributions()
+    pkgs = packages_distributions()  # pragma: no cover
 except ImportError:
     pkgs = {}
 
