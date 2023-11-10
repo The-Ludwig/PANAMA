@@ -1,4 +1,4 @@
-from panama.fluxes import (
+from fluxcomp import (
     H3a,
     H4a,
     TIG,
@@ -8,8 +8,8 @@ from panama.fluxes import (
     CosmicRayFlux,
     muon_fluxes,
 )
-from panama.fluxes.cosmic_ray_fluxes import BrokenPowerLaw
-from panama.fluxes.flux import Flux
+from fluxcomp.cosmic_ray_fluxes import BrokenPowerLaw
+from fluxcomp.flux import Flux
 import numpy as np
 from particle.pdgid import literals
 from typing import ClassVar

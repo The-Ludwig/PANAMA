@@ -3,7 +3,8 @@ from pathlib import Path
 
 import numpy as np
 import panama
-from panama.fluxes import muon_fluxes
+from fluxcomp import muon_fluxes
+import fluxcomp
 import pandas as pd
 import pytest
 from click.testing import CliRunner
@@ -162,7 +163,7 @@ def test_spectral_index(tmp_path, test_file_path=GLOB_TEST_FILE):
     log_e = np.log10((bin_edges[1:] + bin_edges[:-1]) / 2)
     # dont fit empty bins
     p, V = np.polyfit(log_e[~empty], np.log10(hist[~empty]), deg=1, cov=True)
-    save_spectral_fit_test_fig(tmp_path/"test_fit_h3a.pdf", panama.fluxes.H3a(), log_e, hist, p)
+    save_spectral_fit_test_fig(tmp_path/"test_fit_h3a.pdf", fluxcomp.H3a(), log_e, hist, p)
     # test if fittet spectral index is between 2.7 and 3
     assert p[0] + np.sqrt(V[0, 0]) > -3.0 
     assert p[0] - np.sqrt(V[0, 0]) < -2.7
@@ -213,7 +214,7 @@ def test_spectral_index_proton_only(
     )
 
     # add weights
-    ws = panama.get_weights(df_run, df_event, df, model=panama.fluxes.H3a(), proton_only=True)
+    ws = panama.get_weights(df_run, df_event, df, model=fluxcomp.H3a(), proton_only=True)
     df["weight"] = ws
     df_event["weight"] = ws
 
@@ -233,7 +234,7 @@ def test_spectral_index_proton_only(
     # dont fit empty bins
     p, V = np.polyfit(log_e[~empty], np.log10(hist[~empty]), deg=1, cov=True)
     
-    save_spectral_fit_test_fig(tmp_path/"test_fit_proton_only.pdf", panama.fluxes.TIGCutoff(), log_e, hist, p)
+    save_spectral_fit_test_fig(tmp_path/"test_fit_proton_only.pdf", fluxcomp.TIGCutoff(), log_e, hist, p)
     assert p[0] + np.sqrt(V[0, 0]) > -3.1 
     assert p[0] - np.sqrt(V[0, 0]) < -2.8
 

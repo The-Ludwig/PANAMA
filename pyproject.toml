@@ -13,6 +13,7 @@ dependencies = [
     "tqdm<5.0.0,>=4.64.1",
     "scipy<2.0.0,>=1.10.1",
     "ipython>=8.12.3",
+    "fluxcomp>=0.1.2",
 ]
 name = "corsika-panama"
 description = "\"PANdas And Multicore utils for corsikA7\""

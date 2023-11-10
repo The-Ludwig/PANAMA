@@ -5,7 +5,7 @@
 groups = ["default", "dev", "hdf"]
 strategy = ["cross_platform"]
 lock_version = "4.4"
-content_hash = "sha256:0d54430ff7d504780e792ee682b18b88b90506918689812bbf170a44b259c801"
+content_hash = "sha256:2c85793df3de95fc43d4364955c925b33215f57a0e14d950e4d5ab05e1345154"
 
 [[package]]
 name = "alabaster"
@@ -500,6 +500,22 @@ summary = "A platform independent file lock."
 files = [
     {file = "filelock-3.13.1-py3-none-any.whl", hash = "sha256:57dbda9b35157b05fb3e58ee91448612eb674172fab98ee235ccb0b5bee19a1c"},
     {file = "filelock-3.13.1.tar.gz", hash = "sha256:521f5f56c50f8426f5e03ad3b281b490a87ef15bc6c526f168290f0c7148d44e"},
+]
+
+[[package]]
+name = "fluxcomp"
+version = "0.1.2"
+requires_python = "<3.12,>=3.8"
+summary = "(ensator) provides numpy and pandas compatible implemenntations of cosmic ray flux models as well as calculation for simulation weights."
+dependencies = [
+    "numpy<2.0.0,>=1.23.4",
+    "pandas<3.0.0,>=2.0.0",
+    "particle<1.0.0,>=0.21.0",
+    "scipy<2.0.0,>=1.10.1",
+]
+files = [
+    {file = "fluxcomp-0.1.2-py3-none-any.whl", hash = "sha256:cea1bdb968af33ebd4f83f294b579bdeac1864ba0ea7ae3469330f53e4e28b0e"},
+    {file = "fluxcomp-0.1.2.tar.gz", hash = "sha256:97860c4ba32b8abe62f58456387dd3e191da0ec38f9c76f79024e43abd8a03f1"},
 ]
 
 [[package]]
