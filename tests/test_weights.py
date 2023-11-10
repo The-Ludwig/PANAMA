@@ -3,13 +3,14 @@ from pathlib import Path
 
 import numpy as np
 import panama
-from panama.fluxes import muon_fluxes
 import pandas as pd
 import pytest
 from click.testing import CliRunner
 from corsikaio import CorsikaParticleFile
 from panama.cli import cli
 from particle.pdgid import literals
+import fluxcomp
+from fluxcomp import muon_fluxes
 
 import matplotlib.pyplot as plt
 
@@ -30,7 +31,7 @@ def test_weight_wrong_arg(
             df_run,
             df_event,
             df,
-            model=panama.fluxes.H3a(),
+            model=fluxcomp.H3a(),
             proton_only=True,
             groups={10: 10},
         )
@@ -48,7 +49,7 @@ def test_weight_overlapping_energy(
 
     with pytest.raises(ValueError, match="overlap and thus cannot be reweighted"):
         ws = panama.get_weights(
-            df_run, df_event, df, model=panama.fluxes.H3a(), proton_only=True
+            df_run, df_event, df, model=fluxcomp.H3a(), proton_only=True
         )
 
 
@@ -61,7 +62,7 @@ def test_weight_groups(
     )
 
     ws = panama.get_weights(
-        df_run, df_event, df, model=panama.fluxes.H3a(), proton_only=False,
+        df_run, df_event, df, model=fluxcomp.H3a(), proton_only=False,
         groups={literals.proton: (1, 100)}
     )
 
@@ -101,7 +102,7 @@ def test_weight_multiple_slopes(
         'There are multiple energy slopes in the dataframe and thus they cannot be reweighted with this code.'
     ):
         ws = panama.get_weights(
-            df_run, df_event, df, model=panama.fluxes.H3a(), proton_only=True
+            df_run, df_event, df, model=fluxcomp.H3a(), proton_only=True
         )
 
 
@@ -116,7 +117,7 @@ def test_weight_slope_2(
     df_run.loc[:, "energy_spectrum_slope"] = 2
 
     ws = panama.get_weights(
-        df_run, df_event, df, model=panama.fluxes.H3a(), proton_only=False
+        df_run, df_event, df, model=fluxcomp.H3a(), proton_only=False
     )
 
     df["weight"] = ws

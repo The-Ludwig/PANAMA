@@ -7,10 +7,10 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from fluxcomp import CosmicRayFlux, H3a
 from particle import PDGID, Corsika7ID
 
 from .constants import PDGID_PROTON_1
-from .fluxes import CosmicRayFlux, H3a
 
 DEFAULT_FLUX = H3a()
 
