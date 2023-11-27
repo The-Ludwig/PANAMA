@@ -19,7 +19,7 @@
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/The-Ludwig/PANAMA/ci.yml?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/The-Ludwig/PANAMA?label=test%20coverage&style=for-the-badge)](https://app.codecov.io/gh/The-Ludwig/PANAMA)
 [![PyPI](https://img.shields.io/pypi/v/corsika-panama?style=for-the-badge)](https://pypi.org/project/corsika-panama/)
-[![DOI](https://img.shields.io/badge/DOI-10.5281 %2F zenodo.10210623-blue.svg?style=for-the-badge)](https://doi.org/10.5281/zenodo.10210623)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%20%2F%20zenodo.10210623-blue.svg?style=for-the-badge)](https://doi.org/10.5281/zenodo.10210623)
 
 [![GitHub issues](https://img.shields.io/github/issues-raw/The-Ludwig/PANAMA?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/issues)
 [![GitHub](https://img.shields.io/github/license/The-Ludwig/PANAMA?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/blob/main/LICENSE)
