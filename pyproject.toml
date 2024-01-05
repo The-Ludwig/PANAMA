@@ -16,7 +16,7 @@ dependencies = [
     "fluxcomp>=0.1.2",
 ]
 name = "corsika-panama"
-description = "\"PANdas And Multicore utils for corsikA7\""
+description = "\"PANdas And Multicore utils for corsikA7\" -- A python toolkit for CORSIKA7"
 readme = "README.md"
 dynamic = ["version"]
 
