@@ -31,3 +31,13 @@ eval $(pdm venv activate in-project)
 ```bash
 pdm run $SHELL
 ```
+
+# Conventions
+
+This project tries to stay compatible with the suggestions from [Scikit hep](https://learn.scientific-python.org/development/guides/repo-review/?repo=The-Ludwig%2Fpanama&branch=main).
+The used code style is [black](https://github.com/psf/black).
+Please also obey to the other [pre-commit hooks](https://pre-commit.com/) and install them via
+
+```bash
+pre-commit install
+```

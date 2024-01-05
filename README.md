@@ -20,11 +20,11 @@ PANAMA - A python toolkit for CORSIKA7.
 [![Read the Docs](https://img.shields.io/readthedocs/panama?style=for-the-badge)](https://panama.readthedocs.io/en/latest/)
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/The-Ludwig/PANAMA/ci.yml?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/actions/workflows/ci.yml)
+[![GitHub issues](https://img.shields.io/github/issues-raw/The-Ludwig/PANAMA?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/issues)
 [![Codecov](https://img.shields.io/codecov/c/github/The-Ludwig/PANAMA?label=test%20coverage&style=for-the-badge)](https://app.codecov.io/gh/The-Ludwig/PANAMA)
+
 [![PyPI](https://img.shields.io/pypi/v/corsika-panama?style=for-the-badge)](https://pypi.org/project/corsika-panama/)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%20%2F%20zenodo.10210623-blue.svg?style=for-the-badge)](https://doi.org/10.5281/zenodo.10210623)
-
-[![GitHub issues](https://img.shields.io/github/issues-raw/The-Ludwig/PANAMA?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/issues)
 [![GitHub](https://img.shields.io/github/license/The-Ludwig/PANAMA?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/blob/main/LICENSE)
 [![Codestyle](https://img.shields.io/badge/codesyle-Black-black.svg?style=for-the-badge)](https://github.com/psf/black)
 
@@ -33,8 +33,8 @@ PANAMA - A python toolkit for CORSIKA7.
 This python package provides multiple features -- each feature can be used independently, but they also work great together.
 
 - Execute CORSIKA7 on multiple cores
-- Read CORSIKA7 DAT files ("particle files") to [`pandas DataFrame`s](https://pandas.pydata.org/docs/)
-  - Compatible with CORSIKA7's `EHIST` option
+- Read CORSIKA7 DAT files ("particle files") to [pandas DataFrames](https://pandas.pydata.org/docs/)
+  - Correctly parse output from the `EHIST` option
 - Calculate weights for a multiple primary spectra
 
 To see some examples on how to use panama, see the introduction in the documentation.
@@ -53,7 +53,17 @@ If you want to convert Corsikas DAT files to HDF5 files, you need to install the
 pip install corsika-panama[hdf]
 ```
 
+## Contributing
+
+Contributions and suggestions are very welcome.
+Feel free to open an [issue](https://github.com/The-Ludwig/PANAMA/issues) or [pull request](https://github.com/The-Ludwig/PANAMA/pulls).
+This project uses [pdm](https://pdm-project.org/latest/) for the build system as well as a
+dependency and virtual environment manager.
+For suggestions on how to set up a development environment, have a look at [CONTRIBUTING.md]().
+
 ## Further Notes
+
+This project tries to stay compatible with the suggestions from [Scikit hep](https://learn.scientific-python.org/development/guides/repo-review/?repo=The-Ludwig%2Fpanama&branch=main).
 
 Naming idea goes back to [@Jean1995](https://github.com/Jean1995), thanks for that!
 He originally proposed "PArallel ruN of corsikA on MAny cores", as
