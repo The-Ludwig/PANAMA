@@ -195,9 +195,11 @@ class CorsikaRunner:
         corsika_tmp_dir: Path,
         seed: None | int = None,
         save_std: bool = False,
+        first_run_number: int = 0,
+        first_event_number: int = 1,
     ) -> None:
         """
-        TODO: Good Docstring, Types
+        TODO: Docstring
 
         Parameters
         ----------
@@ -208,6 +210,8 @@ class CorsikaRunner:
         self.corsika_executable = Path(corsika_executable)
         self.corsika_tmp_dir = Path(corsika_tmp_dir)
         self.save_std = save_std
+        self.first_run_number = first_run_number
+        self.first_event_number = first_event_number
 
         # we always need at least n_showers if we want to run n_jobs
         if not all(n_jobs <= n_showers for n_showers in primary.values()):
@@ -301,11 +305,10 @@ class CorsikaRunner:
         run_idx: int,
         n_show: int,
         primary_corsikaid: int,
-        first_event_idx: int = 1,
     ) -> dict[str, str]:
         return {
-            "run_idx": f"{run_idx}",
-            "first_event_idx": f"{first_event_idx}",
+            "run_idx": f"{run_idx+self.first_run_number}",
+            "first_event_idx": f"{self.first_event_number}",
             "n_show": f"{n_show}",
             "dir": str(self.output.absolute()) + "/",
             "seed_1": f"{randrange(1, 900_000_000)}",

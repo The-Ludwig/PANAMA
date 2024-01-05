@@ -103,6 +103,20 @@ INT_OR_DICT = IntOrDictParamType()
     is_flag=True,
     help="Save CORSIKAs std_out to a log file in output directory.",
 )
+@click.option(
+    "--first_run_number",
+    "-fr",
+    default=0,
+    help="Sets the first run number, for multiple output files, the number increments from that number.",
+    type=int,
+)
+@click.option(
+    "--first_event_number",
+    "-fe",
+    default=1,
+    help="Sets the first event number in each produced DAT file.",
+    type=int,
+)
 @click.option("--debug", "-d", default=False, is_flag=True, help="Enable debug output")
 def run(
     template: Path,
@@ -114,6 +128,8 @@ def run(
     seed: int,
     tmp: Path,
     save_std: bool,
+    first_run_number: int,
+    first_event_number: int,
     debug: bool,
 ) -> None:
     """
@@ -149,6 +165,15 @@ def run(
         )
 
     runner = CorsikaRunner(
-        primary, jobs, template, Path(output), corsika, p, seed, save_std
+        primary,
+        jobs,
+        template,
+        Path(output),
+        corsika,
+        p,
+        seed,
+        save_std,
+        first_run_number,
+        first_event_number,
     )
     runner.run()
