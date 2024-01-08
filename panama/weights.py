@@ -1,5 +1,5 @@
 """
-Functions to add weights to the read in corsika dataframe
+Functions to add weights to a CORSIKA dataframe read in by `read_DAT`.
 """
 from __future__ import annotations
 
@@ -24,21 +24,28 @@ def get_weights(
     groups: dict[PDGID, tuple[int, int]] | None = None,
 ) -> pd.DataFrame:
     """
-    Adds the column "weight" too df_particle to reweight for given primary flux.
+    Returns a DataFrame with the correct weight for a given primary model
+    The DataFrame will be indexed by the run and event index, so it can be
+    assigned as a column to the particle DataFrame df.
+
+    The primary energy can have different energy-regions, but they must not overlap,
+    if they do, an error is raised.
 
     Parameters
     ----------
-    df_run: The run dataframe (as returned by `read_corsika_particle_files_to_dataframe`)
-    df_event: The event dataframe (as returned by `read_corsika_particle_files_to_dataframe`)
-    df: The particle dataframe (as returned by `read_corsika_particle_files_to_dataframe`)
-    model: The Cosmic Ray primary flux model (instance of CRFlux)
-    proton_only: If set to true (default), only proton pdgid weights are non-zero and refer to
+    df_run: The run dataframe (as returned by `panama.read_DAT`)
+    df_event: The event dataframe (as returned by `panama.read_DAT`)
+    df: The particle dataframe (as returned by `panama.read_DAT`)
+    model: The Cosmic Ray primary flux model (instance of CRFlux from the FluxComp package)
+    proton_only: If set to true (default is false), only proton pdgid weights are non-zero and refer to
         all-nucleon flux.
-    groups: The elements in the model (values: Tuple[Zmin, Zmax]) associated with the MC-primary
+    groups: Mapping from the primary PDGID in the monte carlo, to an (inclusive) range of elements (represented by their atomic number) which will we summed up in the
+        model to represent this element in MC. (values: Tuple[Zmin, Zmax])
 
     Returns
     -------
     weights: A dataframe with the weights labeled by the run and event index.
+
     Can be used like this: `df['weights'] = panama.get_weights(df_run, df_event, df)`
     """
     if groups is not None and proton_only is True:
@@ -127,7 +134,14 @@ def add_weight_prompt(
     is_prompt_col_name: str = "is_prompt",
 ) -> None:
     """
-    Adds column "weight_prompt" to df, to set a weight for every prompt particle, non prompt particles get weight 1
+    Adds column "weight_prompt" to df, to set a weight for every prompt particle, non prompt particles get weight 1.
+
+    Parameters
+    ----------
+    df: The particle dataframe (as returned by `panama.read_DAT`)
+    prompt_factor: The number to put in the `weight_prompt` column.
+    weight_col_name: The column name to give for the prompt weight column (default 'weight_prompt').
+    is_prompt_col_name: The name of the column which indicates the promptness of a particle.
     """
     if not df.index.is_monotonic_increasing:
         df.sort_index(inplace=True)
@@ -147,6 +161,13 @@ def add_weight_prompt_per_event(
     """
     Adds column "weight_prompt_per_event" to df, which will be `prompt_factor` for every particle, which is inside
     a shower, which has at least one prompt muon. For every other particle, it will be 1.
+
+    Parameters
+    ----------
+    df: The particle dataframe (as returned by `panama.read_DAT`)
+    prompt_factor: The number to put in the `weight_prompt` column.
+    weight_col_name: The column name to give for the prompt weight column (default 'weight_prompt_per_event').
+    is_prompt_col_name: The name of the column which indicates the promptness of a particle (default: 'is_prompt').
     """
     # For some weird reason this makes a difference, as the last line of this function does not work otherwise
     if not df.index.is_monotonic_increasing:  # pragma: no cover

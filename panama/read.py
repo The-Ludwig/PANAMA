@@ -1,3 +1,7 @@
+"""
+Functions concerning input of CORSIKA7 DAT files.
+"""
+
 from __future__ import annotations
 
 from math import inf
@@ -322,7 +326,7 @@ def add_mother_columns(
 ) -> None:
     """
     Adds the information from mother and grandmother rows to
-    the particle column.
+    the column of the daughter particle.
 
     This looks so complicated, since in the table different rows
     depend on each other. To do this in a numpy-friendly way is not

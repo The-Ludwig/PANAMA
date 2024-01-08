@@ -1,4 +1,9 @@
-# Adapted from http://eyalarubas.com/python-subproc-nonblock.html
+"""
+A non-blocking stream reader used to read output from
+multiple running CORSIKA instances.
+Only to be used internally.
+Adapted from http://eyalarubas.com/python-subproc-nonblock.html
+"""
 from __future__ import annotations
 
 from queue import Empty, Queue

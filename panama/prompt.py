@@ -1,3 +1,7 @@
+"""
+Functions to use to determine if a particle is prompt or not,
+using multiple different definitions.
+"""
 from __future__ import annotations
 
 from math import inf
@@ -51,7 +55,7 @@ def is_prompt_lifetime_limit(
 
 def add_cleaned_mother_cols(df_particles: pd.DataFrame) -> None:
     """
-    Adds mother_lifetime_cleaned, mother_mass_cleaned and mother_energy_cleaned if not present in the dataframe
+    Adds mother_lifetime_cleaned, mother_mass_cleaned and mother_energy_cleaned if not present in the dataframe.
     """
     if "mother_lifetime_cleaned" not in df_particles:
         pdgids = df_particles["mother_pdgid_cleaned"].unique()
@@ -98,9 +102,11 @@ def is_prompt_lifetime_limit_cleaned(
 ) -> ArrayLike:
     """Return a numpy array of prompt labels for the input dataframe differentiating it by lifetime of the mother particle.
     It considers the cleaned particle type of the mother.
+
     Parameters
     ----------
     df_particles: dataframe with the corsika particles, additional_columns have to be present when running `read_DAT`
+
     Returns
     -------
     A numpy boolean array, True for prompt, False for conventional
@@ -119,10 +125,12 @@ def is_prompt_lifetime_limit_cleaned(
 def is_prompt_energy(df_particles: pd.DataFrame, s: float = 2) -> ArrayLike:
     """Return a numpy array of prompt labels for the input dataframe differentiating it by energy of the mother particle,
        with considering the cleaned particle type of the mother.
+
     Parameters
     ----------
     df_particles: dataframe with the corsika particles, additional_columns have to be present when running `read_DAT`
     s: scaling factor. How much bigger does the decay length has to be compared to the interaction length
+
     Returns
     -------
     A numpy boolean array, True for prompt, False for conventional
