@@ -15,7 +15,7 @@
   `---`                   '---'                       '---'
 ```
 
-PANAMA - A python toolkit for CORSIKA7.
+PANAMA - A python toolkit for [CORSIKA7](https://www.iap.kit.edu/corsika/index.php).
 
 [![Read the Docs](https://img.shields.io/readthedocs/panama?style=for-the-badge)](https://panama.readthedocs.io/en/latest/)
 
@@ -52,6 +52,27 @@ If you want to convert Corsikas DAT files to HDF5 files, you need to install the
 ```
 pip install corsika-panama[hdf]
 ```
+
+### CORSIKA7
+
+For usage and installation of CORSIKA7, please refer to [its website](https://www.iap.kit.edu/corsika/index.php) and its [userguide](https://www.iap.kit.edu/corsika/downloads/CORSIKA_GUIDE7.7500.pdf).
+To properly use this package, knowledge of CORSIKA7 is required.
+
+If you want to install CORSIKA7, you need to request access to their CORSIKA7 mailing list, [as described on their website](https://www.iap.kit.edu/corsika/79.php), then you will receive the CORSIKA7
+password.
+If you want to skip the process of getting familiar with the software and compiling it with coconut, panama provides a (linux) script for compiling
+it.
+You will need a `fortran` compiler. CORSIKA7 will then be pre-configured with the curved earth, EHIST, SIBYLL2.3d and URQDM options.
+For finer control over the used options, please compile CORSIKA7 yourself.
+After cloning this repository, you can then execute
+
+```bash
+CORSIKA_VERSION=77500 CORSIKA_PW=CORSIKA_PASSWORD_YOU_WILL_RECEIVE_BY_MAIL admin/download_corsika.sh
+```
+
+which will download and compile CORSIKA7 version 77500.
+If you are interested in automatically testing software using CORSIKA7, using GitHub actions,
+have a look at the `.github` folder of this project in combination with the admin script.
 
 ## Contributing
 
