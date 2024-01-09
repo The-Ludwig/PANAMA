@@ -1,4 +1,4 @@
-sphinx_rtd_theme
-m2r2
+myst_parser
 sphinx_click
 corsika-panama
+pydata-sphinx-theme

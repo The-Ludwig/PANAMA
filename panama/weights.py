@@ -1,6 +1,9 @@
 """
 Functions to add weights to a CORSIKA dataframe read in by `read_DAT`.
-"""
+If using the suggested flux definitions from `fluxcomp`, all fluxes
+are given in units of :math:`(\mathrm{m^2}\ \mathrm{s}\ \mathrm{sr}\ \mathrm{GeV})^{-1}`.
+
+"""  # noqa: W605
 from __future__ import annotations
 
 from typing import Any

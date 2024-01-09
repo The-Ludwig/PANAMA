@@ -297,7 +297,6 @@ class CorsikaRunner:
             The copied/symlinked files will be deleted automatically,
             but the folders remain.
 
-
         seed : None | int, optional
             The seed to use for generating the seeds for the CORSIKA7 program.
             If None is given, entropic source of the computer will be used.

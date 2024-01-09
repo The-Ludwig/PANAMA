@@ -80,7 +80,7 @@ Contributions and suggestions are very welcome.
 Feel free to open an [issue](https://github.com/The-Ludwig/PANAMA/issues) or [pull request](https://github.com/The-Ludwig/PANAMA/pulls).
 This project uses [pdm](https://pdm-project.org/latest/) for the build system as well as a
 dependency and virtual environment manager.
-For suggestions on how to set up a development environment, have a look at [CONTRIBUTING.md]().
+For suggestions on how to set up a development environment, have a look at `CONTRIBUTING.md`.
 
 ## Further Notes
 

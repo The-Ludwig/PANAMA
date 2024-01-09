@@ -1,8 +1,14 @@
-## Features
+# README
 
-### Run CORSIKA7 on multiple cores
+```{include} ../README.md
 
-You need to have [`CORSIKA7`](https://www.iap.kit.edu/corsika/79.php) installed to run this.
+```
+
+# Quick Examples
+
+## Run CORSIKA7 on multiple cores
+
+You need to have [CORSIKA7](https://www.iap.kit.edu/corsika/79.php) installed to run this.
 
 Running 100 showers on 4 cores with primary being proton:
 
@@ -34,7 +40,7 @@ $ panama run --corsika corsika-77420/run/corsika77420Linux_SIBYLL_urqmd --jobs 1
 ...
 ```
 
-### Read CORSIKA7 DAT files to pandas dataframes
+## Read CORSIKA7 DAT files to pandas dataframes
 
 Example: Calculate mean energy in the corsika files created in the example above:
 
@@ -52,7 +58,7 @@ Out[3]: 26525.611020413744
 If `CORSIKA7` is compiled with the `EHIST` option, then the mother particles are automatically deleted, by default (this behaviour can be changed with`drop_mothers=False`).
 If you want additional columns in the real particles storing the mother information use `mother_columns=True`.
 
-### Convert CORSIKA7 DAT files to hdf5 files
+## Convert CORSIKA7 DAT files to hdf5 files
 
 For this you need to have [PyTables](https://github.com/PyTables/PyTables) installed.
 You can do that if via `pip install corsika-panama[hdf]`.
@@ -63,7 +69,7 @@ $ panama hdf5 path/to/corsika/dat/files/DAT* output.hdf5
 
 The data is available under the `run_header` `event_header` and `particles` key.
 
-### Weighting to primary spectrum
+## Weighting to primary spectrum
 
 This packages also provides facility to add a `weight` column to the dataframe, so you can look at corsika-output
 in physical flux in terms of $(\mathrm{m^2} \mathrm{s}\ \mathrm{sr}\ \mathrm{GeV})^{-1}$.
@@ -74,7 +80,7 @@ In [1]: import panama as pn
 
 In [2]: run_header, event_header, particles = pn.read_DAT(glob="corsika_output/DAT*")
 100%|████████████████████████████████████████████████████████████| 2000/2000.0 [00:00<00:00, 10127.45it/s]
-In [3]: pn.add_weight(run_header, event_header, particles)
+In [3]: particles["weight"] = pn.get_weights(run_header, event_header, particles)
 
 In [4]: particles["weight"].sum()*(run_header["energy_max"]-run_header["energy_min"])
 Out[4]:
@@ -93,5 +99,3 @@ in theory we could have different energy regions. Here, we do not, so the result
 Weighting can be applied to different primaries, also, if they are known by the flux model.
 
 `add_weight` can also be applied to dataframes loaded in from hdf5 files produced with PANAMA.
-
-TODO: Better documentation of weighting (what is weighted, how, proton/neutrons, area...?)
