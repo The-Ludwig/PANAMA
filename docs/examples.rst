@@ -2,7 +2,8 @@ Examples
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
+   examples/plot_spectrum.ipynb
    examples/complete.ipynb
