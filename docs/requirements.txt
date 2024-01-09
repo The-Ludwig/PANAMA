@@ -1,3 +1,4 @@
+nbsphinx
 myst_parser
 sphinx_click
 corsika-panama

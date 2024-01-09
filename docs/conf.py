@@ -15,6 +15,7 @@ author = "Ludwig Neste"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    "nbsphinx",
     "myst_parser",
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",

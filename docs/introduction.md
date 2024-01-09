@@ -1,12 +1,14 @@
-# README
+# Introduction
+
+## README
 
 ```{include} ../README.md
-
+:heading-offset: 1
 ```
 
-# Quick Examples
+## Quick Examples
 
-## Run CORSIKA7 on multiple cores
+### Run CORSIKA7 on multiple cores
 
 You need to have [CORSIKA7](https://www.iap.kit.edu/corsika/79.php) installed to run this.
 
@@ -40,7 +42,7 @@ $ panama run --corsika corsika-77420/run/corsika77420Linux_SIBYLL_urqmd --jobs 1
 ...
 ```
 
-## Read CORSIKA7 DAT files to pandas dataframes
+### Read CORSIKA7 DAT files to pandas dataframes
 
 Example: Calculate mean energy in the corsika files created in the example above:
 
@@ -58,7 +60,7 @@ Out[3]: 26525.611020413744
 If `CORSIKA7` is compiled with the `EHIST` option, then the mother particles are automatically deleted, by default (this behaviour can be changed with`drop_mothers=False`).
 If you want additional columns in the real particles storing the mother information use `mother_columns=True`.
 
-## Convert CORSIKA7 DAT files to hdf5 files
+### Convert CORSIKA7 DAT files to hdf5 files
 
 For this you need to have [PyTables](https://github.com/PyTables/PyTables) installed.
 You can do that if via `pip install corsika-panama[hdf]`.
@@ -69,7 +71,7 @@ $ panama hdf5 path/to/corsika/dat/files/DAT* output.hdf5
 
 The data is available under the `run_header` `event_header` and `particles` key.
 
-## Weighting to primary spectrum
+### Weighting to primary spectrum
 
 This packages also provides facility to add a `weight` column to the dataframe, so you can look at corsika-output
 in physical flux in terms of $(\mathrm{m^2} \mathrm{s}\ \mathrm{sr}\ \mathrm{GeV})^{-1}$.

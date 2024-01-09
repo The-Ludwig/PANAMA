@@ -58,5 +58,6 @@ PANAMA - A python toolkit for `CORSIKA7 <https://www.iap.kit.edu/corsika/index.p
    :caption: Contents:
 
    Introduction <introduction>
+   examples
    api
    cli

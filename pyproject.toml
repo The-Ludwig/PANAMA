@@ -15,6 +15,7 @@ dependencies = [
     "ipython>=8.12.3",
     "fluxcomp>=0.1.2",
     "myst-parser>=2.0.0",
+    "nbsphinx>=0.9.3",
 ]
 name = "corsika-panama"
 description = "\"PANdas And Multicore utils for corsikA7\" -- A python toolkit for CORSIKA7"
@@ -129,6 +130,7 @@ dev = [
     "types-toml<1.0.0.0,>=0.10.8.7",
     "python-lsp-server>=1.8.2",
     "pydata-sphinx-theme>=0.14.4",
+    "notebook>=7.0.6",
 ]
 
 [tool.pdm.build]
