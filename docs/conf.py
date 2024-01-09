@@ -5,11 +5,12 @@
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+import panama
 
 project = "PANAMA"
-copyright = "2023, Ludwig Neste"
+copyright = "2023-2024, Ludwig Neste"
 author = "Ludwig Neste"
-# release = "v0.3.0"
+release = panama.__version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -22,7 +23,6 @@ extensions = [
     "sphinx_click",
     "pydata_sphinx_theme",
 ]
-
 # templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
