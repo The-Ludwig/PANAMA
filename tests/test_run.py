@@ -13,6 +13,42 @@ CORSIKA_VERSION = "corsika-77500"
 CORSIKA_EXECUTABLE = "corsika77500Linux_SIBYLL_urqmd"
 
 
+def test_corsika_runner_cleanup(
+    test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
+):
+    """
+    Tests if cleanup of the runner works and a new CorsikaRunner objct 
+    with the same tmp path can be constructed.
+    """
+    with CorsikaRunner(
+            {2212: 100_000, 1000260560: 1000},
+            4,
+            test_file_path,
+            Path("/tmp/corsika_test_output"),
+            test_file_path.parent.parent.parent / "panama" / "cli" / "cli.py",
+            Path("/tmp/corsika_tmp_dir"),
+    ) as runner:
+        pass
+    
+    runner = CorsikaRunner(
+            {2212: 100_000, 1000260560: 1000},
+            4,
+            test_file_path,
+            Path("/tmp/corsika_test_output"),
+            test_file_path.parent.parent.parent / "panama" / "cli" / "cli.py",
+            Path("/tmp/corsika_tmp_dir"),
+        )
+    runner.clean()
+
+    runner = CorsikaRunner(
+            {2212: 100_000, 1000260560: 1000},
+            4,
+            test_file_path,
+            Path("/tmp/corsika_test_output"),
+            test_file_path.parent.parent.parent / "panama" / "cli" / "cli.py",
+            Path("/tmp/corsika_tmp_dir"),
+        )
+
 def test_run_fail(
     test_file_path=Path(__file__).parent / "files" /
     "example_corsika.template",

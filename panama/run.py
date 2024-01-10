@@ -13,6 +13,7 @@ from random import randrange
 from random import seed as set_seed
 from subprocess import PIPE, Popen, TimeoutExpired
 from time import sleep
+from types import TracebackType
 
 from particle import Corsika7ID, Particle
 from tqdm import tqdm
@@ -71,7 +72,21 @@ class CorsikaJob:
         self.output = b""
         self.save_std_file: None | io.TextIOWrapper = None
 
-    def __del__(self) -> None:
+    def __enter__(self) -> CorsikaJob:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        self.clean()
+
+    def clean(self) -> None:
+        """
+        Cleans the temporary directory.
+        """
         shutil.rmtree(self.corsika_copy_dir)
 
     @property
@@ -243,6 +258,8 @@ class CorsikaRunner:
     up the requested showers in badges and changing the initial seeds for CORSIKA7 for
     each batch.
     It also provides a progressbar by investigating the stdout from CORSIKA7.
+    To automatically clean up temporary directories, this class can be used in a
+    `with`-statement. Otherwise, call `corsika_runner.clean()` to delete the tmp dirs.
     """
 
     def __init__(
@@ -294,8 +311,9 @@ class CorsikaRunner:
             A temporary directory to symlink the CORSIKA7 executable to.
             Since CORSIKA7 can not be run in parallel from the same executable
             directly.
-            The copied/symlinked files will be deleted automatically,
-            but the folders remain.
+            The copied/symlinked files will be deleted automatically when used
+            in a context manager (`with`-statement), otherwise you have to call
+            the `clean()` method.
 
         seed : None | int, optional
             The seed to use for generating the seeds for the CORSIKA7 program.
@@ -315,6 +333,11 @@ class CorsikaRunner:
         self.primary = primary
         self.n_jobs = n_jobs
         self.output = Path(output)
+        if self.output.exists():
+            logger.warning(
+                f"Output Directory ({self.output.absolute()}) already exists. CORSIKA7 will crash if an output file already exists. Consider removing the directory before running the simulation."
+            )
+
         self.corsika_executable = Path(corsika_executable)
         self.corsika_tmp_dir = Path(corsika_tmp_dir)
         self.save_std = save_std
@@ -370,6 +393,25 @@ class CorsikaRunner:
         # testing keyboard interrupt is hard
         except KeyboardInterrupt:  # pragma: no cover
             logger.info("Interrupted by user.")
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        self.clean()
+
+    def __enter__(self) -> CorsikaRunner:
+        return self
+
+    def clean(self) -> None:
+        """
+        Deletes the temporary directory, this is called when the object is deleted.
+        This method has to be called, before a different CorsikaRunner with the
+        same tmp_dir can be constructed.
+        """
+        shutil.rmtree(self.corsika_tmp_dir)
 
     def run(self, disable_pb: bool = False) -> None:
         """
