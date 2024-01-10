@@ -47,7 +47,7 @@ from ..version import __distribution__, __logo__
 def hdf5(
     input: list[Path],
     output: Path,
-    complevel: int,
+    comp: int,
     noadd: bool,
     mother: bool,
     dropmother: bool,
@@ -96,6 +96,6 @@ def hdf5(
         drop_non_particles=dropnonparticles,
     )
 
-    run_header.to_hdf(output, "run_header", complevel=complevel)
-    event_header.to_hdf(output, "event_header", complevel=complevel)
-    particles.to_hdf(output, "particles", complevel=complevel)
+    run_header.to_hdf(output, "run_header", complevel=comp)
+    event_header.to_hdf(output, "event_header", complevel=comp)
+    particles.to_hdf(output, "particles", complevel=comp)

@@ -87,7 +87,7 @@ class CorsikaJob:
         """
         Cleans the temporary directory.
         """
-        shutil.rmtree(self.corsika_copy_dir)
+        shutil.rmtree(self.corsika_copy_dir, ignore_errors=True)
 
     @property
     def is_finished(self) -> bool:
@@ -314,6 +314,8 @@ class CorsikaRunner:
             The copied/symlinked files will be deleted automatically when used
             in a context manager (`with`-statement), otherwise you have to call
             the `clean()` method.
+            The directory itself will not be deleted, only the used subdir in the
+            directory.
 
         seed : None | int, optional
             The seed to use for generating the seeds for the CORSIKA7 program.
@@ -405,13 +407,18 @@ class CorsikaRunner:
     def __enter__(self) -> CorsikaRunner:
         return self
 
+    def __del__(self) -> None:
+        self.clean()
+
     def clean(self) -> None:
         """
-        Deletes the temporary directory, this is called when the object is deleted.
+        Deletes the temporary directories, this is called when the object is deleted.
         This method has to be called, before a different CorsikaRunner with the
         same tmp_dir can be constructed.
+        The object can't be used anymore after calling this method.
         """
-        shutil.rmtree(self.corsika_tmp_dir)
+        for job in self.job_pool:
+            job.clean()
 
     def run(self, disable_pb: bool = False) -> None:
         """

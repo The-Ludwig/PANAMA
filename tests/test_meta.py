@@ -34,6 +34,7 @@ def test_cli_no_tables(pytestconfig, tmp_path, caplog, monkeypatch, test_file_pa
         catch_exceptions=True
     )
 
+    print(result.exception)
     assert type(result.exception) == ImportError
     assert "corsika-panama[hdf]" in result.exception.msg
     assert "corsika-panama[hdf]" in caplog.text
