@@ -326,6 +326,13 @@ class CorsikaRunner:
             If true, the output is available as "prim{pdgid}_job{jobid}.log" in the
             output folder.
 
+        first_run_number : int = 0, optional
+            The run number the first run will get.
+            All following runs will increment the run number by one.
+
+        first_event_number : int = 1, optional
+            The event number the first event in each run will get.
+
         Raises
         ------
         ValueError
