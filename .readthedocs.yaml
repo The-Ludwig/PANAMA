@@ -5,6 +5,9 @@ build:
   tools:
     python: "3.11"
 
+formats:
+  - pdf
+
 python:
   install:
     - requirements: docs/requirements.txt
