@@ -1,5 +1,5 @@
 nbsphinx
 myst_parser
 sphinx_click
-corsika-panama
 pydata-sphinx-theme
+.
