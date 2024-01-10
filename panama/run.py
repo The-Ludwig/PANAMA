@@ -72,17 +72,6 @@ class CorsikaJob:
         self.output = b""
         self.save_std_file: None | io.TextIOWrapper = None
 
-    def __enter__(self) -> CorsikaJob:
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> None:
-        self.clean()
-
     def clean(self) -> None:
         """
         Cleans the temporary directory.
