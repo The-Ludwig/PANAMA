@@ -15,15 +15,31 @@
   `---`                   '---'                       '---'
 ```
 
+PANAMA - A python toolkit for [CORSIKA7](https://www.iap.kit.edu/corsika/index.php).
+
 [![Read the Docs](https://img.shields.io/readthedocs/panama?style=for-the-badge)](https://panama.readthedocs.io/en/latest/)
+
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/The-Ludwig/PANAMA/ci.yml?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/actions/workflows/ci.yml)
+[![GitHub issues](https://img.shields.io/github/issues-raw/The-Ludwig/PANAMA?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/issues)
 [![Codecov](https://img.shields.io/codecov/c/github/The-Ludwig/PANAMA?label=test%20coverage&style=for-the-badge)](https://app.codecov.io/gh/The-Ludwig/PANAMA)
+
 [![PyPI](https://img.shields.io/pypi/v/corsika-panama?style=for-the-badge)](https://pypi.org/project/corsika-panama/)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%20%2F%20zenodo.10210623-blue.svg?style=for-the-badge)](https://doi.org/10.5281/zenodo.10210623)
-
-[![GitHub issues](https://img.shields.io/github/issues-raw/The-Ludwig/PANAMA?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/issues)
 [![GitHub](https://img.shields.io/github/license/The-Ludwig/PANAMA?style=for-the-badge)](https://github.com/The-Ludwig/PANAMA/blob/main/LICENSE)
 [![Codestyle](https://img.shields.io/badge/codesyle-Black-black.svg?style=for-the-badge)](https://github.com/psf/black)
+
+## Features
+
+This python package provides multiple features -- each feature can be used independently, but they also work great together.
+
+- Execute CORSIKA7 on multiple cores
+- Read CORSIKA7 DAT files ("particle files") to [pandas DataFrames](https://pandas.pydata.org/docs/)
+  - Correctly parse output from the `EHIST` option
+- Calculate weights for a multiple primary spectra
+
+To see some examples on how to use panama, see the introduction in the documentation.
+To get an overview of how the features play together, have a look at the example notebook in the documentation.
+In-depth explanation is provided in the API documentation.
 
 ## Installation
 
@@ -37,125 +53,51 @@ If you want to convert Corsikas DAT files to HDF5 files, you need to install the
 pip install corsika-panama[hdf]
 ```
 
-## Features
+### CORSIKA7
 
-### Run CORSIKA7 on multiple cores
+For usage and installation of CORSIKA7, please refer to [its website](https://www.iap.kit.edu/corsika/index.php) and its [userguide](https://www.iap.kit.edu/corsika/downloads/CORSIKA_GUIDE7.7500.pdf).
+To properly use this package, knowledge of CORSIKA7 is required.
 
-You need to have [`CORSIKA7`](https://www.iap.kit.edu/corsika/79.php) installed to run this.
+If you want to install CORSIKA7, you need to request access to their CORSIKA7 mailing list, [as described on their website](https://www.iap.kit.edu/corsika/79.php), then you will receive the CORSIKA7
+password.
+If you want to skip the process of getting familiar with the software and compiling it with coconut, panama provides a (linux) script for compiling
+it.
+You will need a `fortran` compiler. CORSIKA7 will then be pre-configured with the curved earth, EHIST, SIBYLL2.3d and URQDM options.
+For finer control over the used options, please compile CORSIKA7 yourself.
+After cloning this repository, you can then execute
 
-Running 100 showers on 4 cores with primary being proton:
-
-```sh
-$ panama run --corsika path/to/corsika7/executable -j4 ./tests/files/example_corsika.template
-83%|████████████████████████████████████████████████████▋        | 83.0/100 [00:13<00:02, 6.36shower/s]
-Jobs should be nearly finished, now we wait for them to exit
-All jobs terminated, cleanup now
+```bash
+CORSIKA_VERSION=77500 CORSIKA_PW=CORSIKA_PASSWORD_YOU_WILL_RECEIVE_BY_MAIL admin/download_corsika.sh
 ```
 
-Injecting 5 different primaries (Proton, Helium-4, Carbon-12, Silicon-28, Iron-54 roughly aligning with grouping in H3a) with each primary shower taking 10 jobs:
+which will download and compile CORSIKA7 version 77500.
+If you are interested in automatically testing software using CORSIKA7, using GitHub actions,
+have a look at the `.github` folder of this project in combination with the admin script.
 
-```sh
-$ panama run --corsika corsika-77420/run/corsika77420Linux_SIBYLL_urqmd --jobs 10 --primary ""{2212: 500, 1000020040: 250, 1000060120: 50, 1000140280: 50, 1000260540: 50}"" ./tests/files/example_corsika.template
-,-.----.                           ,--.das     nd               ____ ulticore utils for corsik  7
-\    /  \     ,---,              ,--.'|   ,---,               ,'  , `.                    ,---,
-|   :    \   '  .' \         ,--,:  : |  '  .' \           ,-+-,.' _ |                   '  .' \
-|   |  .\ : /  ;    '.    ,`--.'`|  ' : /  ;    '.      ,-+-. ;   , ||                  /  ;    '.
-.   :  |: |:  :       \   |   :  :  | |:  :       \    ,--.'|'   |  ;|                 :  :       \
-|   |   \ ::  |   /\   \  :   |   \ | ::  |   /\   \  |   |  ,', |  ':                 :  |   /\   \
-|   : .   /|  :  ' ;.   : |   : '  '; ||  :  ' ;.   : |   | /  | |  ||                 |  :  ' ;.   :
-;   | |`-' |  |  ;/  \   \'   ' ;.    ;|  |  ;/  \   \'   | :  | :  |,                 |  |  ;/  \   \
-|   | ;    '  :  | \  \ ,'|   | | \   |'  :  | \  \ ,';   . |  ; |--'                  '  :  | \  \ ,'
-:   ' |    |  |  '  '--'  '   : |  ; .'|  |  '  '--'  |   : |  | ,                     |  |  '  '--'
-:   : :    |  :  :        |   | '`--'  |  :  :        |   : '  |/                      |  :  :
-|   | :    |  | ,'        '   : |      |  | ,'        ;   | |`-'                       |  | ,'
-`---'.|    `--''          ;   |.'      `--''          |   ;/                           `--''
-  `---`                   '---'                       '---'                                     v0.7.2
-...
-```
+## Contributing
 
-### Read CORSIKA7 DAT files to pandas dataframes
+Contributions and suggestions are very welcome.
+Feel free to open an [issue](https://github.com/The-Ludwig/PANAMA/issues) or [pull request](https://github.com/The-Ludwig/PANAMA/pulls).
+This project uses [pdm](https://pdm-project.org/latest/) for the build system as well as a
+dependency and virtual environment manager.
+For suggestions on how to set up a development environment, have a look at `CONTRIBUTING.md`.
 
-Example: Calculate mean energy in the corsika files created in the example above:
+## Further Notes
 
-```
-In [1]: import panama as pn
-
-In [2]: run_header, event_header, particles = pn.read_DAT(glob="corsika_output/DAT*")
-100%|████████████████████████████████████████████████████████████| 2000/2000.0 [00:00<00:00, 10127.45it/s]
-In [3]: particles["energy"].mean()
-Out[3]: 26525.611020413744
-```
-
-`run_header`, `event_header` and `particles` are all [pandas.DataFrames](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html) and can conveniently be used.
-
-If `CORSIKA7` is compiled with the `EHIST` option, then the mother particles are automatically deleted, by default (this behaviour can be changed with`drop_mothers=False`).
-If you want additional columns in the real particles storing the mother information use `mother_columns=True`.
-
-### Convert CORSIKA7 DAT files to hdf5 files
-
-For this you need to have [PyTables](https://github.com/PyTables/PyTables) installed.
-You can do that if via `pip install corsika-panama[hdf]`.
-
-```sh
-$ panama hdf5 path/to/corsika/dat/files/DAT* output.hdf5
-```
-
-The data is available under the `run_header` `event_header` and `particles` key.
-
-### Weighting to primary spectrum
-
-This packages also provides facility to add a `weight` column to the dataframe, so you can look at corsika-output
-in physical flux in terms of $(\mathrm{m^2} \mathrm{s}\ \mathrm{sr}\ \mathrm{GeV})^{-1}$.
-Using the example above, to get the whole physical flux in the complete simulated energy region:
-
-```
-In [1]: import panama as pn
-
-In [2]: run_header, event_header, particles = pn.read_DAT(glob="corsika_output/DAT*")
-100%|████████████████████████████████████████████████████████████| 2000/2000.0 [00:00<00:00, 10127.45it/s]
-In [3]: pn.add_weight(run_header, event_header, particles)
-
-In [4]: particles["weight"].sum()*(run_header["energy_max"]-run_header["energy_min"])
-Out[4]:
-run_number
-1.0    1234.693481
-0.0    1234.693481
-3.0    1234.693481
-2.0    1234.693481
-dtype: float32
-
-```
-
-Which is in units of $(\mathrm{m^2}\ \mathrm{s}\ \mathrm{sr})^{-1}$. We get a result for each run, since
-in theory we could have different energy regions. Here, we do not, so the result is always equal.
-
-Weighting can be applied to different primaries, also, if they are known by the flux model.
-
-`add_weight` can also be applied to dataframes loaded in from hdf5 files produced with PANAMA.
-
-TODO: Better documentation of weighting (what is weighted, how, proton/neutrons, area...?)
-
-## Name
+This project tries to stay compatible with the suggestions from [Scikit hep](https://learn.scientific-python.org/development/guides/repo-review/?repo=The-Ludwig%2Fpanama&branch=main).
 
 Naming idea goes back to [@Jean1995](https://github.com/Jean1995), thanks for that!
-He originally proposed "PArallel ruN of corsikA on MAny Cores", as
+He originally proposed "PArallel ruN of corsikA on MAny cores", as
 the scope of this library grew bigger, it evolved into the current name.
 
-#### Notes:
+This started as part of the code I wrote for [my master thesis](https://ludwigneste.space/masterthesis_ludwig_neste.pdf).
+I ended in the same place where most CORSIKA7 users end when running large CORSIKA7 simulations and wrote small scripts
+to split one simulation request into multiple CORSIKA7 processes with different seeds.
+The FACT software ([fact-project/corsika_wrapper](https://github.com/fact-project/corsika_wrapper))
+and the IceCube software does essentially the same thing (and I am sure, MAGIC, CTA and other air-shower based observatories do the same).
+I hope this package provides a more experiment-independent and better documented version of internal software packages.
 
-This started a little while ago while I was looking into the `EHIST` option
-of corsika.
-I wanted a way of conveniently running CORSIKA7 on more than 1 core.
-I ended in the same place where most CORSIKA7 users end (see e.g. [fact-project/corsika_wrapper](https://github.com/fact-project/corsika_wrapper))
-and wrote a small wrapper.
+## Related Repositories
 
-read_DAT made possible by [cta-observatory/pycorsikaio](https://github.com/cta-observatory/pycorsikaio).
-
-#### Pitfalls
-
-- The whole `run` folder of CORSIKA7 must be copied for each process, so very high parallel runs have high overhead
-- If you simulate to low energies, python can't seem to hold up with the corsika output to `stdin` and essentially slows down corsika this is still a bug in investigation #1
-
-## What this is not
-
-Bug-free or stable
+- Reading DAT files uses [cta-observatory/pycorsikaio](https://github.com/cta-observatory/pycorsikaio).
+- Cosmic Ray models implemented in [The-Ludwig/FluxComp](https://github.com/The-Ludwig/FluxComp/).

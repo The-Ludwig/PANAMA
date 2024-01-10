@@ -14,6 +14,12 @@ from ..version import __distribution__, __logo__
 @click.argument("input", type=click.Path(exists=True, dir_okay=False), nargs=-1)
 @click.argument("output", type=click.Path(exists=False, dir_okay=False), nargs=1)
 @click.option(
+    "--comp",
+    "-c",
+    help="Sets a compression level between 0 and 9. 0 means no compression.",
+    default=5,
+)
+@click.option(
     "--noadd",
     "-n",
     is_flag=True,
@@ -41,6 +47,7 @@ from ..version import __distribution__, __logo__
 def hdf5(
     input: list[Path],
     output: Path,
+    comp: int,
     noadd: bool,
     mother: bool,
     dropmother: bool,
@@ -89,6 +96,6 @@ def hdf5(
         drop_non_particles=dropnonparticles,
     )
 
-    run_header.to_hdf(output, "run_header")
-    event_header.to_hdf(output, "event_header")
-    particles.to_hdf(output, "particles")
+    run_header.to_hdf(output, "run_header", complevel=comp)
+    event_header.to_hdf(output, "event_header", complevel=comp)
+    particles.to_hdf(output, "particles", complevel=comp)

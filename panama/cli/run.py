@@ -164,7 +164,7 @@ def run(
             "Looks like --events was given and --primary was provided a dict. --events is ignored."
         )
 
-    runner = CorsikaRunner(
+    with CorsikaRunner(
         primary,
         jobs,
         template,
@@ -175,5 +175,5 @@ def run(
         save_std,
         first_run_number,
         first_event_number,
-    )
-    runner.run()
+    ) as runner:
+        runner.run()

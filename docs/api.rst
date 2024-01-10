@@ -1,15 +1,27 @@
 API Documentation
 ==================
 
+panama (re-exported from submodules)
+------------------------------------
 .. automodule:: panama
    :members:
 
-Fluxes
--------
+panama.prompt
+-------------
+.. automodule:: panama.prompt
+   :members:
 
-The fluxes here are the `mceq-project/crflux <https://github.com/mceq-project/crflux>`_
-implementations, with very slight modifications to make them faster when working with
-numpy/pandas.
+panama.read
+-----------
+.. automodule:: panama.read
+   :members:
 
-.. automodule:: panama.fluxes
+panama.run
+----------
+.. automodule:: panama.run
+   :members:
+
+panama.weights
+--------------
+.. automodule:: panama.weights
    :members:

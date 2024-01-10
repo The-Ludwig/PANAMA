@@ -37,6 +37,10 @@ repos:
     rev: v2.2.6
     hooks:
       - id: codespell
+        exclude: >
+          (?x)^(
+              .*\.ipynb
+          )$
         args: [--exclude-file, .codespell-ignore]
 
   - repo: https://github.com/pre-commit/pygrep-hooks
