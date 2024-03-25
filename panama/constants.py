@@ -1,6 +1,7 @@
 """
 Some constants used across multiple modules
 """
+
 from particle import PDGID, Particle
 
 D0_LIFETIME = Particle.from_name("D0").lifetime
