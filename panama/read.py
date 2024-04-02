@@ -359,7 +359,7 @@ def add_mother_columns(
 
     df_particles["mother_hadr_gen"] = (
         np.abs(df_particles["particle_description"].iloc[mother_index]) % 100
-    )
+    ).to_numpy(copy=False)
     df_particles.loc[~df_particles["has_mother"], "mother_hadr_gen"] = pd.NA
 
     # copy mother values to daughter columns so we can drop them later
