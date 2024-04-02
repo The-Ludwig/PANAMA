@@ -24,7 +24,7 @@ from .prompt import is_prompt_lifetime_limit
 
 
 def read_DAT(
-    files: Path | list[Path] | None = None,
+    files: Path | str | list[Path] | None = None,
     glob: str | None = None,
     max_events: int | None = None,
     run_header_features: list[str] | None = None,
@@ -123,8 +123,8 @@ def read_DAT(
     if glob is not None:
         basepath = Path(glob).parent
         files = list(basepath.glob(Path(glob).name))
-    elif isinstance(files, Path):
-        files = [files]
+    elif isinstance(files, Path | str):
+        files = [Path(files)]
 
     assert isinstance(files, list)
 
