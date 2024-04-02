@@ -9,7 +9,7 @@ except ImportError:
 __distribution__ = pkgs["panama"][0] if "panama" in pkgs else "corsika-panama"
 
 # __version__ = version(__distribution__)
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 LOGO_TEMPLATE = r"""
 ,-.----.                           ,--.das     nd               ____ ulticore utils for corsik  7
