@@ -90,6 +90,20 @@ def test_read_corsia_file(test_file_path=SINGLE_TEST_FILE):
     except AssertionError:
         pass
 
+def test_parsing(test_file_path=GLOB_TEST_FILE):
+    """This tests if the parsing of the actual values in the files work."""
+    df_run, df_event, df = panama.read_DAT(
+        glob=test_file_path, drop_non_particles=False, mother_columns=True
+    )
+
+    # just perform manual checking with looking at the files
+    p = df.loc[34, 1, 3]
+    assert p["pdgid"] == -13
+    assert p["hadron_gen"] == 57
+    assert p["n_obs_level"] == 1
+    assert p["mother_hadr_gen"] == 6
+    assert p["mother_pdgid"] == 211
+    assert p["grandmother_pdgid"] == 211
 
 # Do not turn the PyTables performance warning into an error
 @pytest.mark.filterwarnings("ignore::pandas.errors.PerformanceWarning")
@@ -136,6 +150,9 @@ def test_read_none():
     with pytest.raises(ValueError, match="can't both be not None"):
         df_run, df_event, df = panama.read_DAT(files = ["bla1", "bla2"], glob="bla*")
 
+# BIG note: The following two  tests pass, but due to issue #100, I have big
+# reason to believe these tests don't catch as many errors as I thought.
+# e.g.: If the prompt/conv tag is completely wrong, they still seem to pass.
 def test_spectral_index(tmp_path, test_file_path=GLOB_TEST_FILE):
     """Test if we can fit the muon spectral index, with the test dataset"""
 

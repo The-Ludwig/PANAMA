@@ -24,7 +24,7 @@ from .prompt import is_prompt_lifetime_limit
 
 
 def read_DAT(
-    files: Path | list[Path] | None = None,
+    files: Path | str | list[Path] | None = None,
     glob: str | None = None,
     max_events: int | None = None,
     run_header_features: list[str] | None = None,
@@ -123,8 +123,8 @@ def read_DAT(
     if glob is not None:
         basepath = Path(glob).parent
         files = list(basepath.glob(Path(glob).name))
-    elif isinstance(files, Path):
-        files = [files]
+    elif isinstance(files, (Path, str)):  # noqa: UP038
+        files = [Path(files)]
 
     assert isinstance(files, list)
 
@@ -359,7 +359,7 @@ def add_mother_columns(
 
     df_particles["mother_hadr_gen"] = (
         np.abs(df_particles["particle_description"].iloc[mother_index]) % 100
-    )
+    ).to_numpy(copy=False)
     df_particles.loc[~df_particles["has_mother"], "mother_hadr_gen"] = pd.NA
 
     # copy mother values to daughter columns so we can drop them later
