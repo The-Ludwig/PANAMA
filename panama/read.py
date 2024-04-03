@@ -123,7 +123,7 @@ def read_DAT(
     if glob is not None:
         basepath = Path(glob).parent
         files = list(basepath.glob(Path(glob).name))
-    elif isinstance(files, Path | str):
+    elif isinstance(files, (Path, str)):  # noqa: UP038
         files = [Path(files)]
 
     assert isinstance(files, list)
