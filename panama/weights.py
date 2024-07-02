@@ -4,6 +4,7 @@ If using the suggested flux definitions from `fluxcomp`, all fluxes
 are given in units of :math:`(\mathrm{m^2}\ \mathrm{s}\ \mathrm{sr}\ \mathrm{GeV})^{-1}`.
 
 """  # noqa: W605
+
 from __future__ import annotations
 
 from typing import Any
@@ -150,9 +151,9 @@ def add_weight_prompt(
         df.sort_index(inplace=True)
 
     df[weight_col_name] = 1.0
-    df.loc[
-        df[is_prompt_col_name] == True, weight_col_name  # noqa: E712
-    ] = prompt_factor
+    df.loc[df[is_prompt_col_name] == True, weight_col_name] = (  # noqa: E712
+        prompt_factor
+    )
 
 
 def add_weight_prompt_per_event(
