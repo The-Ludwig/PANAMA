@@ -9,8 +9,8 @@ from panama import read_DAT
 import pytest
 import numpy as np
 
-CORSIKA_VERSION = "corsika-77500"
-CORSIKA_EXECUTABLE = "corsika77500Linux_SIBYLL_urqmd"
+CORSIKA_VERSION = "corsika-77550"
+CORSIKA_EXECUTABLE = "corsika77550Linux_SIBYLL_urqmd"
 
 
 def test_corsika_runner_cleanup(

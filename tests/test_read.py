@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 
 SINGLE_TEST_FILE = Path(__file__).parent / "files" / "DAT000000"
 GLOB_TEST_FILE = Path(__file__).parent / "files" / "DAT*"
+NOEHIST_TEST_FILE = Path(__file__).parent / "files" / "noEHIST" / "DAT101001"
 
 
 def test_noparse(test_file_path=SINGLE_TEST_FILE):
@@ -59,6 +60,13 @@ def check_eq(file, df_run, df_event, particles, skip_mother=False):
                     continue
                 assert particles.iloc[num]["px"] == particle["px"]
                 num += 1
+
+
+def test_noehist(test_file_path=NOEHIST_TEST_FILE):
+    # This used to fail (see issue #103)
+    df_run, df_event, df = panama.read_DAT(glob=test_file_path, mother_columns=True)
+
+    check_eq(test_file_path, df_run, df_event, df, skip_mother=False)
 
 
 def test_noadd(test_file_path=SINGLE_TEST_FILE):

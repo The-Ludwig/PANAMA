@@ -386,6 +386,8 @@ def add_mother_columns(
         else False
         for pdgid in pdgids
     }
+    # explicitly force an invalid PDGID to not be charm
+    has_charm[PDGID_ERROR_VAL] = False
 
     # this follows the MCEq definition
     lifetimes = {
@@ -395,6 +397,8 @@ def add_mother_columns(
     for pdgid in lifetimes:
         if lifetimes[pdgid] is None:
             lifetimes[pdgid] = 0
+    # explicitly force invalid PDGID to have infinite lifetime
+    lifetimes[PDGID_ERROR_VAL] = inf
 
     is_resonance = {
         pdgid: "*" in Particle.from_pdgid(pdgid).name
@@ -402,6 +406,8 @@ def add_mother_columns(
         else False
         for pdgid in pdgids
     }
+    # explicitly force an invalid PDGID to not be a resonance
+    is_resonance[PDGID_ERROR_VAL] = False
 
     df_particles["mother_lifetimes"] = df_particles["mother_pdgid"].map(
         lifetimes, na_action=None
