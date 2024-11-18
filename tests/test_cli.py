@@ -5,8 +5,8 @@ from click.testing import CliRunner
 from panama import read_DAT
 import pytest
 
-CORSIKA_VERSION = "corsika-77500"
-CORSIKA_EXECUTABLE = "corsika77500Linux_SIBYLL_urqmd"
+CORSIKA_VERSION = "corsika-77550"
+CORSIKA_EXECUTABLE = "corsika77550Linux_SIBYLL_urqmd"
 
 def test_cli_missing_executable(
     test_file_path=Path(__file__).parent / "files" / "example_corsika.template",
