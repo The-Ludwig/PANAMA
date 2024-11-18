@@ -84,6 +84,11 @@ ignore = [
   "B905"       # strict= parameter of zip. (not in py3.8)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Things we don't really want to test in a notebook
+# (valid LaTeX code which does not need to be in a raw-string gets flagged)
+"*.ipynb" = ["I001", "T201", "W605"]
+
 [tool.mypy]
 files = [
   "panama/**",
