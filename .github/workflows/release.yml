@@ -15,7 +15,7 @@ jobs:
       matrix:
         python-version: ["3.11"]
         poetry-version: ["1.3"]
-        corsika-version: ["77500"]
+        corsika-version: ["77550"]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     permissions:
