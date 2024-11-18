@@ -2,6 +2,7 @@
 Functions to use to determine if a particle is prompt or not,
 using multiple different definitions.
 """
+
 from __future__ import annotations
 
 from math import inf
@@ -60,9 +61,9 @@ def add_cleaned_mother_cols(df_particles: pd.DataFrame) -> None:
     if "mother_lifetime_cleaned" not in df_particles:
         pdgids = df_particles["mother_pdgid_cleaned"].unique()
         lifetimes = {
-            pdgid: Particle.from_pdgid(pdgid).lifetime
-            if pdgid != PDGID_ERROR_VAL
-            else inf
+            pdgid: (
+                Particle.from_pdgid(pdgid).lifetime if pdgid != PDGID_ERROR_VAL else inf
+            )
             for pdgid in pdgids
         }
         for pdgid in lifetimes:
