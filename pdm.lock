@@ -5,7 +5,7 @@
 groups = ["default", "dev", "hdf"]
 strategy = ["cross_platform"]
 lock_version = "4.5.0"
-content_hash = "sha256:e2bcaec8f930c4c515ce93e885c5b0128ee92cb8db45f7272db99c43c742ac96"
+content_hash = "sha256:30adff85dad95518b8b379bd0b15156e4c44a5d801d8db09588a7fbf7d458e94"
 
 [[metadata.targets]]
 requires_python = ">=3.8,<3.12"
