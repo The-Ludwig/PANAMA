@@ -282,9 +282,11 @@ def read_DAT(
         # the use of pd.NA is currently experimental in Int64 type columns
         corsikaids = df_particles["corsikaid"].unique()
         pdg_map = {
-            corsikaid: int(Corsika7ID(corsikaid).to_pdgid())
-            if Corsika7ID(corsikaid).is_particle()
-            else PDGID_ERROR_VAL  # This will be our error value
+            corsikaid: (
+                int(Corsika7ID(corsikaid).to_pdgid())
+                if Corsika7ID(corsikaid).is_particle()
+                else PDGID_ERROR_VAL
+            )  # This will be our error value
             for corsikaid in corsikaids
         }
         df_particles["pdgid"] = (
@@ -381,9 +383,11 @@ def add_mother_columns(
         df_particles.loc[~df_particles["has_mother"], f"mother_{name}"] = error_val
 
     has_charm = {
-        pdgid: "c" in Particle.from_pdgid(pdgid).quarks.lower()
-        if pdgid != PDGID_ERROR_VAL
-        else False
+        pdgid: (
+            "c" in Particle.from_pdgid(pdgid).quarks.lower()
+            if pdgid != PDGID_ERROR_VAL
+            else False
+        )
         for pdgid in pdgids
     }
     # explicitly force an invalid PDGID to not be charm
@@ -401,9 +405,11 @@ def add_mother_columns(
     lifetimes[PDGID_ERROR_VAL] = inf
 
     is_resonance = {
-        pdgid: "*" in Particle.from_pdgid(pdgid).name
-        if pdgid != PDGID_ERROR_VAL
-        else False
+        pdgid: (
+            "*" in Particle.from_pdgid(pdgid).name
+            if pdgid != PDGID_ERROR_VAL
+            else False
+        )
         for pdgid in pdgids
     }
     # explicitly force an invalid PDGID to not be a resonance

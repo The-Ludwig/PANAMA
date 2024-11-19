@@ -29,7 +29,7 @@ class IntOrDictParamType(click.ParamType):  # type: ignore[misc]
             return value
 
         try:
-            d = eval(value)  # noqa: PGH001
+            d = eval(value)
             if not isinstance(d, (int, dict)):  # noqa: UP038
                 self.fail(
                     f"{value!r} is a valid python expression, but not a dict nor an int",

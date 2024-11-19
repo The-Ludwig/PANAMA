@@ -8,3 +8,4 @@ corsika-*/
 corsika-*.tar.gz
 node_modules/
 .ipynb_checkpoints/
+.venv/

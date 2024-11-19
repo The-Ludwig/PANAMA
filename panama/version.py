@@ -2,14 +2,14 @@
 try:
     from importlib.metadata import packages_distributions  # , version
 
-    pkgs = packages_distributions()  # pragma: no cover
-except ImportError:
-    pkgs = {}
+    pkgs = packages_distributions()
+except ImportError:  # pragma: no cover
+    pkgs = {}  # pragma: no cover
 
 __distribution__ = pkgs["panama"][0] if "panama" in pkgs else "corsika-panama"
 
 # __version__ = version(__distribution__)
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 LOGO_TEMPLATE = r"""
 ,-.----.                           ,--.das     nd               ____ ulticore utils for corsik  7
