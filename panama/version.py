@@ -2,9 +2,9 @@
 try:
     from importlib.metadata import packages_distributions  # , version
 
-    pkgs = packages_distributions()  # pragma: no cover
-except ImportError:
-    pkgs = {}
+    pkgs = packages_distributions()
+except ImportError:  # pragma: no cover
+    pkgs = {}  # pragma: no cover
 
 __distribution__ = pkgs["panama"][0] if "panama" in pkgs else "corsika-panama"
 
