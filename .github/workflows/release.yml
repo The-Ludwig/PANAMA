@@ -34,7 +34,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pdm install --dev --group :all
+          pdm lock --no-cross-platform
+          pdm sync --dev --group :all
       - name: Cache Corsika7
         id: cache-corsika
         uses: actions/cache@v3
