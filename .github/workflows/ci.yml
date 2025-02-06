@@ -31,7 +31,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pdm lock --python=${{ matrix.python-version }}
+          pdm lock --python=${{ matrix.python-version }} --dev --group :all
           pdm sync --dev --group :all
       - name: Cache Corsika7
         id: cache-corsika
