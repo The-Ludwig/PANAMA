@@ -7,8 +7,6 @@ are given in units of :math:`(\mathrm{m^2}\ \mathrm{s}\ \mathrm{sr}\ \mathrm{GeV
 
 from __future__ import annotations
 
-from typing import Any
-
 import numpy as np
 import pandas as pd
 from fluxcomp import CosmicRayFlux, H3a
@@ -173,16 +171,7 @@ def add_weight_prompt_per_event(
     weight_col_name: The column name to give for the prompt weight column (default 'weight_prompt_per_event').
     is_prompt_col_name: The name of the column which indicates the promptness of a particle (default: 'is_prompt').
     """
-    # For some weird reason this makes a difference, as the last line of this function does not work otherwise
-    if not df.index.is_monotonic_increasing:  # pragma: no cover
-        df.sort_index(inplace=True)
-
+    condition = df[is_prompt_col_name]
+    flag = condition.groupby(level=["run_number", "event_number"]).transform("any")
     df[weight_col_name] = 1.0
-
-    indexes = df.query(f"{is_prompt_col_name} == True").index
-    evt_idxs: dict[int, set[Any]] = {i[0]: set() for i in indexes}
-    for i in indexes:
-        evt_idxs[i[0]].add(i[1])
-
-    for i in evt_idxs:
-        df.loc[(i, list(evt_idxs[i])), weight_col_name] = prompt_factor
+    df.loc[flag, weight_col_name] = prompt_factor
