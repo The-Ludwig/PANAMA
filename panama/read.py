@@ -35,7 +35,7 @@ def read_DAT(
     drop_non_particles: bool = True,
     noparse: bool = True,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
+    r"""
     Read CORSIKA DAT files to Pandas.DataFrame.
     Exactly one of `files` or `glob` must be provided.
     Made for CORSIKA>7.4, other compatibility not garantueed, but probably approximate.
@@ -103,7 +103,7 @@ def read_DAT(
             DataFrame with the information about each event
         particles: pandas.DataFrame
             DataFrame with the information about each particle
-    """  # noqa: W605
+    """
 
     if files is None and glob is None:
         raise ValueError("`file` and `glob` can't both be None")

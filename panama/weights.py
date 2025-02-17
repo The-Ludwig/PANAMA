@@ -1,9 +1,9 @@
-"""
+r"""
 Functions to add weights to a CORSIKA dataframe read in by `read_DAT`.
 If using the suggested flux definitions from `fluxcomp`, all fluxes
 are given in units of :math:`(\mathrm{m^2}\ \mathrm{s}\ \mathrm{sr}\ \mathrm{GeV})^{-1}`.
 
-"""  # noqa: W605
+"""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def get_weights(
     proton_only: bool = False,
     groups: dict[PDGID, tuple[int, int]] | None = None,
 ) -> pd.DataFrame:
-    """
+    r"""
     Returns a DataFrame with the correct weight for a given primary model
     The DataFrame will be indexed by the run and event index, so it can be
     assigned as a column to the particle DataFrame df.
@@ -185,4 +185,4 @@ def add_weight_prompt_per_event(
         evt_idxs[i[0]].add(i[1])
 
     for i in evt_idxs:
-        df.loc[i].loc[list(evt_idxs[i]), weight_col_name] = prompt_factor
+        df.loc[(i, list(evt_idxs[i])), weight_col_name] = prompt_factor
