@@ -96,6 +96,6 @@ def hdf5(
         drop_non_particles=dropnonparticles,
     )
 
-    run_header.to_hdf(output, "run_header", complevel=comp)
-    event_header.to_hdf(output, "event_header", complevel=comp)
-    particles.to_hdf(output, "particles", complevel=comp)
+    run_header.to_hdf(output, key="run_header", complevel=comp)
+    event_header.to_hdf(output, key="event_header", complevel=comp)
+    particles.to_hdf(output, key="particles", complevel=comp)

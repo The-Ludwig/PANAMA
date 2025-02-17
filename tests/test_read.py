@@ -144,8 +144,8 @@ def save_spectral_fit_test_fig(path, model, log_e, hist, p):
     plt.plot(log_e[~empty], np.log10(hist[~empty]), "x", label="weighted mc")
     plt.plot(x_plot, np.log10(model.total_flux(10.0**(x_plot))), ":", label="model")
 
-    plt.xlabel("$\log \phi$")
-    plt.ylabel("$\log E/GeV$")
+    plt.xlabel(r"$\log \phi$")
+    plt.ylabel(r"$\log E/GeV$")
     plt.legend()
     plt.savefig(path)
     plt.clf()

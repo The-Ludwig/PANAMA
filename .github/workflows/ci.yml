@@ -20,16 +20,21 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      
       - name: Set up PDM
         uses: pdm-project/setup-pdm@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: true
+          cache-dependency-path: |
+            ./panama/version.py
+            ./pyproject.toml
 
       - name: Install dependencies
         run: |
-          pdm sync -d -G hdf
-
+          pdm lock --python=${{ matrix.python-version }} --dev --group :all
+          pdm sync --dev --group :all
+          
       - name: Cache Corsika7
         id: cache-corsika
         uses: actions/cache@v4

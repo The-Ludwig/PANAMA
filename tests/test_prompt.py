@@ -5,6 +5,7 @@ import numpy as np
 import panama
 import pandas as pd
 import pytest
+import warnings
 
 GLOB_TEST_FILE = Path(__file__).parent / "files" / "DAT*"
 
@@ -34,7 +35,9 @@ def test_none_lifetime(test_file_path=GLOB_TEST_FILE):
         glob=test_file_path, drop_non_particles=False, mother_columns=True, drop_mothers=True
     )
 
-    df.loc[:, "mother_pdgid_cleaned"] = 3101 # whatever this particle is, it has None mass and lifetime
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category= pd.errors.PerformanceWarning)
+        df.loc[:, "mother_pdgid_cleaned"] = 3101 # whatever this particle is, it has None mass and lifetime
 
 
     panama.prompt.add_cleaned_mother_cols(df)
