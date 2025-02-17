@@ -23,7 +23,7 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up PDM
         uses: pdm-project/setup-pdm@v4
         with:
@@ -37,7 +37,7 @@ jobs:
         run: |
           pdm lock --python=${{ matrix.python-version }} --dev --group :all
           pdm sync --dev --group :all
-          
+
       - name: Cache Corsika7
         id: cache-corsika
         uses: actions/cache@v4
