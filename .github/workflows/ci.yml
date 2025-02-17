@@ -29,24 +29,27 @@ jobs:
       - name: Install dependencies
         run: |
           pdm sync -d -G hdf
+
       - name: Cache Corsika7
         id: cache-corsika
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-corsika
+        uses: actions/cache@v4
         with:
           path: corsika-${{ matrix.corsika-version }}/run
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.corsika-version }}-${{ hashFiles('admin/config.h') }}
+
       - name: Install CORSIKA7
         run: admin/download_corsika.sh
         env:
           CORSIKA_PW: ${{ secrets.CORSIKA_PW }}
           CORSIKA_VERSION: ${{ matrix.corsika-version }}
+
       - name: Run Tests
         run: |
           pdm run -v coverage run --include="panama/**" -m pytest
+
       - name: Produce coverage xml
         run: pdm run -v coverage xml
+
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:
