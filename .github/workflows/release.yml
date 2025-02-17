@@ -23,6 +23,7 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up PDM
         uses: pdm-project/setup-pdm@v4
         with:
@@ -36,27 +37,33 @@ jobs:
         run: |
           pdm lock --python=${{ matrix.python-version }} --dev --group :all
           pdm sync --dev --group :all
+
       - name: Cache Corsika7
         id: cache-corsika
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           cache-name: cache-corsika
         with:
           path: corsika-${{ matrix.corsika-version }}/run
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.corsika-version }}-${{ hashFiles('admin/config.h') }}
+
       - name: Install CORSIKA7
         run: admin/download_corsika.sh
         env:
           CORSIKA_PW: ${{ secrets.CORSIKA_PW }}
           CORSIKA_VERSION: ${{ matrix.corsika-version }}
+
       - name: Run Tests
         run: |
           pdm run -v coverage run --include="panama/**" -m pytest
+
       - name: Produce coverage xml
         run: pdm run -v coverage xml
+
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Deploy to PyPi
         run: pdm publish
