@@ -6,13 +6,13 @@ from .version import __logo__, __version__
 from .weights import add_weight_prompt, add_weight_prompt_per_event, get_weights
 
 __all__ = (
-    "read_DAT",
-    "get_weights",
+    "PDGID_ERROR_VAL",
+    "CorsikaRunner",
+    "__logo__",
+    "__version__",
     "add_weight_prompt",
     "add_weight_prompt_per_event",
-    "CorsikaRunner",
     "cli",
-    "PDGID_ERROR_VAL",
-    "__version__",
-    "__logo__",
+    "get_weights",
+    "read_DAT",
 )
