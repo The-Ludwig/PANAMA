@@ -65,13 +65,13 @@ class CorsikaJob:
             symlink(str(p.absolute()), str((corsika_copy_dir / p.name).absolute()))
         self.this_corsika_path = self.corsika_copy_dir / corsika_executable.name
 
-        self.running: None | Popen[bytes] = None
-        self.config: None | dict[str, str] = None
-        self.stream: None | NBSR = None
+        self.running: Popen[bytes] | None = None
+        self.config: dict[str, str] | None = None
+        self.stream: NBSR | None = None
         self.n_showers = 0
         self.finished_showers = 0
         self.output = b""
-        self.save_std_file: None | io.TextIOWrapper = None
+        self.save_std_file: io.TextIOWrapper | None = None
 
     def clean(self) -> None:
         """
@@ -202,7 +202,7 @@ class CorsikaJob:
             raise RuntimeError("Job is already finished")
         assert self.stream is not None
 
-        (last_stdout, last_stderr_data) = self.running.communicate()
+        last_stdout, last_stderr_data = self.running.communicate()
         line = self.stream.readline()
 
         finished = 0
@@ -260,7 +260,7 @@ class CorsikaRunner:
         output: Path,
         corsika_executable: Path,
         corsika_tmp_dir: Path,
-        seed: None | int = None,
+        seed: int | None = None,
         save_std: bool = False,
         first_run_number: int = 0,
         first_event_number: int = 1,
