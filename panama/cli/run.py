@@ -30,7 +30,7 @@ class IntOrDictParamType(click.ParamType):  # type: ignore[misc]
 
         try:
             d = eval(value)
-            if not isinstance(d, (int, dict)):  # noqa: UP038
+            if not isinstance(d, (int, dict)):
                 self.fail(
                     f"{value!r} is a valid python expression, but not a dict nor an int",
                     param,
